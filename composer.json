@@ -1,0 +1,14 @@
+{
+    "name": "klit/symfony-rowmapper",
+    "license": "Creative Common",
+    "type": "project",
+    "description": "A RowMapper for Symfony",
+    "autoload": {
+        "psr-0": { "Klit\\Common\\RowMapper": "src/" }
+    },
+    "require": {
+        "php": ">=5.4.0",
+        "symfony/symfony": "2.3.*"
+    },
+    "minimum-stability": "dev"
+}
