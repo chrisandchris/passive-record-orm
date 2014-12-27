@@ -1,7 +1,6 @@
 <?php
-namespace Klit\Cipromat\DatabaseBundle\Services\Pdo;
+namespace Klit\Common\RowMapperBundle\Services\Pdo;
 
-use Klit\Common\RowMapperBundle\Services\Pdo\PdoLogger;
 use PDO;
 
 /**
@@ -41,6 +40,10 @@ class PdoStatement extends \PDOStatement {
         if (self::$userId == null) {
             self::$userId = $userId;
         }
+    }
+
+    public static function getUser() {
+        return self::$userId;
     }
 
     /**
@@ -99,9 +102,10 @@ class PdoStatement extends \PDOStatement {
             if ($this->PdoLogger === null) {
                 return ;
             }
-            $statement = $this->PdoLogger->prepare('INSERT INTO log
+            $now = (new \DateTime())->format('Y-m-d H:i');
+            $statement = $this->PdoLogger->prepare("INSERT INTO log
               (user_id, log_requestid, log_type, log_date, log_querymeta, log_exectime)
-              VALUES (:uid, :requestId, :type, NOW(), :meta, :exectime) ' . self::$DNLPOSTFIX);
+              VALUES (:uid, :requestId, :type, '" . $now . "', :meta, :exectime) " . self::$DNLPOSTFIX);
 
             $meta = $this->getMeta();
             if ($this->isNotLoggableQuery($meta)) {

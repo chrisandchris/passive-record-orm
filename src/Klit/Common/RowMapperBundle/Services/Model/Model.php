@@ -1,6 +1,13 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Model;
 
+use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
+use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
+use Klit\Common\RowMapperBundle\Exceptions\TransactionException;
+use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
+use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
+use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
+
 /**
  * @name Model
  * @version 1.0.0
@@ -63,9 +70,9 @@ abstract class Model {
     /**
      * @param \PDOStatement $statement
      * @return bool
-     * @throws \JayCool\BackofficeBundle\Exception\DatabaseException
-     * @throws \JayCool\BackofficeBundle\Exception\ForeignKeyConstraintException
-     * @throws \JayCool\BackofficeBundle\Exception\UniqueConstraintException
+     * @throws DatabaseException
+     * @throws ForeignKeyConstraintException
+     * @throws UniqueConstraintException
      */
     protected function handleError(\PDOStatement $statement) {
         $errorNum = $statement->errorInfo();
@@ -96,7 +103,7 @@ abstract class Model {
      * @param $offset int the offset to validate
      * @return int
      */
-    protected function validateOffset($offset) {
+    public function validateOffset($offset) {
         if ($offset < 0 ) {
             return 0;
         }
@@ -109,11 +116,11 @@ abstract class Model {
      * @param $max int the max limit allowed
      * @return int the validated limit as an integer
      */
-    protected function validateLimit($limit, $max = 100) {
+    public function validateLimit($limit, $max = 100) {
         if ($limit < 1) {
             return 1;
         } elseif ($limit > $max) {
-            return 100;
+            return $max;
         }
         return (int)$limit;
     }
@@ -161,7 +168,7 @@ abstract class Model {
 
     /**
      * Begins a new transaction if not already in one
-     * @throws \JayCool\BackofficeBundle\Exception\TransactionException
+     * @throws TransactionException
      */
     protected function _startTransaction() {
         if (!$this->getPDO()->inTransaction()) {
@@ -175,7 +182,7 @@ abstract class Model {
      * Commits the actual transaction if one is started
      *
      * Throws an exception if no transaction is running
-     * @throws \JayCool\BackofficeBundle\Exception\TransactionException
+     * @throws TransactionException
      */
     protected function _commit() {
         if ($this->getPDO()->inTransaction()) {
@@ -191,7 +198,7 @@ abstract class Model {
      * Rolls the actual transaction back
      *
      * Throws an exception if no transaction is running
-     * @throws \JayCool\BackofficeBundle\Exception\TransactionException
+     * @throws TransactionException
      */
     protected function _rollback() {
         if ($this->getPDO()->inTransaction()) {

@@ -19,10 +19,8 @@ class PdoLayer extends \PDO {
     private $Logger;
 
     function __construct(PdoLogger $PdoLogger = null, $system, $host, $port, $name, $user, $password) {
-        if ($system == 'pdo_mysql') {
-            $system = 'mysql';
-        }
-        $dsn = $system . ':dbname=' . $name . ';host=' . $host . ';port=' . $port . ';charset=utf8';
+        $system = self::getPdoSystem($system);
+        $dsn = $this->getDsn($system, $host, $port, $name);
         try {
             parent::__construct(
                 $dsn, $user, $password
@@ -33,7 +31,7 @@ class PdoLayer extends \PDO {
             // $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             // force to use own pdo statement class
             $this->setPdoAttributes();
-        } catch(Exception $e) {
+        } catch(\PDOException $e) {
             throw new FatalErrorException("Unable to init PdoLayer: " . $e->getMessage());
         }
     }
@@ -42,5 +40,36 @@ class PdoLayer extends \PDO {
         $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array(
             'Klit\Common\RowMapperBundle\Services\Pdo\PdoStatement', array($this->Logger)
         ));
+    }
+
+    public static function getPdoSystem($system = 'pdo_mysql') {
+        switch ($system) {
+            case 'sqlite' :
+            case 'pdo_sqlite' :
+                return 'sqlite';
+            case 'pdo_mysql' :
+            case 'mysqli' :
+            default :
+                return 'mysql';
+        }
+    }
+
+    public static function getDsn($system, $host, $port, $name) {
+        switch ($system) {
+            case 'mysql' :
+                return self::getMysqlDsn($host, $port, $name);
+            case 'sqlite' :
+                return self::getSqliteDsn($host);
+            default :
+                return null;
+        }
+    }
+
+    private static function getMysqlDsn($host, $port, $name) {
+        return 'mysql:dbname=' . $name . ';host=' . $host . ';port=' . $port . ';charset=utf8';
+    }
+
+    private static function getSqliteDsn($host) {
+        return 'sqlite:' . $host;
     }
 }

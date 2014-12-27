@@ -40,7 +40,8 @@ class RowMapper {
             if (property_exists($Map, $key) || method_exists($Map, 'set' . ucfirst($key))) {
                 call_user_func(array($Map, 'set' . ucfirst($key)), $value);
             } else {
-                error_log('Unable to set property "' . $key .'" on class "'. get_class($Map) . '"');
+                // @todo should we throw an exception?
+                $Map->$key = $value;
             }
         }
         return $Map;
