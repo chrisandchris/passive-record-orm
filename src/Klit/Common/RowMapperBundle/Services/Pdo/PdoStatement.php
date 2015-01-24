@@ -102,7 +102,7 @@ class PdoStatement extends \PDOStatement {
             if ($this->PdoLogger === null) {
                 return ;
             }
-            $now = (new \DateTime())->format('Y-m-d H:i');
+            $now = (new \DateTime())->format('Y-m-d H:i:s');
             $statement = $this->PdoLogger->prepare("INSERT INTO log
               (user_id, log_requestid, log_type, log_date, log_querymeta, log_exectime)
               VALUES (:uid, :requestId, :type, '" . $now . "', :meta, :exectime) " . self::$DNLPOSTFIX);
