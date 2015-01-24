@@ -88,6 +88,17 @@ class PdoStatementTest extends TestKernel {
 
         $Statement->execute();
 
+        $Statement = $this->Logger->prepare('SELECT * FROM log');
+        if ($Statement->execute()) {
+            $row = $Statement->fetch(\PDO::FETCH_OBJ);
+            $this->assertNotFalse(strtotime($row->log_date));
+            $this->assertNotNull($row->log_querymeta);
+            $this->assertTrue(is_numeric($row->log_exectime));
+            $this->assertNotNull($row->log_requestid);
+        } else {
+            $this->fail('Unable to fetch log row');
+        }
+
         $CountStatement = $this->Logger->prepare('SELECT COUNT(*) FROM log');
         if ($CountStatement->execute()) {
             $this->assertEquals(1, $CountStatement->fetch(\PDO::FETCH_NUM)[0]);
