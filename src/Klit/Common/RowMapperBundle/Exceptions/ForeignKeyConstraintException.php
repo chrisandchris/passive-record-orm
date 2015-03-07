@@ -2,7 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Exceptions;
 
 /**
- * @name ForeignKeyConstraintException.php
+ * @name ForeignKeyConstraintException
  * @version 1.0.0
  * @package CommonRowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>

@@ -1,12 +1,14 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Model;
 
+use Klit\Common\RowMapperBundle\Entity\Entity;
 use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use Klit\Common\RowMapperBundle\Exceptions\TransactionException;
 use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
@@ -17,9 +19,12 @@ use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
  * @link http://www.klit.ch
  */
 abstract class Model {
-    /** @var PdoLayer pdo */
+    /** @var PdoLayer the pdo class */
     private $PDO;
+    /** @var RowMapper the row mapper */
     private $mapper;
+    /** @var bool if set to true, current result must have at least one row */
+    private $currentMustHaveRow;
 
     function __construct(PdoLayer $PDO, RowMapper $mapper) {
         $this->PDO = $PDO;
@@ -27,6 +32,8 @@ abstract class Model {
     }
 
     /**
+     * Set the PDO class
+     *
      * @param \PDO $PDO
      * @deprecated
      */
@@ -35,6 +42,8 @@ abstract class Model {
     }
 
     /**
+     * Set the Mapper
+     *
      * @param \Klit\Common\RowMapperBundle\Services\Pdo\RowMapper $mapper
      */
     protected function setMapper($mapper) {
@@ -42,6 +51,8 @@ abstract class Model {
     }
 
     /**
+     * Get the PDO class
+     *
      * @return \PDO
      */
     protected  function getPDO() {
@@ -49,6 +60,8 @@ abstract class Model {
     }
 
     /**
+     * Get the Mapper
+     *
      * @return RowMapper
      */
     protected  function getMapper() {
@@ -56,6 +69,8 @@ abstract class Model {
     }
 
     /**
+     * Create a new statement from SQL-Code
+     *
      * @param $sql
      * @return \PDOStatement
      */
@@ -63,8 +78,27 @@ abstract class Model {
         return $this->PDO->prepare($sql);
     }
 
+    /**
+     * Execute a PDOStatement
+     * @param \PDOStatement $statement
+     * @return mixed
+     */
     protected function execute(\PDOStatement $statement) {
         return $this->PDO->execute($statement);
+    }
+
+    public function setCurrentMustHaveResult($mustHaveRow = true) {
+        $this->currentMustHaveRow = (bool)$mustHaveRow;
+    }
+
+    public function handle(\PDOStatement $statement, Entity $Entity, array $fields) {
+        if ($statement->execute()) {
+            if ($statement->rowCount() === 0 && $this->currentMustHaveRow) {
+                throw new NotFoundHttpException("No row found for entity");
+            }
+            return $this->getMapper()->mapFromResult($statement, $Entity);
+        }
+        return $this->handleError($statement);
     }
 
     /**
