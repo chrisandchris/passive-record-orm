@@ -2,6 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Services\Pdo;
 
 use Klit\Common\RowMapperBundle\Entity\Entity;
+use Klit\Common\RowMapperBundle\Entity\ManagedEntity;
 use Symfony\Component\Debug\Exception\FatalErrorException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -16,44 +17,58 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class RowMapper {
 
     /**
-     * @param \PDOStatement $statement
-     * @param $Map
-     * @param limit
+     * Maps a result from a statement into an entity
+     *
+     * @param \PDOStatement $statement the statement to map
+     * @param Entity $Entity the entity to use
+     * @param int $limit max amount of rows to map
      * @return array list of mapped rows
      */
-    public function mapFromResult(\PDOStatement $statement, Entity $Map, $limit = null) {
+    public function mapFromResult(\PDOStatement $statement, Entity $Entity, $limit = null) {
         $return = array();
         $c = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) && (++$c <= $limit || $limit == null)) {
-            $return[] = $this->mapRow($row, clone $Map);
+            $return[] = $this->mapRow($row, clone $Entity);
         }
         return $return;
     }
 
-    /**
-     * @param array $row the single row to map
-     * @param $Map Entity entity to map to
-     * @return Entity mapped entity
-     */
-    private function mapRow(array $row, Entity $Map) {
-        foreach ($row as $key => $value) {
-            if (property_exists($Map, $key) || method_exists($Map, 'set' . ucfirst($key))) {
-                call_user_func(array($Map, 'set' . ucfirst($key)), $value);
-            } else {
-                // @todo should we throw an exception?
-                $Map->$key = $value;
-            }
+    public function map(\PDOStatement $statement, Entity $Entity, array $fields) {
+        $return = [];
+        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC))) {
+            $return[]= $this->mapRow($row, clone $Entity, $fields);
         }
-        return $Map;
     }
 
     /**
-     * @param \PDOStatement $statement
-     * @param $param
+     * Map a single row by calling setter or getter methods
+     *
+     * @param array $row the single row to map
+     * @param $Entity Entity entity to map to
+     * @param array $fields the fields that are mapped
+     * @return Entity mapped entity
+     */
+    private function mapRow(array $row, Entity $Entity, array $fields = null) {
+        foreach ($row as $key => $value) {
+            if (property_exists($Entity, $key) || method_exists($Entity, 'set' . ucfirst($key))) {
+                call_user_func(array($Entity, 'set' . ucfirst($key)), $value);
+            } else {
+                // @todo should we throw an exception?
+                $Entity->$key = $value;
+            }
+        }
+        return $Entity;
+    }
+
+    /**
+     * Map a single result from a statement
+     *
+     * @param \PDOStatement $statement the statement to map
+     * @param Entity $Entity the entity to map into
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public function mapSingleFromResult(\PDOStatement $statement, Entity $param) {
-        $list = $this->mapFromResult($statement, $param, 1);
+    public function mapSingleFromResult(\PDOStatement $statement, Entity $Entity) {
+        $list = $this->mapFromResult($statement, $Entity, 1);
         if (count($list) == 0) {
             throw new NotFoundHttpException;
         }
@@ -68,12 +83,12 @@ class RowMapper {
      * It must contain an index "value" with the value to map
      *
      * @throws FatalErrorException
-     * @param $statement \PDOStatement the statement to map
-     * @param $entity Entity the entity to map from
-     * @param $closure \Closure the closure to use to map any row
+     * @param \PDOStatement $statement the statement to map
+     * @param Entity $entity the entity to map from
+     * @param \Closure $closure the closure to use to map any row
      * @return array the associative mapped array
      */
-    public function mapToArray($statement, Entity $entity, $closure) {
+    public function mapToArray($statement, Entity $entity, \Closure $closure) {
         $array = $this->mapFromResult($statement, $entity);
         $return = array();
         foreach ($array as $row) {
