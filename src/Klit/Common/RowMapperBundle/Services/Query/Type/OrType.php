@@ -17,27 +17,4 @@ class OrType implements TypeInterface{
     function getTypeName() {
         return 'or';
     }
-
-    /**
-     * Get an array of instances of interfaces/classes allowed to get called after this type
-     * Instances will be validated by $value instanceof $assigned
-     *
-     * @return array
-     */
-    function getAllowedChildren() {
-        return array(
-            new FieldType(),
-            new ValueType(),
-            new BraceType()
-        );
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        // TODO: Implement call() method.
-    }
 }

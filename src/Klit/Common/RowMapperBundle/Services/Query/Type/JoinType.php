@@ -1,5 +1,6 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
+
 /**
  * @name JoinType
  * @version
@@ -9,6 +10,14 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Type;
  * @link http://www.klit.ch
  */
 class JoinType implements TypeInterface {
+    private $table;
+    private $joinType;
+
+    function __construct($table, $joinType = 'inner') {
+        $this->table = $table;
+        $this->joinType = $joinType;
+    }
+
     /**
      * @inheritdoc
      */
@@ -17,20 +26,22 @@ class JoinType implements TypeInterface {
     }
 
     /**
-     * @inheritdoc
+     * Generic call method
+     *
+     * @param mixed $table
      */
-    function getAllowedChildren() {
-        return array(
-
-        );
+    function call($table) {
+        $this->table = $table;
     }
 
     /**
-     * Generic call method
-     *
-     * @param mixed $data
+     * @return mixed
      */
-    function call($data) {
-        // TODO: Implement call() method.
+    public function getTable() {
+        return $this->table;
+    }
+
+    public function getJoinType() {
+        return $this->joinType;
     }
 }

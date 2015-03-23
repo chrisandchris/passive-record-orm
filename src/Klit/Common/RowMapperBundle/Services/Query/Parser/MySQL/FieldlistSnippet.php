@@ -21,15 +21,21 @@ class FieldlistSnippet extends AbstractSnippet {
      * @return string
      */
     function getCode() {
-        return '(#getFields)';
+        return '#getFields';
     }
 
+    // @todo implement explicit name database.table.field
     public function getFields() {
         $sql = '';
         $fieldCount = count($this->type->getFields());
-        foreach ($this->type->getFields() as $idx => $value) {
-            $sql .= '`' . $value . '`';
-            if ($idx + 1 < $fieldCount) {
+        $idx = 0;
+        foreach ($this->type->getFields() as $key => $value) {
+            if (!is_numeric($key)) {
+                $sql .= '`' . $key .'` as `' . $value . '`';
+            } else {
+                $sql .= '`' . $value . '`';
+            }
+            if (++$idx < $fieldCount) {
                 $sql .= ', ';
             }
         }

@@ -2,29 +2,30 @@
 namespace Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL;
 
 use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
-use Klit\Common\RowMapperBundle\Services\Query\Type\LimitType;
 
 /**
- * @name LimitSnippet
- * @version 1.0.0-dev
- * @package CommonRowMapper
+ * @name OrderBySnippet
+ * @version
+ * @package
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class LimitSnippet extends AbstractSnippet {
-    /** @var LimitType */
-    protected $type;
+class OrderBySnippet extends AbstractSnippet {
     /**
      * Get the code
      *
      * @return string
      */
     function getCode() {
-        return 'LIMIT #getLimit';
+        return '`#getField` #getDirection';
     }
 
-    public function getLimit() {
-        return abs($this->type->getLimit());
+    public function getField() {
+        return $this->getType()->getField();
+    }
+
+    public function getDirection() {
+        return strtoupper($this->getType()->getDirection());
     }
 }

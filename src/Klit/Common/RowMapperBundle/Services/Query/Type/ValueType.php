@@ -28,28 +28,4 @@ class ValueType implements ParameterizedTypeInterface {
     function getTypeName() {
         return 'value';
     }
-
-    /**
-     * Get an array of instances of interfaces/classes allowed to get called after this type
-     * Instances will be validated by $value instanceof $assigned
-     *
-     * @return array
-     */
-    function getAllowedChildren() {
-        return array(
-            new CloseType(),
-            new AndType(),
-            new OrType(),
-            new BraceType()
-        );
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        $this->value = $data;
-    }
 }

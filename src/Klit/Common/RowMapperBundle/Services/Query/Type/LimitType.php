@@ -26,25 +26,6 @@ class LimitType implements TypeInterface {
     }
 
     /**
-     * Get an array of instances of interfaces/classes allowed to get called after this type
-     * Instances will be validated by $value instanceof $assigned
-     *
-     * @return array
-     */
-    function getAllowedChildren() {
-        return array(new CloseType());
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        $this->limit = $data;
-    }
-
-    /**
      * @return mixed
      */
     public function getLimit() {

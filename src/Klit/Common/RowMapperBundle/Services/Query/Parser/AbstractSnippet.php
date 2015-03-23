@@ -22,4 +22,13 @@ abstract class AbstractSnippet implements SnippetInterface {
     function setType(TypeInterface $type) {
         $this->type = $type;
     }
+
+    /**
+     * @return TypeInterface
+     */
+    protected function getType() {
+        return $this->type;
+    }
+
+
 }

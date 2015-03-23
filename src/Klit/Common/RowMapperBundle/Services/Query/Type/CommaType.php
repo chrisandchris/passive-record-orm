@@ -2,18 +2,22 @@
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
 
 /**
- * @name SelectType
- * @version 1.0.0-dev
- * @package CommonRowMapper
+ * @name CommaType
+ * @version 
+ * @since 
+ * @package 
+ * @subpackage 
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-interface TypeInterface {
+class CommaType implements TypeInterface {
     /**
      * Get the name of the type
      *
      * @return string
      */
-    function getTypeName();
+    function getTypeName() {
+        return 'comma';
+    }
 }

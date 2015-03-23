@@ -18,8 +18,6 @@ class WhereSnippet extends AbstractSnippet {
      * @return string
      */
     function getCode() {
-        return 'WHERE (
-            /@brace(where)
-        )';
+        return 'WHERE /@brace(where)';
     }
 }

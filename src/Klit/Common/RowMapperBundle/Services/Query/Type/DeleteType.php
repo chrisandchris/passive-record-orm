@@ -1,14 +1,16 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
 /**
- * @name UpdateType
- * @version
- * @package
+ * @name DeleteType
+ * @version 1.0.0
+ * @since 1.1.0
+ * @package Common
+ * @subpackage RowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class UpdateType implements TypeInterface {
+class DeleteType implements TypeInterface {
     /** @var string */
     private $table;
 
@@ -22,12 +24,9 @@ class UpdateType implements TypeInterface {
      * @return string
      */
     function getTypeName() {
-        return 'update';
+        return 'delete';
     }
 
-    /**
-     * @return string
-     */
     public function getTable() {
         return $this->table;
     }

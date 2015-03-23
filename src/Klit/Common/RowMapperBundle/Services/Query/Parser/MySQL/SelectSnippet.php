@@ -1,9 +1,7 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL;
 
-use Klit\Common\RowMapperBundle\Services\Query\Parser\SnippetInterface;
-use Klit\Common\RowMapperBundle\Services\Query\Type\SelectType;
-use Klit\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
+use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
 
 /**
  * @name SelectSnippet
@@ -13,18 +11,7 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class SelectSnippet implements SnippetInterface {
-    /** @var SelectType */
-    private $type;
-
-    function setType(TypeInterface $type) {
-        if ($type instanceof SelectType) {
-            $this->type = $type;
-            return ;
-        }
-        throw new \Exception("Invalid type given");
-    }
-
+class SelectSnippet extends  AbstractSnippet {
 
     public function getCode() {
         return 'SELECT';

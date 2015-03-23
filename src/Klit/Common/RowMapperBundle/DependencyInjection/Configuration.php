@@ -18,8 +18,6 @@ class Configuration implements ConfigurationInterface {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('klit_common_row_mapper');
 
-        $rootNode->children()->booleanNode('enableLog')->end()->end();
-
         return $treeBuilder;
     }
 }

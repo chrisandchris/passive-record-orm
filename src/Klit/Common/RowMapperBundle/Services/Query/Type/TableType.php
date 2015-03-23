@@ -12,7 +12,7 @@ class TableType implements TypeInterface {
     private $table;
 
     function __construct($table = null) {
-        $this->call($table);
+        $this->table = $table;
     }
 
     /**
@@ -20,27 +20,6 @@ class TableType implements TypeInterface {
      */
     function getTypeName() {
         return 'table';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    function getAllowedChildren() {
-        return array(
-            new JoinType(),
-            new WhereType(),
-            new CloseType(),
-            new LimitType()
-        );
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        $this->table = $data;
     }
 
     /**

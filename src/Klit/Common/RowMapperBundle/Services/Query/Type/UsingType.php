@@ -1,19 +1,24 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
 /**
- * @name UpdateType
+ * @name UsingType
  * @version
  * @package
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class UpdateType implements TypeInterface {
+class UsingType implements TypeInterface {
     /** @var string */
-    private $table;
+    private $field;
 
-    function __construct($table) {
-        $this->table = $table;
+    /**
+     * Create instance
+     *
+     * @param string $field
+     */
+    function __construct($field) {
+        $this->field = $field;
     }
 
     /**
@@ -22,13 +27,13 @@ class UpdateType implements TypeInterface {
      * @return string
      */
     function getTypeName() {
-        return 'update';
+        return 'using';
     }
 
     /**
      * @return string
      */
-    public function getTable() {
-        return $this->table;
+    public function getField() {
+        return $this->field;
     }
 }

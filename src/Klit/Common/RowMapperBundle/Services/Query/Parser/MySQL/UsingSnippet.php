@@ -2,26 +2,20 @@
 namespace Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL;
 
 use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
-use Klit\Common\RowMapperBundle\Services\Query\Type\OrderType;
 
 /**
- * @name OrderSnippet
+ * @name UsingSnippet
  * @version
  * @package
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class OrderSnippet extends AbstractSnippet {
-    /** @var OrderType */
-    protected $type;
-
+class UsingSnippet extends AbstractSnippet {
     /**
-     * Get the code
-     *
-     * @return string
+     * @inheritdoc
      */
     function getCode() {
-        return 'ORDER BY /@brace(order)';
+        return 'USING(`' . $this->getType()->getField() . '`)';
     }
 }

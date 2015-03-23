@@ -21,6 +21,8 @@ class TableSnippet extends AbstractSnippet {
      *
      * @return string
      */
+    // @todo implement explicit name database.table
+    // @todo implement alias
     function getCode() {
        return 'FROM `#getTable`';
     }

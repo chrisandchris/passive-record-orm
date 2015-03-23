@@ -15,16 +15,36 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\FieldType;
 class FieldSnippet extends AbstractSnippet {
     /** @var FieldType */
     protected $type;
+    private $key = 0;
     /**
      * Get the code
      *
      * @return string
      */
     function getCode() {
-        return '`#getName`';
+        if (is_array($this->type->getIdentifier())) {
+            $code = '';
+            $id = 'A';
+            foreach ($this->type->getIdentifier() as $key => $name) {
+                $code .= '`#getNextIdentifier' . $id++ . '`';
+                if (count($this->type->getIdentifier()) > $key + 1) {
+                    $code .= '.';
+                }
+            }
+        } else {
+            $code = '`#getNextIdentifier`';
+        }
+        return $code;
     }
 
-    public function getName() {
-        return $this->type->getField();
+    public function __call($name, $arg) {
+        return $this->getNextIdentifier();
+    }
+
+    public function getNextIdentifier() {
+        if (is_array($this->type->getIdentifier())) {
+            return $this->type->getIdentifier()[$this->key++];
+        }
+        return $this->type->getIdentifier();
     }
 }

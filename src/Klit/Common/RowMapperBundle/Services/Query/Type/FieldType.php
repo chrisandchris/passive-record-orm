@@ -1,5 +1,6 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
+
 /**
  * @name FieldType
  * @version 1.0.0-dev
@@ -9,10 +10,10 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Type;
  * @link http://www.klit.ch
  */
 class FieldType implements TypeInterface {
-    private $field;
+    private $identifier;
 
-    function __construct($field = null) {
-        $this->field = $field;
+    function __construct($identifier) {
+        $this->identifier = $identifier;
     }
 
     /**
@@ -25,34 +26,9 @@ class FieldType implements TypeInterface {
     }
 
     /**
-     * Get an array of instances of interfaces/classes allowed to get called after this type
-     * Instances will be validated by $value instanceof $assigned
-     *
-     * @return array
+     * @return mixed
      */
-    function getAllowedChildren() {
-        return array(
-            new EqualsType(),
-            new CloseType(),
-            new OrType(),
-            new AndType(),
-            new BraceType()
-        );
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        $this->field = $data;
-    }
-
-    /**
-     * @return null
-     */
-    public function getField() {
-        return $this->field;
+    public function getIdentifier() {
+        return $this->identifier;
     }
 }

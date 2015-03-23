@@ -15,20 +15,4 @@ class SelectType implements TypeInterface {
     function getTypeName() {
         return 'select';
     }
-
-    /**
-     * @inheritdoc
-     */
-    function getAllowedChildren() {
-        return array(
-            new FieldlistType()
-        );
-    }
-
-    /**
-     * @inheritdoc
-     */
-    function call($data) {
-        // ignore
-    }
 }

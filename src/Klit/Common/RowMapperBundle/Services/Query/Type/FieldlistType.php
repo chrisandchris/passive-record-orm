@@ -12,7 +12,7 @@ class FieldlistType implements TypeInterface {
     private $fields;
 
     function __construct($fields = null) {
-        $this->call($fields);
+        $this->fields = $fields;
     }
 
     /**
@@ -20,24 +20,6 @@ class FieldlistType implements TypeInterface {
      */
     function getTypeName() {
         return 'fieldlist';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    function getAllowedChildren() {
-        return array(
-            new TableType()
-        );
-    }
-
-    /**
-     * Generic call method
-     *
-     * @param mixed $data
-     */
-    function call($data) {
-        $this->fields = $data;
     }
 
     /**
