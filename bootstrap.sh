@@ -43,9 +43,11 @@ EOF
 echo "--- Enabling mod-rewrite ---"
 sudo a2enmod rewrite
 
-echo "--- Setting document root ---"
+echo "--- Setting up web directory ---"
 sudo rm -rf /var/www/html
 sudo ln -fs /vagrant /var/www/html
+sudo mkdir -p /var/www/uploads
+sudo chmod 0777 /var/www/uploads
 
 echo "--- Modify apache user ---"
 sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=vagrant/" /etc/apache2/envvars
