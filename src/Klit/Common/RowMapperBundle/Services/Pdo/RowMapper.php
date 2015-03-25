@@ -2,13 +2,12 @@
 namespace Klit\Common\RowMapperBundle\Services\Pdo;
 
 use Klit\Common\RowMapperBundle\Entity\Entity;
-use Klit\Common\RowMapperBundle\Entity\ManagedEntity;
 use Symfony\Component\Debug\Exception\FatalErrorException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapper
- * @version 1.0.0
+ * @version 2.0.0
  * @package CommonRowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
@@ -33,13 +32,6 @@ class RowMapper {
         return $return;
     }
 
-    public function map(\PDOStatement $statement, Entity $Entity, array $fields) {
-        $return = [];
-        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC))) {
-            $return[]= $this->mapRow($row, clone $Entity, $fields);
-        }
-    }
-
     /**
      * Map a single row by calling setter or getter methods
      *
@@ -48,7 +40,7 @@ class RowMapper {
      * @param array $fields the fields that are mapped
      * @return Entity mapped entity
      */
-    private function mapRow(array $row, Entity $Entity, array $fields = null) {
+    private function mapRow(array $row, Entity $Entity) {
         foreach ($row as $key => $value) {
             if (property_exists($Entity, $key) || method_exists($Entity, 'set' . ucfirst($key))) {
                 call_user_func(array($Entity, 'set' . ucfirst($key)), $value);

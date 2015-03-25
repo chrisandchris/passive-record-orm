@@ -19,8 +19,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class RowMapperTest extends TestKernel {
 
     public function getStatementMockup() {
-        PdoStatement::$id = 0;
-        return new PdoStatement();
+        PdoStatementDummy::$id = 0;
+        return new PdoStatementDummy();
     }
 
     public function getRowMapper() {
@@ -29,7 +29,7 @@ class RowMapperTest extends TestKernel {
 
     public function testMapFromResult() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 2;
+        PdoStatementDummy::$maxId = 2;
         $rows = $Mapper->mapFromResult($this->getStatementMockup(), new DummyEntity());
 
         /** @var DummyEntity $Row */
@@ -44,7 +44,7 @@ class RowMapperTest extends TestKernel {
 
     public function testMapFromResultLimit() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 100;
+        PdoStatementDummy::$maxId = 100;
         $rows = $Mapper->mapFromResult($this->getStatementMockup(), new DummyEntity(), 10);
 
         $this->assertEquals(10, count($rows));
@@ -52,7 +52,7 @@ class RowMapperTest extends TestKernel {
 
     public function testEntity() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 1;
+        PdoStatementDummy::$maxId = 1;
         $rows = $Mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
 
         $this->assertEquals('Name 1', $rows[0]->name);
@@ -60,7 +60,7 @@ class RowMapperTest extends TestKernel {
 
     public function testSingle() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 2;
+        PdoStatementDummy::$maxId = 2;
         $row = $Mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
 
         $this->assertTrue(is_object($row));
@@ -68,7 +68,7 @@ class RowMapperTest extends TestKernel {
 
     public function testNotFoundSingle() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 0;
+        PdoStatementDummy::$maxId = 0;
         try {
             $row = $Mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
             $this->fail('Must throw not found exception due to empty result');
@@ -79,7 +79,7 @@ class RowMapperTest extends TestKernel {
 
     public function testMapToArray() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 2;
+        PdoStatementDummy::$maxId = 2;
         $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
             return array(
                 'key' => $entity->getId(),
@@ -94,7 +94,7 @@ class RowMapperTest extends TestKernel {
 
     public function testMapToArrayErrors() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 2;
+        PdoStatementDummy::$maxId = 2;
         try{
             $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
                 return null;
@@ -107,7 +107,7 @@ class RowMapperTest extends TestKernel {
 
     public function testMapToArrayImplicitKey() {
         $Mapper = new RowMapper();
-        PdoStatement::$maxId = 2;
+        PdoStatementDummy::$maxId = 2;
         $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
             return array(
                 'value' => $entity->getName()
@@ -120,7 +120,7 @@ class RowMapperTest extends TestKernel {
     }
 }
 
-class PdoStatement extends \PDOStatement {
+class PdoStatementDummy extends \PDOStatement {
     public static $id = 0;
     public static $maxId = 5;
 

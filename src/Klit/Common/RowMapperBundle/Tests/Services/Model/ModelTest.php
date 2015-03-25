@@ -1,7 +1,11 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Tests\Services\Model;
 
+use Klit\Common\RowMapperBundle\Services\Logger\PdoLogger;
+use Klit\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use Klit\Common\RowMapperBundle\Services\Model\Model;
+use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
+use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use Klit\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
@@ -12,10 +16,22 @@ use Klit\Common\RowMapperBundle\Tests\TestKernel;
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class ModelTest extends TestKernel {
+class
+ModelTest extends TestKernel {
 
+    /**
+     * @return Model
+     */
     public function getModel() {
-        return new DummyModel();
+        $Logger = new PdoLogger('sqlite', 'log.db');
+
+        $Model = new EmptyModel(
+            new PdoLayer('sqlite', 'sqlite.db'),
+            new RowMapper(),
+            new ErrorHandler(),
+            $Logger
+        );
+        return $Model;
     }
 
     public function testValidateOffset() {
@@ -36,8 +52,6 @@ class ModelTest extends TestKernel {
     }
 }
 
-class DummyModel extends Model {
-
-    function __construct() {
-    }
+class EmptyModel extends Model {
+    // empty
 }
