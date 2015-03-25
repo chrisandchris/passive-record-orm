@@ -7,3 +7,5 @@ services:
       arguments: [null, %database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
   common_rowmapper.rowMapper:
       class: Klit\Common\RowMapperBundle\Services\Pdo\RowMapper
+  common_rowmapper.errorHandler:
+      class: Klit\Common\RowMapperBundle\Services\Model\ErrorHandler

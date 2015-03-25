@@ -20,7 +20,7 @@ class PdoLayerTest extends TestKernel {
         // $PdoLayer = $this->container->get('common_rowmapper.pdoLayer');
 
         // connect to a local sqlite-DB
-        $PdoLayer = new PdoLayer(null, 'pdo_sqlite', 'sqlite.db', '3306', 'foobar', null, null);
+        $PdoLayer = new PdoLayer('sqlite', 'sqlite.db');
         $this->assertEquals('Klit\Common\RowMapperBundle\Services\Pdo\PdoStatement',
             $PdoLayer->getAttribute(\PDO::ATTR_STATEMENT_CLASS)[0]
         );
@@ -28,7 +28,7 @@ class PdoLayerTest extends TestKernel {
 
     function testConstructFail() {
         try {
-            $PdoLayer = new PdoLayer(null, 'pdo_mysql', 'localhost', 3306, uniqid(), uniqid(), uniqid());
+            $PdoLayer = new PdoLayer('mysql', 'localhost', 3306, uniqid(), uniqid(), uniqid());
             $this->fail('Must fail due to wrong connection parameters');
         } catch (FatalErrorException $e) {
             // that's good

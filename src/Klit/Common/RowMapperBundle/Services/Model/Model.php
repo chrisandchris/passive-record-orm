@@ -6,13 +6,15 @@ use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use Klit\Common\RowMapperBundle\Exceptions\TransactionException;
 use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
+use Klit\Common\RowMapperBundle\Services\Logger\LoggerInterface;
 use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
+use Klit\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
- * @version 1.0.0
+ * @version 2.0.0
  * @package CommonRowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
@@ -22,13 +24,25 @@ abstract class Model {
     /** @var PdoLayer the pdo class */
     private $PDO;
     /** @var RowMapper the row mapper */
-    private $mapper;
+    private $Mapper;
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
+    /** @var ErrorHandler */
+    private $ErrorHandler;
+    /** @var LoggerInterface the logger used to log statements */
+    private $Logger;
+    /** @var string a id representing the current user */
+    private $userId;
 
-    function __construct(PdoLayer $PDO, RowMapper $mapper) {
+    function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler, LoggerInterface $Logger) {
         $this->PDO = $PDO;
-        $this->mapper = $mapper;
+        $this->Mapper = $mapper;
+        $this->ErrorHandler = $ErrorHandler;
+        $this->Logger = $Logger;
+    }
+
+    public function setRunningUser($userId) {
+        $this->userId = $userId;
     }
 
     /**
@@ -44,10 +58,10 @@ abstract class Model {
     /**
      * Set the Mapper
      *
-     * @param \Klit\Common\RowMapperBundle\Services\Pdo\RowMapper $mapper
+     * @param \Klit\Common\RowMapperBundle\Services\Pdo\RowMapper $Mapper
      */
-    protected function setMapper($mapper) {
-        $this->mapper = $mapper;
+    protected function setMapper($Mapper) {
+        $this->Mapper = $Mapper;
     }
 
     /**
@@ -65,7 +79,7 @@ abstract class Model {
      * @return RowMapper
      */
     protected  function getMapper() {
-        return $this->mapper;
+        return $this->Mapper;
     }
 
     /**
@@ -79,57 +93,58 @@ abstract class Model {
     }
 
     /**
-     * Execute a PDOStatement
-     * @param \PDOStatement $statement
+     * Execute a PDOStatement and writes it to the log
+     *
+     * @param PdoStatement $statement
      * @return mixed
      */
-    protected function execute(\PDOStatement $statement) {
-        return $this->PDO->execute($statement);
+    protected function execute(PdoStatement $statement) {
+        $start = microtime(true);
+        $result = $statement->execute();
+        $time = microtime(true) - $start;
+        $this->Logger->writeToLog($statement, $this->userId, $time);
+        return $result;
     }
 
     public function setCurrentMustHaveResult($mustHaveRow = true) {
         $this->currentMustHaveRow = (bool)$mustHaveRow;
     }
 
-    public function handle(\PDOStatement $statement, Entity $Entity, array $fields) {
-        if ($statement->execute()) {
-            if ($statement->rowCount() === 0 && $this->currentMustHaveRow) {
-                throw new NotFoundHttpException("No row found for entity");
+    public function handle(PdoStatement $Statement, Entity $Entity) {
+        $mustHaveRow = $this->currentMustHaveRow;
+        $this->setCurrentMustHaveResult(false);
+        if ($this->execute($Statement)) {
+            if ($Statement->rowCount() === 0 && $mustHaveRow) {
+                throw new NotFoundHttpException("No row found with query");
             }
-            return $this->getMapper()->mapFromResult($statement, $Entity);
+            return $this->getMapper()->mapFromResult($Statement, $Entity);
         }
-        return $this->handleError($statement);
+        return $this->handleError($Statement);
+    }
+
+    public function handleArray(PdoStatement $Statement, Entity $Entity, \Closure $Closure) {
+        $mustHaveRow = $this->currentMustHaveRow;
+        $this->setCurrentMustHaveResult(false);
+        if ($this->execute($Statement)) {
+            if ($Statement->rowCount() === 0 && $mustHaveRow) {
+                throw new NotFoundHttpException("No row found with query");
+            }
+            return $this->getMapper()->mapToArray($Statement, $Entity, $Closure);
+        }
+        return $this->handleError($Statement);
     }
 
     /**
-     * @param \PDOStatement $statement
+     * Handles statement errors
+     *
+     * @param PdoStatement $statement
      * @return bool
      * @throws DatabaseException
      * @throws ForeignKeyConstraintException
      * @throws UniqueConstraintException
      */
-    protected function handleError(\PDOStatement $statement) {
-        $errorNum = $statement->errorInfo();
-        $errorText = $errorNum[2];
-        if ($errorNum[1] === null AND $errorNum[0] !== 'HY093') {
-            // Well, the PDOStatement::execute() method returned false, we do it also
-            return false;
-        } elseif ($errorNum[0] == 'HY093') {
-            throw new DatabaseException('incorrect field <-> param count');
-        } else {
-            $e = &$errorNum[1];
-            if ($e == 1062) {
-                throw new UniqueConstraintException($errorText);
-            } elseif ($e == 1064) {
-                // sql syntax
-                throw new DatabaseException($errorText);
-            } elseif ($e == 1215
-                OR $e == 1216
-                OR $e == 1217) {
-                throw new ForeignKeyConstraintException($errorText);
-            }
-        }
-        throw new DatabaseException($errorText);
+    protected function handleError(PdoStatement $statement) {
+        return $this->ErrorHandler->handle($statement->errorInfo()[1], $statement->errorInfo()[2]);
     }
 
     /**
@@ -166,34 +181,34 @@ abstract class Model {
      * If you provide an array as $id, all values will be bound to the statement as "id{key}", where key indicates
      *  the array key + 1
      *
-     * @param \PDOStatement $statement the statement to work with
+     * @param PdoStatement $Statement the statement to work with
      * @param $id array|int an array of ids or an id
      * @return bool whether there is such a row or not
      */
-    protected function _handleHas(\PDOStatement $statement, $id) {
+    protected function _handleHas(PdoStatement $Statement, $id) {
         if (!is_array($id)) {
-            $statement->bindValue('id', $id, \PDO::PARAM_INT);
+            $Statement->bindValue('id', $id, \PDO::PARAM_INT);
         } else {
             foreach ($id as $key => $anId) {
-                $statement->bindValue('id' . (++$key), $anId);
+                $Statement->bindValue('id' . (++$key), $anId);
             }
         }
-        if ($statement->execute() && $statement->rowCount() == 1) {
+        if ($this->execute($Statement) && $Statement->rowCount() == 1) {
             return true;
         }
-        return $this->handleError($statement);
+        return $this->handleError($Statement);
     }
 
     /**
      * Validates whether the given statement has result rows or not<br /
      * <br />
      * Also executes this statement, so do not execute before!
-     * @param \PDOStatement $statement
+     * @param PdoStatement $Statement
      * @return bool whether there is at least one result row or not
      */
-    protected function _handleHasResult(\PDOStatement $statement) {
-        if ($statement->execute()) {
-            if ($statement->rowCount() > 0) {
+    protected function _handleHasResult(PdoStatement $Statement) {
+        if ($this->execute($Statement)) {
+            if ($Statement->rowCount() > 0) {
                 return true;
             }
         }
@@ -244,4 +259,3 @@ abstract class Model {
         }
     }
 }
- 
