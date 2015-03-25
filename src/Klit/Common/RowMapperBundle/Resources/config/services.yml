@@ -1,10 +1,10 @@
 services:
   common_rowmapper.pdoLayer:
       class: Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer
-      arguments: [@common_rowmapper.pdoLogger, %database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
   common_rowmapper.pdoLogger:
-      class: Klit\Common\RowMapperBundle\Services\Pdo\PdoLogger
-      arguments: [null, %database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+      class: Klit\Common\RowMapperBundle\Services\Logger\PdoLogger
+      arguments: [ %database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
   common_rowmapper.rowMapper:
       class: Klit\Common\RowMapperBundle\Services\Pdo\RowMapper
   common_rowmapper.errorHandler:
