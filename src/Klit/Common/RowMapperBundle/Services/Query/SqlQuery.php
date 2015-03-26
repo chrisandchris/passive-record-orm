@@ -12,9 +12,9 @@ class SqlQuery {
     private $query;
     private $parameters;
 
-    function __construct($query, $paremeters) {
+    function __construct($query, $parameters) {
         $this->query = $query;
-        $this->parameters = $paremeters;
+        $this->parameters = $parameters;
     }
 
     /**

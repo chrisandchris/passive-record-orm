@@ -5,42 +5,61 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\ParameterizedTypeInterface;
 use Klit\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
 
 /**
- * @name MySQLParser
+ * @name DefaultParser
  * @version 1.0.0-dev
+ * @since v2.0.0
  * @package CommonRowMapper
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class MySQLParser implements ParserInterface {
-    private $namespace = 'Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL\\';
-
+class DefaultParser implements ParserInterface {
     /**
-     * Contains the result object
-     * @var object
-     */
-    protected $result = null;
-    /**
-     * Contains the fetched tableinfo
-     * @var array
-     */
-    protected $info = array();
-    /**
-     * Contains the already called function
-     * @var array
-     */
-    protected $marker;
-    /**
-     * Contains the actual table in the statement
+     * The namespace where the snippets are located
+     *
      * @var string
      */
-    protected $activeTable = null;
-
-    private $statement = null;
+    private $namespace ;
+    /**
+     * The statement array
+     *
+     * @var array
+     */
+    private $statement;
+    /**
+     * The generated query
+     *
+     * @var string
+     */
     private $query = '';
+    /**
+     * The suffix of the snippet classes
+     *
+     * @var string
+     */
     private $suffix = 'Snippet';
+    /**
+     * An array of open braces
+     *
+     * @var array
+     */
     private $braces = [];
+    /**
+     * An ordered array of parameters used in the query
+     *
+     * @var array
+     */
     private $parameters = [];
+
+    /**
+     * Initialize class
+     *
+     * @param string $namespace the namespace of the parser snippets
+     */
+    function __construct($namespace = 'Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL\\') {
+        $this->namespace = $namespace;
+    }
+
 
     /**
      * Set the query information
@@ -69,7 +88,15 @@ class MySQLParser implements ParserInterface {
         return $this->parameters;
     }
 
-
+    /**
+     * Parses the code
+     *
+     * @param string $code the snippet code to parse
+     * @param TypeInterface $type the type interface to use
+     * @param SnippetInterface $snippet the snippet interface to use
+     * @return string the generated query
+     * @throws \Exception
+     */
     private function parseCode($code, TypeInterface $type, SnippetInterface $snippet) {
         // check if it's a close
         if ($code == '/@close') {
@@ -131,6 +158,13 @@ class MySQLParser implements ParserInterface {
         return $code . ' ';
     }
 
+    /**
+     * Gets an instance of a snippet
+     *
+     * @param string $type the snippet name
+     * @return SnippetInterface the snippet instnace
+     * @throws \Exception
+     */
     public function getSnippet($type) {
         /** @var TypeInterface $type */
         $class = $this->namespace . ucfirst($type->getTypeName()) . $this->suffix;
@@ -143,6 +177,11 @@ class MySQLParser implements ParserInterface {
         return $Snippet;
     }
 
+    /**
+     * Run the parser
+     *
+     * @throws \Exception
+     */
     public function execute() {
         $this->clear();
         /** @var TypeInterface $type */
@@ -153,10 +192,17 @@ class MySQLParser implements ParserInterface {
         }
     }
 
+    /**
+     * Add a used parameter
+     * @param $parameter
+     */
     private function addParameter($parameter) {
         $this->parameters[] = $parameter;
     }
 
+    /**
+     * Clear and prepare builder for next query
+     */
     private function clear() {
         $this->parameters = [];
         $this->query = '';

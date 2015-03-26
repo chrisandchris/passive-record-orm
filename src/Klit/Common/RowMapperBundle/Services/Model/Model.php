@@ -7,7 +7,6 @@ use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use Klit\Common\RowMapperBundle\Exceptions\TransactionException;
 use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use Klit\Common\RowMapperBundle\Services\Logger\LoggerInterface;
-use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use Klit\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -21,47 +20,19 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @link http://www.klit.ch
  */
 abstract class Model {
-    /** @var PdoLayer the pdo class */
-    private $PDO;
-    /** @var RowMapper the row mapper */
-    private $Mapper;
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
-    /** @var ErrorHandler */
-    private $ErrorHandler;
-    /** @var LoggerInterface the logger used to log statements */
-    private $Logger;
     /** @var string a id representing the current user */
     private $userId;
+    /** @var ModelDependencyProvider the dependency provider */
+    private $DependencyProvider;
 
-    function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler, LoggerInterface $Logger) {
-        $this->PDO = $PDO;
-        $this->Mapper = $mapper;
-        $this->ErrorHandler = $ErrorHandler;
-        $this->Logger = $Logger;
+    function __construct(ModelDependencyProvider $DependencyProvider) {
+        $this->DependencyProvider = $DependencyProvider;
     }
 
     public function setRunningUser($userId) {
         $this->userId = $userId;
-    }
-
-    /**
-     * Set the PDO class
-     *
-     * @param \PDO $PDO
-     * @deprecated
-     */
-    protected function setPdo(\PDO $PDO) {
-        $this->PDO = $PDO;
-    }
-
-    /**
-     * Set the Mapper
-     *
-     * @param \Klit\Common\RowMapperBundle\Services\Pdo\RowMapper $Mapper
-     */
-    protected function setMapper($Mapper) {
-        $this->Mapper = $Mapper;
     }
 
     /**
@@ -70,7 +41,7 @@ abstract class Model {
      * @return \PDO
      */
     protected  function getPDO() {
-        return $this->PDO;
+        return $this->DependencyProvider->getPDO();
     }
 
     /**
@@ -79,18 +50,37 @@ abstract class Model {
      * @return RowMapper
      */
     protected  function getMapper() {
-        return $this->Mapper;
+        return $this->DependencyProvider->getMapper();
     }
 
     /**
      * Create a new statement from SQL-Code
      *
      * @param $sql
-     * @return \PDOStatement
+     * @return PdoStatement
      */
     protected function createStatement($sql) {
-        return $this->PDO->prepare($sql);
+        return $this->getPDO()->prepare($sql);
     }
+
+    /**
+     * Get the logger
+     *
+     * @return LoggerInterface
+     */
+    protected function getLogger() {
+        return $this->DependencyProvider->getLogger();
+    }
+
+    /**
+     * Get the error handler
+     *
+     * @return ErrorHandler
+     */
+    protected function getErrorHandler() {
+        return $this->DependencyProvider->getErrorHandler();
+    }
+
 
     /**
      * Execute a PDOStatement and writes it to the log
@@ -102,7 +92,7 @@ abstract class Model {
         $start = microtime(true);
         $result = $statement->execute();
         $time = microtime(true) - $start;
-        $this->Logger->writeToLog($statement, $this->userId, $time);
+        $this->getLogger()->writeToLog($statement, $this->userId, $time);
         return $result;
     }
 
@@ -144,7 +134,7 @@ abstract class Model {
      * @throws UniqueConstraintException
      */
     protected function handleError(PdoStatement $statement) {
-        return $this->ErrorHandler->handle($statement->errorInfo()[1], $statement->errorInfo()[2]);
+        return $this->getErrorHandler()->handle($statement->errorInfo()[1], $statement->errorInfo()[2]);
     }
 
     /**

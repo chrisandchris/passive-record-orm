@@ -31,6 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * @name Builder
  * @version 1.0.0-dev
+ * @since v2.0.0
  * @package CommonRowMapper
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
@@ -43,12 +44,9 @@ class Builder {
     private $Parser;
     /** @var Cache Doctrine cache interface */
     private $Cache;
-    /** @var ContainerInterface */
-    private $Container;
 
-    function __construct(ContainerInterface $Container, Cache $Cache = null) {
+    function __construct(Cache $Cache = null) {
         $this->Cache = $Cache;
-        $this->Container = $Container;
     }
 
     public function setParser(ParserInterface $Parser) {
