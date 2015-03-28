@@ -16,7 +16,8 @@ use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 class ErrorHandler {
     private $databaseExceptions = array(
         'HY093',
-        1064
+        1064,
+        1054 // unknown column
     );
 
     private $uniqueConstraintExceptions = array(
@@ -32,7 +33,7 @@ class ErrorHandler {
     );
 
     /**
-     * Validates an error number
+     * Validates an MySQL error number
      *
      * @param $errorNum
      * @param $errorText
@@ -51,6 +52,6 @@ class ErrorHandler {
         if (in_array($errorNum, $this->foreignKeyConstraintExceptions)) {
             throw new ForeignKeyConstraintException($errorText);
         }
-        return false;
+        throw new GeneralDatabaseException($errorText);
     }
 }

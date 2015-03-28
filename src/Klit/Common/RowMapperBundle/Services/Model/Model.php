@@ -2,6 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Services\Model;
 
 use Klit\Common\RowMapperBundle\Entity\Entity;
+use Klit\Common\RowMapperBundle\Entity\KeyValueEntity;
 use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use Klit\Common\RowMapperBundle\Exceptions\TransactionException;
@@ -9,6 +10,7 @@ use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use Klit\Common\RowMapperBundle\Services\Logger\LoggerInterface;
 use Klit\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
+use Klit\Common\RowMapperBundle\Services\Query\SqlQuery;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -31,8 +33,22 @@ abstract class Model {
         $this->DependencyProvider = $DependencyProvider;
     }
 
+    /**
+     * Set the id of the current user for logging purposes
+     *
+     * @param $userId
+     */
     public function setRunningUser($userId) {
         $this->userId = $userId;
+    }
+
+    /**
+     * Get the dependency provider
+     *
+     * @return ModelDependencyProvider
+     */
+    protected function getDependencyProvider() {
+        return $this->DependencyProvider;
     }
 
     /**
@@ -51,6 +67,19 @@ abstract class Model {
      */
     protected  function getMapper() {
         return $this->DependencyProvider->getMapper();
+    }
+
+    /**
+     * Runs a query including preparing statement and value binding
+     *
+     * @param SqlQuery $Query
+     * @param Entity $Entity
+     * @return array|bool
+     */
+    protected function run(SqlQuery $Query, Entity $Entity) {
+        $stmt = $this->createStatement($Query->getQuery());
+        $this->bindValues($stmt, $Query->getParameters());
+        return $this->handle($stmt, $Entity);
     }
 
     /**
@@ -81,6 +110,17 @@ abstract class Model {
         return $this->DependencyProvider->getErrorHandler();
     }
 
+    /**
+     * Binds values of the query to the statement
+     *
+     * @param PdoStatement $stmt
+     * @param SqlQuery $Query
+     */
+    protected function bindValues(PdoStatement $stmt, SqlQuery $Query) {
+        foreach ($Query->getParameters() as $id => $value) {
+            $stmt->bindValue(++$id, $value);
+        }
+    }
 
     /**
      * Execute a PDOStatement and writes it to the log
@@ -96,32 +136,79 @@ abstract class Model {
         return $result;
     }
 
-    public function setCurrentMustHaveResult($mustHaveRow = true) {
+    /**
+     * Set to true if current statement must have at least one row returning
+     *
+     * @param bool $mustHaveRow
+     */
+    protected function setCurrentMustHaveResult($mustHaveRow = true) {
         $this->currentMustHaveRow = (bool)$mustHaveRow;
     }
 
-    public function handle(PdoStatement $Statement, Entity $Entity) {
+    /**
+     * Generic handle method
+     *
+     * @param PdoStatement $Statement
+     * @param callable $MappingCallback a callback taking the statement as first and only argument
+     * @return bool
+     */
+    protected function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($Statement)) {
             if ($Statement->rowCount() === 0 && $mustHaveRow) {
                 throw new NotFoundHttpException("No row found with query");
             }
-            return $this->getMapper()->mapFromResult($Statement, $Entity);
+            return $MappingCallback($Statement);
         }
         return $this->handleError($Statement);
     }
 
-    public function handleArray(PdoStatement $Statement, Entity $Entity, \Closure $Closure) {
-        $mustHaveRow = $this->currentMustHaveRow;
-        $this->setCurrentMustHaveResult(false);
-        if ($this->execute($Statement)) {
-            if ($Statement->rowCount() === 0 && $mustHaveRow) {
-                throw new NotFoundHttpException("No row found with query");
-            }
+    /**
+     * Handles a statement including mapping to entity and error handling
+     *
+     * @param PdoStatement $Statement
+     * @param Entity $Entity
+     * @return array|bool
+     */
+    protected function handle(PdoStatement $Statement, Entity $Entity = null) {
+        return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity) {
+            return $this->getMapper()->mapFromResult($Statement, $Entity);
+        });
+    }
+
+    /**
+     * Handles a statement including mapping to array and error handling
+     *
+     * @param PdoStatement $Statement
+     * @param Entity $Entity
+     * @param callable $Closure
+     * @return array|bool
+     * @throws \Symfony\Component\Debug\Exception\FatalErrorException
+     */
+    protected function handleArray(PdoStatement $Statement, Entity $Entity, \Closure $Closure) {
+        return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity, $Closure) {
             return $this->getMapper()->mapToArray($Statement, $Entity, $Closure);
-        }
-        return $this->handleError($Statement);
+        });
+    }
+
+    /**
+     * Maps the statement to a key => value array<br />
+     * <br />
+     * Use SQL-Field 'key' for array key, 'value' for array value
+     *
+     * @param PdoStatement $Statement
+     * @return bool
+     */
+    protected function handleKeyValue(PdoStatement $Statement) {
+        return $this->handleGeneric($Statement, function (PdoStatement $Statement) {
+            return $this->getMapper()->mapToArray($Statement, new KeyValueEntity(), function (KeyValueEntity $Entity) {
+                return array(
+                    'key' => $Entity->key,
+                    'value' => $Entity->value
+                );
+            });
+        });
     }
 
     /**
@@ -139,6 +226,7 @@ abstract class Model {
 
     /**
      * Validates whether the offset is greater or equal to zero
+     *
      * @param $offset int the offset to validate
      * @return int
      */
@@ -151,6 +239,7 @@ abstract class Model {
 
     /**
      * Validates whether the limit is greater than 1 and less than $max
+     *
      * @param $limit int the limit to validate
      * @param $max int the max limit allowed
      * @return int the validated limit as an integer
@@ -171,6 +260,7 @@ abstract class Model {
      * If you provide an array as $id, all values will be bound to the statement as "id{key}", where key indicates
      *  the array key + 1
      *
+     * @deprecated since v2.0.0
      * @param PdoStatement $Statement the statement to work with
      * @param $id array|int an array of ids or an id
      * @return bool whether there is such a row or not
@@ -193,6 +283,7 @@ abstract class Model {
      * Validates whether the given statement has result rows or not<br /
      * <br />
      * Also executes this statement, so do not execute before!
+     *
      * @param PdoStatement $Statement
      * @return bool whether there is at least one result row or not
      */
@@ -207,6 +298,7 @@ abstract class Model {
 
     /**
      * Begins a new transaction if not already in one
+     *
      * @throws TransactionException
      */
     protected function _startTransaction() {
@@ -221,6 +313,7 @@ abstract class Model {
      * Commits the actual transaction if one is started
      *
      * Throws an exception if no transaction is running
+     *
      * @throws TransactionException
      */
     protected function _commit() {
@@ -237,6 +330,7 @@ abstract class Model {
      * Rolls the actual transaction back
      *
      * Throws an exception if no transaction is running
+     *
      * @throws TransactionException
      */
     protected function _rollback() {

@@ -129,6 +129,9 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
     private function parseMeta(array $meta) {
         $neededMeta = $meta['query'];
         $neededMeta .= "\nValues:\n";
+        if (!isset($meta['params'])) {
+            return $neededMeta;
+        }
         foreach ($meta['params'] as $parameter => $value) {
             $neededMeta .= "\t" . $parameter . ': ' . $value . "\n";
         }

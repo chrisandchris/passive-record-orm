@@ -1,7 +1,8 @@
 services:
   common_rowmapper.dependencyProvider:
       class: Klit\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
-      arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.pdoLogger]
+      arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler,
+          @common_rowmapper.pdoLogger, @common_rowmapper.queryBuilder]
   common_rowmapper.pdoLayer:
       class: Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer
       arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
@@ -14,5 +15,6 @@ services:
       class: Klit\Common\RowMapperBundle\Services\Model\ErrorHandler
   common_rowmapper.queryBuilder:
       class: Klit\Common\RowMapperBundle\Services\Query\Builder
+      arguments: [@common_rowmapper.defaultParser]
   common_rowmapper.defaultParser:
       class: Klit\Common\RowMapperBundle\Services\Query\Parser\DefaultParser

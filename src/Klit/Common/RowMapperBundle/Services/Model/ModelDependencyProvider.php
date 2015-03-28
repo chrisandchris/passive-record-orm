@@ -4,6 +4,7 @@ namespace Klit\Common\RowMapperBundle\Services\Model;
 use Klit\Common\RowMapperBundle\Services\Logger\LoggerInterface;
 use Klit\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
+use Klit\Common\RowMapperBundle\Services\Query\Builder;
 
 /**
  * @name ModelDependencyProvider
@@ -24,13 +25,16 @@ class ModelDependencyProvider {
     private $ErrorHandler;
     /** @var LoggerInterface the logger used to log statements */
     private $Logger;
+    /** @var Builder the query builder */
+    private $Builder;
 
 
-    function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler, LoggerInterface $Logger) {
+    function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler, LoggerInterface $Logger, Builder $Builder) {
         $this->PDO = $PDO;
         $this->Mapper = $mapper;
         $this->ErrorHandler = $ErrorHandler;
         $this->Logger = $Logger;
+        $this->Builder = $Builder;
     }
 
     /**
@@ -59,5 +63,12 @@ class ModelDependencyProvider {
      */
     public function getLogger() {
         return $this->Logger;
+    }
+
+    /**
+     * @return Builder
+     */
+    public function getBuilder() {
+        return $this->Builder;
     }
 }

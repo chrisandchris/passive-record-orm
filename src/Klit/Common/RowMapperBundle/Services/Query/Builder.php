@@ -11,10 +11,13 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\DeleteType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\EqualsType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\FieldlistType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\FieldType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\FunctionType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\GroupType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\InsertType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\IsNullType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\JoinType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\LimitType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\NullType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OnType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OrderByType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OrderType;
@@ -45,8 +48,9 @@ class Builder {
     /** @var Cache Doctrine cache interface */
     private $Cache;
 
-    function __construct(Cache $Cache = null) {
+    function __construct(ParserInterface $Parser, Cache $Cache = null) {
         $this->Cache = $Cache;
+        $this->Parser = $Parser;
     }
 
     public function setParser(ParserInterface $Parser) {
@@ -98,6 +102,13 @@ class Builder {
     }
 
     /**
+     * Synonym for close()
+     */
+    public function end() {
+        $this->close();
+    }
+
+    /**
      * Select a field<br />
      * Provide a field name or a path to the field (e.g.: database.table.field as array(database, table, field))
      *
@@ -109,6 +120,18 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Opens a new function<br />
+     * <br />
+     * <i>close this type by close()</i>
+     * @param $name
+     * @return $this
+     */
+    public function f($name) {
+        $this->append(new FunctionType($name));
+        return $this->brace();
+    }
+
     public function equals() {
         $this->append(new EqualsType());
         return $this;
@@ -116,6 +139,15 @@ class Builder {
 
     public function value($value) {
         $this->append(new ValueType($value));
+        return $this;
+    }
+
+    public function null() {
+        $this->append(new NullType());
+        return $this;
+    }
+    public function isNull() {
+        $this->append(new IsNullType());
         return $this;
     }
 
@@ -144,6 +176,16 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add a new group<br />
+     * <br />
+     * Provide a single group by field as parameter $field<br />
+     * After this method, add fields by field()<br />
+     * <br />
+     * <i>must be closed by close()</i>
+     * @param null $field
+     * @return $this
+     */
     public function groupBy($field = null) {
         $this->append(new GroupType());
         if ($field != null) {
@@ -153,11 +195,23 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add a new order<br />
+     * <br />
+     * <i>must be closed by close()</i>
+     * @return $this
+     */
     public function order() {
         $this->append(new OrderType());
         return $this;
     }
 
+    /**
+     * Add a complete order by command
+     *
+     * @param array $orders
+     * @return $this
+     */
     public function orderBy(array $orders) {
         $this->append(new OrderType());
         $idx = 0;
@@ -175,6 +229,13 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add a order by field
+     *
+     * @param $field
+     * @param string $order
+     * @return $this
+     */
     public function by($field, $order = 'desc') {
         $this->append(new OrderByType($field, $order));
         return $this;
@@ -236,7 +297,7 @@ class Builder {
         }
 
         $this->cacheItem($this->getHash($this->statement), $this->statement, $Query);
-
+        $this->clear();
         return $Query;
     }
 
@@ -263,5 +324,12 @@ class Builder {
 
     private function getHash(array $statement) {
         return md5(serialize($statement));
+    }
+
+    /**
+     * Clear the class
+     */
+    private function clear() {
+        $this->statement = [];
     }
 }
