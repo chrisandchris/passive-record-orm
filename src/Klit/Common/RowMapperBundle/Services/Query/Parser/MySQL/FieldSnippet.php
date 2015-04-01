@@ -6,8 +6,10 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\FieldType;
 
 /**
  * @name FieldSnippet
- * @version 1.0.0-dev
- * @package CommonRowMapper
+ * @version 1.0.0
+ * @since v2.0.0
+ * @package KlitCommon
+ * @subpackage RowMapper
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
@@ -15,7 +17,9 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\FieldType;
 class FieldSnippet extends AbstractSnippet {
     /** @var FieldType */
     protected $type;
+    /** @var int internal counter */
     private $key = 0;
+
     /**
      * Get the code
      *

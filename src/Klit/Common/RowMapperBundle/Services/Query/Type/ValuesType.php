@@ -1,21 +1,25 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
 
+use Symfony\Component\Form\AbstractType;
+
 /**
- * @name SelectType
+ * @name ValuesType
  * @version 1.0.0
  * @since v2.0.0
  * @package KlitCommon
- * @subpackage RowMapper
+ * @subpackage RowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-interface TypeInterface {
+class ValuesType extends AbstractType {
     /**
-     * Get the name of the type
+     * Returns the name of this type.
      *
-     * @return string
+     * @return string The name of this type
      */
-    function getTypeName();
+    public function getName() {
+        return 'values';
+    }
 }

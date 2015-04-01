@@ -4,25 +4,20 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL;
 use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
 
 /**
- * @name IsNullSnippet
+ * @name AnySnippet
  * @version 1.0.0
- * @since v2.0.0
+ * @since v1.0.0
  * @package KlitCommon
- * @subpackage RowMapperBundle
+ * @subpackage RowMapper
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class IsNullSnippet extends AbstractSnippet {
+class AnySnippet extends AbstractSnippet {
     /**
-     * Get the code
-     *
-     * @return string
+     * @inheritdoc
      */
     function getCode() {
-        if ($this->getType()->isNull()) {
-            return 'IS NULL';
-        }
-        return 'IS NOT NULL';
+        return '*';
     }
 }

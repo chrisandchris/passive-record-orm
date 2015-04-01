@@ -3,11 +3,12 @@ namespace Klit\Common\RowMapperBundle\Services\Model;
 
 use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Klit\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
+use Klit\Common\RowMapperBundle\Exceptions\GeneralDatabaseException;
 use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 
 /**
  * @name ErrorHandler
- * @version 1.0.0
+ * @version 2.0.0
  * @package CommonRowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
@@ -15,13 +16,13 @@ use Klit\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
  */
 class ErrorHandler {
     private $databaseExceptions = array(
-        'HY093',
-        1064,
-        1054 // unknown column
+        'HY093',    // pdo not enough values bound
+        1064,       // syntax error
+        1054        // unknown column
     );
 
     private $uniqueConstraintExceptions = array(
-        1062
+        1062        // unique constraint problem
     );
 
     private $foreignKeyConstraintExceptions = array(
@@ -38,9 +39,10 @@ class ErrorHandler {
      * @param $errorNum
      * @param $errorText
      * @return bool
-     * @throws DatabaseException
-     * @throws ForeignKeyConstraintException
-     * @throws UniqueConstraintException
+     * @throws DatabaseException thrown if this is an error related to the database
+     * @throws ForeignKeyConstraintException thrown if this is an error related to a key problem
+     * @throws UniqueConstraintException thrown if this is an unique constraint error
+     * @throws GeneralDatabaseException thrown otherwise
      */
     public function handle($errorNum, $errorText) {
         if (in_array($errorNum, $this->databaseExceptions)) {

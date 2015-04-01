@@ -4,6 +4,7 @@ namespace Klit\Common\RowMapperBundle\Services\Query;
 use Doctrine\Common\Cache\Cache;
 use Klit\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use Klit\Common\RowMapperBundle\Services\Query\Type\AndType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\AnyType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\BraceType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\CloseType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\CommaType;
@@ -132,6 +133,11 @@ class Builder {
         return $this->brace();
     }
 
+    public function any() {
+        $this->append(new AnyType());
+        return $this;
+    }
+
     public function equals() {
         $this->append(new EqualsType());
         return $this;
@@ -146,8 +152,12 @@ class Builder {
         $this->append(new NullType());
         return $this;
     }
-    public function isNull() {
-        $this->append(new IsNullType());
+    public function isNull($isNull = true) {
+        if ($isNull) {
+            $this->append(new IsNullType());
+        } else {
+            $this->append(new IsNullType(false));
+        }
         return $this;
     }
 

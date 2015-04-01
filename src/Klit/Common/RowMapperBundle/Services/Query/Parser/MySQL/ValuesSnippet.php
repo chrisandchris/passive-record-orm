@@ -4,7 +4,7 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Parser\MySQL;
 use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
 
 /**
- * @name IsNullSnippet
+ * @name ValuesSnippet
  * @version 1.0.0
  * @since v2.0.0
  * @package KlitCommon
@@ -12,17 +12,15 @@ use Klit\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
+ * @todo multiple values statement
  */
-class IsNullSnippet extends AbstractSnippet {
+class ValuesSnippet extends AbstractSnippet {
     /**
      * Get the code
      *
      * @return string
      */
     function getCode() {
-        if ($this->getType()->isNull()) {
-            return 'IS NULL';
-        }
-        return 'IS NOT NULL';
+        return 'VALUES @brace(values)';
     }
 }

@@ -2,6 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Services\Pdo;
 
 use Klit\Common\RowMapperBundle\Entity\Entity;
+use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Symfony\Component\Debug\Exception\FatalErrorException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -37,16 +38,17 @@ class RowMapper {
      *
      * @param array $row the single row to map
      * @param $Entity Entity entity to map to
-     * @param array $fields the fields that are mapped
      * @return Entity mapped entity
+     * @throws DatabaseException if there is no such property
      */
     private function mapRow(array $row, Entity $Entity) {
         foreach ($row as $key => $value) {
-            if (property_exists($Entity, $key) || method_exists($Entity, 'set' . ucfirst($key))) {
+            if (property_exists($Entity, $key) && method_exists($Entity, 'set' . ucfirst($key))) {
                 call_user_func(array($Entity, 'set' . ucfirst($key)), $value);
-            } else {
-                // @todo should we throw an exception?
+            } else if (property_exists($Entity, $key)) {
                 $Entity->$key = $value;
+            } else {
+                throw new DatabaseException("No property ' . $key . ' found for Entity");
             }
         }
         return $Entity;
@@ -68,25 +70,25 @@ class RowMapper {
     }
 
     /**
-     * Maps a statement to an associative array
-     *
-     * The closure is used to map any row, it must give back an array
-     * The array may contain an index "key" with the key of the associative array returned by the method
-     * It must contain an index "value" with the value to map
+     * Maps a statement to an associative array<br />
+     * <br />
+     * The closure is used to map any row, it must give back an array.<br />
+     * The array <i>may</i> contain an index "key" with the desired key value of the returned array and
+     * it <i>must</i> contain an index "value" with the value to map
      *
      * @throws FatalErrorException
      * @param \PDOStatement $statement the statement to map
      * @param Entity $entity the entity to map from
-     * @param \Closure $closure the closure to use to map any row
+     * @param \Closure $callable the callable to use to map any row
      * @return array the associative mapped array
      */
-    public function mapToArray($statement, Entity $entity, \Closure $closure) {
+    public function mapToArray($statement, Entity $entity, \Closure $callable) {
         $array = $this->mapFromResult($statement, $entity);
         $return = array();
         foreach ($array as $row) {
-            $a = $closure($row);
+            $a = $callable($row);
             if (!is_array($a)) {
-                throw new FatalErrorException("This ist not an array");
+                throw new FatalErrorException("Callable must return an array with at least index 'value'");
             }
             if (isset($a['key'])) {
                 $return[$a['key']] = $a['value'];

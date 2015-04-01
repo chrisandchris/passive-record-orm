@@ -1,20 +1,22 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
+
 /**
- * @name IsNullType
+ * @name AsType
  * @version 1.0.0
  * @since v2.0.0
  * @package KlitCommon
- * @subpackage RowMapperBundle
+ * @subpackage RowMapper
  * @author Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class IsNullType implements TypeInterface {
-    private $isNull;
+class AsType implements TypeInterface {
+    /** @var string */
+    private $fieldName;
 
-    function __construct($isNull = true) {
-        $this->isNull = $isNull;
+    function __construct($fieldName) {
+        $this->fieldName = $fieldName;
     }
 
     /**
@@ -23,14 +25,13 @@ class IsNullType implements TypeInterface {
      * @return string
      */
     function getTypeName() {
-        return 'isNull';
+        return 'as';
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function isNull() {
-        return $this->isNull;
+    public function getFieldName() {
+        return $this->fieldName;
     }
-
 }

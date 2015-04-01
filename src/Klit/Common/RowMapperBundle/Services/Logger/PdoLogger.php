@@ -113,7 +113,7 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
         if (mb_strstr($metaLine, 'insert')) {
             return 'INSERT';
         } else if (mb_strstr($metaLine, 'delete')) {
-                return 'DELETE';
+            return 'DELETE';
         } else if (mb_strstr($metaLine, 'update')) {
             return 'UPDATE';
         } else if (mb_strstr($metaLine, 'select')) {

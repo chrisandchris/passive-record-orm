@@ -1,9 +1,11 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Exceptions;
 /**
+ * Indicates a general database exception (or reason unknown)
+ *
  * @name GeneralDatabaseException
  * @version 1.0.0
- * @since v1.1.0
+ * @since v2.0.0
  * @package Common
  * @subpackage RowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>

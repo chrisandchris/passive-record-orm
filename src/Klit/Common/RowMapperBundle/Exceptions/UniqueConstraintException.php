@@ -2,7 +2,9 @@
 namespace Klit\Common\RowMapperBundle\Exceptions;
 
 /**
- * @name UniqueConstraintException.php
+ * Indicates a unique constraint exception
+ *
+ * @name UniqueConstraintException
  * @version 1.0.0
  * @package CommonRowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>

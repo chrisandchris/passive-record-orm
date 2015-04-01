@@ -70,19 +70,6 @@ abstract class Model {
     }
 
     /**
-     * Runs a query including preparing statement and value binding
-     *
-     * @param SqlQuery $Query
-     * @param Entity $Entity
-     * @return array|bool
-     */
-    protected function run(SqlQuery $Query, Entity $Entity) {
-        $stmt = $this->createStatement($Query->getQuery());
-        $this->bindValues($stmt, $Query->getParameters());
-        return $this->handle($stmt, $Entity);
-    }
-
-    /**
      * Create a new statement from SQL-Code
      *
      * @param $sql
@@ -123,6 +110,67 @@ abstract class Model {
     }
 
     /**
+     * Set to true if current statement must have at least one row returning
+     *
+     * @param bool $mustHaveRow
+     */
+    protected function setCurrentMustHaveResult($mustHaveRow = true) {
+        $this->currentMustHaveRow = (bool)$mustHaveRow;
+    }
+
+    /**
+     * Runs a query
+     *
+     * @param SqlQuery $Query
+     * @param Entity $Entity
+     * @return array|bool
+     */
+    protected function run(SqlQuery $Query, Entity $Entity) {
+        $stmt = $this->prepare($Query);
+        return $this->handle($stmt, $Entity);
+    }
+
+    protected function runSimple(SqlQuery $Query) {
+        return $this->handle($this->prepare($Query), null);
+    }
+
+    /**
+     * Handles an array query
+     *
+     * @param SqlQuery $Query
+     * @param Entity $Entity
+     * @param callable $Closure
+     * @return array|bool
+     */
+    protected function runArray(SqlQuery $Query, Entity $Entity, \Closure $Closure) {
+        $stmt = $this->prepare($Query);
+        return $this->handleArray($stmt, $Entity, $Closure);
+    }
+
+    /**
+     * Handles a key value query
+     *
+     * @param SqlQuery $Query
+     * @return bool
+     */
+    protected function runKeyValue(SqlQuery $Query) {
+        $stmt = $this->prepare($Query);
+        return $this->handleKeyValue($stmt);
+    }
+
+    /**
+     * Prepares a statement including value binding
+     *
+     * @param SqlQuery $Query
+     * @return PdoStatement
+     */
+    private function prepare(SqlQuery $Query) {
+        $stmt = $this->createStatement($Query->getQuery());
+        $this->bindValues($stmt, $Query);
+        return $stmt;
+    }
+
+    /**
      * Execute a PDOStatement and writes it to the log
      *
      * @param PdoStatement $statement
@@ -137,22 +185,13 @@ abstract class Model {
     }
 
     /**
-     * Set to true if current statement must have at least one row returning
-     *
-     * @param bool $mustHaveRow
-     */
-    protected function setCurrentMustHaveResult($mustHaveRow = true) {
-        $this->currentMustHaveRow = (bool)$mustHaveRow;
-    }
-
-    /**
      * Generic handle method
      *
      * @param PdoStatement $Statement
      * @param callable $MappingCallback a callback taking the statement as first and only argument
      * @return bool
      */
-    protected function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
+    private function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($Statement)) {
@@ -165,14 +204,19 @@ abstract class Model {
     }
 
     /**
-     * Handles a statement including mapping to entity and error handling
+     * Handles a statement including mapping to entity (if given) and error handling<br />
+     * If no entity is given returns true on success, false otherwise
      *
+     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @param Entity $Entity
-     * @return array|bool
+     * @return Entity[]|bool
      */
     protected function handle(PdoStatement $Statement, Entity $Entity = null) {
         return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity) {
+            if ($Entity === null) {
+                return is_null($Statement->errorInfo());
+            }
             return $this->getMapper()->mapFromResult($Statement, $Entity);
         });
     }
@@ -180,6 +224,7 @@ abstract class Model {
     /**
      * Handles a statement including mapping to array and error handling
      *
+     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @param Entity $Entity
      * @param callable $Closure
@@ -197,6 +242,7 @@ abstract class Model {
      * <br />
      * Use SQL-Field 'key' for array key, 'value' for array value
      *
+     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @return bool
      */
@@ -254,46 +300,32 @@ abstract class Model {
     }
 
     /**
-     * Checks whether there exists a unique row with the given ids<br />
-     * <br />
-     * It is important that you limit your query to one, if there is more than one row, the function will return false<br />
-     * If you provide an array as $id, all values will be bound to the statement as "id{key}", where key indicates
-     *  the array key + 1
+     * Runs the query and returns whether the row count is equal to one or not
      *
-     * @deprecated since v2.0.0
-     * @param PdoStatement $Statement the statement to work with
-     * @param $id array|int an array of ids or an id
-     * @return bool whether there is such a row or not
+     * @param SqlQuery $Query the query
+     * @param bool $forceEqual if set to true, only a row count of one and only one returns true
+     * @return bool whether there is a row or not
      */
-    protected function _handleHas(PdoStatement $Statement, $id) {
-        if (!is_array($id)) {
-            $Statement->bindValue('id', $id, \PDO::PARAM_INT);
-        } else {
-            foreach ($id as $key => $anId) {
-                $Statement->bindValue('id' . (++$key), $anId);
+    protected function _handleHas(SqlQuery $Query, $forceEqual = true) {
+        $stmt = $this->prepare($Query);
+        return $this->handleGeneric($stmt, function (PdoStatement $Statement) use ($forceEqual) {
+            if ($Statement->rowCount() == 1 && $forceEqual) {
+                return true;
+            } else if ($Statement->rowCount() > 0 && !$forceEqual) {
+                return true;
             }
-        }
-        if ($this->execute($Statement) && $Statement->rowCount() == 1) {
-            return true;
-        }
-        return $this->handleError($Statement);
+            return false;
+        });
     }
 
     /**
-     * Validates whether the given statement has result rows or not<br /
-     * <br />
-     * Also executes this statement, so do not execute before!
+     * Validates whether the given statement has a row count greater than zero
      *
-     * @param PdoStatement $Statement
+     * @param SqlQuery $Query
      * @return bool whether there is at least one result row or not
      */
-    protected function _handleHasResult(PdoStatement $Statement) {
-        if ($this->execute($Statement)) {
-            if ($Statement->rowCount() > 0) {
-                return true;
-            }
-        }
-        return false;
+    protected function _handleHasResult(SqlQuery $Query) {
+        return $this->_handleHas($Query, false);
     }
 
     /**

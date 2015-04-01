@@ -9,7 +9,7 @@ use Klit\Common\RowMapperBundle\Services\Query\Builder;
 /**
  * @name ModelDependencyProvider
  * @version 1.0.0
- * @since v1.1.0
+ * @since v2.0.0
  * @package KlitCommon
  * @subpackage RowMapperBundle
  * @author Christian Klauenbösch <christian@klit.ch>
@@ -27,7 +27,6 @@ class ModelDependencyProvider {
     private $Logger;
     /** @var Builder the query builder */
     private $Builder;
-
 
     function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler, LoggerInterface $Logger, Builder $Builder) {
         $this->PDO = $PDO;

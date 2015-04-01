@@ -2,7 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Services\Query\Type;
 
 /**
- * @name SelectType
+ * @name AnyType
  * @version 1.0.0
  * @since v2.0.0
  * @package KlitCommon
@@ -11,11 +11,11 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Type;
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-interface TypeInterface {
+class AnyType implements TypeInterface {
     /**
-     * Get the name of the type
-     *
-     * @return string
+     * @inheritdoc
      */
-    function getTypeName();
+    public function getTypeName() {
+        return 'any';
+    }
 }
