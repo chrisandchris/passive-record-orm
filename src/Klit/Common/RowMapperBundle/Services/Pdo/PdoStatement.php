@@ -49,7 +49,7 @@ class PdoStatement extends \PDOStatement {
     public function getMeta() {
         return array(
             'query' => $this->queryString,
-            'param' => $this->params
+            'params' => $this->params
         );
     }
 }

@@ -25,7 +25,7 @@ abstract class Model {
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
     /** @var string a id representing the current user */
-    private $userId;
+    private static $userId;
     /** @var ModelDependencyProvider the dependency provider */
     private $DependencyProvider;
 
@@ -39,7 +39,7 @@ abstract class Model {
      * @param $userId
      */
     public function setRunningUser($userId) {
-        $this->userId = $userId;
+        self::$userId = $userId;
     }
 
     /**
@@ -130,8 +130,24 @@ abstract class Model {
         return $this->handle($stmt, $Entity);
     }
 
+    /**
+     * Runs a simple query, just returning true on success
+     *
+     * @param SqlQuery $Query
+     * @return bool|\Klit\Common\RowMapperBundle\Entity\Entity[]
+     */
     protected function runSimple(SqlQuery $Query) {
         return $this->handle($this->prepare($Query), null);
+    }
+
+    /**
+     * Runs a simple query, returning the last insert id on success
+     *
+     * @param SqlQuery $Query
+     * @return bool|int
+     */
+    protected function runWithLastId(SqlQuery $Query) {
+        return $this->handleWithLastInsertId($this->prepare($Query));
     }
 
     /**
@@ -164,7 +180,7 @@ abstract class Model {
      * @param SqlQuery $Query
      * @return PdoStatement
      */
-    private function prepare(SqlQuery $Query) {
+    protected function prepare(SqlQuery $Query) {
         $stmt = $this->createStatement($Query->getQuery());
         $this->bindValues($stmt, $Query);
         return $stmt;
@@ -180,7 +196,7 @@ abstract class Model {
         $start = microtime(true);
         $result = $statement->execute();
         $time = microtime(true) - $start;
-        $this->getLogger()->writeToLog($statement, $this->userId, $time);
+        $this->getLogger()->writeToLog($statement, self::$userId, $time);
         return $result;
     }
 
@@ -191,7 +207,7 @@ abstract class Model {
      * @param callable $MappingCallback a callback taking the statement as first and only argument
      * @return bool
      */
-    private function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
+    protected function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($Statement)) {
@@ -207,7 +223,6 @@ abstract class Model {
      * Handles a statement including mapping to entity (if given) and error handling<br />
      * If no entity is given returns true on success, false otherwise
      *
-     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @param Entity $Entity
      * @return Entity[]|bool
@@ -222,9 +237,20 @@ abstract class Model {
     }
 
     /**
+     * Handles a statement and returns the last insert id on success
+     *
+     * @param PdoStatement $Statement
+     * @return bool|int
+     */
+    protected function handleWithLastInsertId(PdoStatement $Statement) {
+        return $this->handleGeneric($Statement, function (\PDOStatement $Statement) {
+            return $this->getPDO()->lastInsertId();
+        });
+    }
+
+    /**
      * Handles a statement including mapping to array and error handling
      *
-     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @param Entity $Entity
      * @param callable $Closure
@@ -242,7 +268,6 @@ abstract class Model {
      * <br />
      * Use SQL-Field 'key' for array key, 'value' for array value
      *
-     * @deprecated since v2.0.0, protected access is deprecated
      * @param PdoStatement $Statement
      * @return bool
      */
