@@ -16,6 +16,23 @@ use PDO;
 class PdoStatement extends \PDOStatement {
     /** @var array the list of set parameters */
     private $params = array();
+    private $mustHaveResult = false;
+
+    /**
+     * Set to true if this statement must have a rowCount greater than zero
+     *
+     * @param boolean $mustHaveResult
+     */
+    public function setMustHaveResult($mustHaveResult = true) {
+        $this->mustHaveResult = (bool)$mustHaveResult;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isMustHaveResult() {
+        return $this->mustHaveResult;
+    }
 
     /**
      * @inheritdoc
@@ -47,9 +64,6 @@ class PdoStatement extends \PDOStatement {
      * @return string
      */
     public function getMeta() {
-        return array(
-            'query' => $this->queryString,
-            'params' => $this->params
-        );
+        return array('query' => $this->queryString, 'params' => $this->params);
     }
 }

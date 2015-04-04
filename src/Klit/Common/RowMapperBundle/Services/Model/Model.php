@@ -27,7 +27,7 @@ abstract class Model {
     /** @var string a id representing the current user */
     private static $userId;
     /** @var ModelDependencyProvider the dependency provider */
-    private $DependencyProvider;
+    protected $DependencyProvider;
 
     function __construct(ModelDependencyProvider $DependencyProvider) {
         $this->DependencyProvider = $DependencyProvider;
@@ -211,7 +211,7 @@ abstract class Model {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($Statement)) {
-            if ($Statement->rowCount() === 0 && $mustHaveRow) {
+            if ($Statement->rowCount() === 0 && ($mustHaveRow || $Statement->isMustHaveResult())) {
                 throw new NotFoundHttpException("No row found with query");
             }
             return $MappingCallback($Statement);
@@ -230,7 +230,10 @@ abstract class Model {
     protected function handle(PdoStatement $Statement, Entity $Entity = null) {
         return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity) {
             if ($Entity === null) {
-                return is_null($Statement->errorInfo());
+                if ((int)$Statement->errorCode() == 0) {
+                    return true;
+                }
+                return false;
             }
             return $this->getMapper()->mapFromResult($Statement, $Entity);
         });
@@ -248,6 +251,18 @@ abstract class Model {
         });
     }
 
+    /**
+     * Returns the first column of the first row or a NotFoundHttpException if no row available
+     *
+     * @param PdoStatement $Statement
+     * @return bool
+     */
+    public function handleWithFirstRowFirstColumn(PdoStatement $Statement) {
+        $Statement->setMustHaveResult();
+        return $this->handleGeneric($Statement, function (PdoStatement $Statement) {
+            return $Statement->fetch(\PDO::FETCH_NUM)[0];
+        });
+    }
     /**
      * Handles a statement including mapping to array and error handling
      *
@@ -292,6 +307,10 @@ abstract class Model {
      * @throws UniqueConstraintException
      */
     protected function handleError(PdoStatement $statement) {
+        if ($this->getPDO()->inTransaction()) {
+            // automatic rollback the transaction if an error occurs
+            $this->_rollback();
+        }
         return $this->getErrorHandler()->handle($statement->errorInfo()[1], $statement->errorInfo()[2]);
     }
 

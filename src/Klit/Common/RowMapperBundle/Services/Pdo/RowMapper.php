@@ -90,7 +90,7 @@ class RowMapper {
             if (!is_array($a)) {
                 throw new FatalErrorException("Callable must return an array with at least index 'value'");
             }
-            if (isset($a['key'])) {
+            if (isset($a['key']) && !empty($a['key'])) {
                 $return[$a['key']] = $a['value'];
             } else {
                 $return[] = $a['value'];
