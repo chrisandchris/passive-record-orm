@@ -2,6 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Tests\Services\Pdo;
 
 use Klit\Common\RowMapperBundle\Entity\Entity;
+use Klit\Common\RowMapperBundle\Exceptions\DatabaseException;
 use Klit\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use Klit\Common\RowMapperBundle\Tests\TestKernel;
 use PDO;
@@ -53,9 +54,12 @@ class RowMapperTest extends TestKernel {
     public function testEntity() {
         $Mapper = new RowMapper();
         PdoStatementDummy::$maxId = 1;
-        $rows = $Mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
-
-        $this->assertEquals('Name 1', $rows[0]->name);
+        try {
+            $rows = $Mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
+            $this->fail('Must fail due to no such property');
+        } catch (DatabaseException $E) {
+            // ignore
+        }
     }
 
     public function testSingle() {

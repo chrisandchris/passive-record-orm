@@ -11,6 +11,6 @@ namespace Klit\Common\RowMapperBundle\Exceptions;
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class DatabaseException extends \Exception {
+class DatabaseException extends GeneralDatabaseException {
 
 }

@@ -43,6 +43,13 @@ abstract class Model {
     }
 
     /**
+     * @return string
+     */
+    public static function getRunningUser() {
+        return self::$userId;
+    }
+
+    /**
      * Get the dependency provider
      *
      * @return ModelDependencyProvider
@@ -257,7 +264,7 @@ abstract class Model {
      * @param PdoStatement $Statement
      * @return bool
      */
-    public function handleWithFirstRowFirstColumn(PdoStatement $Statement) {
+    protected function handleWithFirstRowFirstColumn(PdoStatement $Statement) {
         $Statement->setMustHaveResult();
         return $this->handleGeneric($Statement, function (PdoStatement $Statement) {
             return $Statement->fetch(\PDO::FETCH_NUM)[0];

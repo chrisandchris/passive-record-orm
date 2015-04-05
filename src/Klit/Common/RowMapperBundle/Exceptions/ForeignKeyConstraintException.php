@@ -11,6 +11,6 @@ namespace Klit\Common\RowMapperBundle\Exceptions;
  * @copyright Klauenbösch IT Services
  * @link http://www.klit.ch
  */
-class ForeignKeyConstraintException extends \Exception {
+class ForeignKeyConstraintException extends GeneralDatabaseException {
 
 }

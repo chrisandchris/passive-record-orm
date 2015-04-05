@@ -2,6 +2,7 @@
 namespace Klit\Common\RowMapperBundle\Tests\Services\Query;
 
 use Klit\Common\RowMapperBundle\Services\Query\Builder;
+use Klit\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use Klit\Common\RowMapperBundle\Services\Query\Parser\MySQLParser;
 use Klit\Common\RowMapperBundle\Services\Query\SqlQuery;
 use Klit\Common\RowMapperBundle\Tests\TestKernel;
@@ -16,8 +17,7 @@ use Klit\Common\RowMapperBundle\Tests\TestKernel;
  */
 class BuilderTest extends TestKernel {
     function testSimpleQuery() {
-        $Builder = new Builder($this->container);
-        $Builder->setParser(new MySQLParser());
+        $Builder = new Builder(new DefaultParser());
         $Builder->select()
             ->fieldlist(array(
                 'field1' => 'aliasName',
@@ -68,8 +68,7 @@ class BuilderTest extends TestKernel {
      * @return Builder
      */
     private function getBuilder() {
-        $B = new Builder($this->container);
-        $B->setParser(new MySQLParser());
+        $B = new Builder(new DefaultParser());
         return $B;
     }
 
@@ -188,12 +187,10 @@ class BuilderTest extends TestKernel {
         $this->assertEquals('value1', $Query->getParameters()[0]);
         $this->assertEquals(1, count($Query->getParameters()));
 
-        // Multiple parsing does not affect parameters
+        // builder is empty after parsing
         $Query = $B->getSqlQuery();
-        $this->assertEquals(1, count($Query->getParameters()));
-
-        $Query = $B->getSqlQuery();
-        $this->assertEquals(1, count($Query->getParameters()));
+        $this->assertEquals(0, strlen($Query->getQuery()));
+        $this->assertEquals(0, count($Query->getParameters()));
 
     }
 
@@ -334,16 +331,6 @@ class BuilderTest extends TestKernel {
     }
 
     public function testGetSqlQuery() {
-        $Builder = new Builder($this->container);
-
-        $Builder->c();
-        try {
-            $Builder->getSqlQuery();
-            $this->fail('Must fail due to no parser assigned');
-        } catch (\Exception $e) {
-            // ignore
-        }
-
         $Builder = $this->getBuilder();
         $this->assertTrue($Builder->getSqlQuery() instanceof SqlQuery);
     }

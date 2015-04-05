@@ -1,10 +1,12 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Tests;
+require_once __DIR__.'/../../../../../app/AppKernel.php';
 
 use AppKernel;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
 /**
  * @name TestKernel
  * @version 1.0.0

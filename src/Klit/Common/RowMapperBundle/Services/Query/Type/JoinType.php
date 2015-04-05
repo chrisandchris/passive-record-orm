@@ -26,15 +26,6 @@ class JoinType implements TypeInterface {
     }
 
     /**
-     * Generic call method
-     *
-     * @param mixed $table
-     */
-    function call($table) {
-        $this->table = $table;
-    }
-
-    /**
      * @return mixed
      */
     public function getTable() {

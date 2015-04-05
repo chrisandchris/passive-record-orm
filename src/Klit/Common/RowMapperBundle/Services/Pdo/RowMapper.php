@@ -48,7 +48,7 @@ class RowMapper {
             } else if (property_exists($Entity, $key)) {
                 $Entity->$key = $value;
             } else {
-                throw new DatabaseException("No property ' . $key . ' found for Entity");
+                throw new DatabaseException("No property '$key' found for Entity");
             }
         }
         return $Entity;

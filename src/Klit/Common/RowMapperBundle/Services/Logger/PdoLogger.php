@@ -59,8 +59,12 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
               VALUES (:uid, :requestId, :type, '" . $now . "', :meta, :exectime) " . self::$DNLPOSTFIX);
 
             $meta = $this->parseMeta($Statement->getMeta());
-            if ($this->isNotLoggableQuery($meta)) {
+            if ($this->isNotLoggableQuery($Statement->getMeta()['query'])) {
                 return ;
+            }
+            // on error, append error information
+            if (!empty($Statement->errorInfo())) {
+                $meta .= "\n" . serialize($Statement->errorInfo());
             }
 
             $LogStatement->bindValue('uid', $userId, \PDO::PARAM_INT);
