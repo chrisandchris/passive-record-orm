@@ -1,6 +1,5 @@
 <?php
 namespace Klit\Common\RowMapperBundle\Tests;
-require_once __DIR__.'/../../../../../app/AppKernel.php';
 
 use AppKernel;
 use Symfony\Bundle\FrameworkBundle\Client;

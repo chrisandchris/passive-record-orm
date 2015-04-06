@@ -8,6 +8,7 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\AnyType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\BraceType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\CloseType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\CommaType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\ComparisonType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\DeleteType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\EqualsType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\FieldlistType;
@@ -48,6 +49,8 @@ class Builder {
     private $Parser;
     /** @var Cache Doctrine cache interface */
     private $Cache;
+    /** @var bool if true, no new statements will be added */
+    private $stopPropagation = null;
 
     function __construct(ParserInterface $Parser, Cache $Cache = null) {
         $this->Cache = $Cache;
@@ -59,6 +62,10 @@ class Builder {
     }
 
     private function append(TypeInterface $type) {
+        // on anything else than true, we still add the types
+        if ($this->stopPropagation === true) {
+            return ;
+        }
         $this->statement[] = $type;
     }
 
@@ -143,6 +150,16 @@ class Builder {
         return $this;
     }
 
+    public function compare($comparison) {
+        $comparisons = array(
+            '<', '>', '<>', '=', '!=', '>=', '<='
+        );
+        if (in_array($comparisons, $comparison)) {
+            $this->append(new ComparisonType($comparison));
+        }
+        throw new \Exception("No such comparison known");
+    }
+
     public function value($value) {
         $this->append(new ValueType($value));
         return $this;
@@ -214,6 +231,36 @@ class Builder {
     public function order() {
         $this->append(new OrderType());
         return $this;
+    }
+
+    /**
+     * If the condition is true, the following types will be added<br />
+     * If not, until the next _end() or _else() nothing will be added to the query
+     *
+     * @param bool $condition the condition to validate
+     */
+    public function _if($condition) {
+        $condition = (bool)$condition;
+        if ($condition !== true) {
+            $this->stopPropagation = true;
+        } else {
+            $this->stopPropagation = false;
+        }
+    }
+
+    /**
+     * Else condition if the _if() condition failed
+     */
+    public function _else() {
+        // simply swap propagation
+        $this->stopPropagation = !$this->stopPropagation;
+    }
+
+    /**
+     * Reset propagation state
+     */
+    public function _end() {
+        $this->stopPropagation = null;
     }
 
     /**
