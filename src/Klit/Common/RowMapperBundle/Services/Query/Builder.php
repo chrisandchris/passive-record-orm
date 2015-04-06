@@ -143,7 +143,7 @@ class Builder {
      */
     public function f($name) {
         $this->append(new FunctionType($name));
-        return $this->brace();
+        return $this;
     }
 
     public function any() {

@@ -247,6 +247,19 @@ abstract class Model {
     }
 
     /**
+     * Call query and get first column of first row
+     *
+     * @param $Query
+     * @return bool
+     */
+    protected function runWithFirstKeyFirstValue($Query) {
+        $stmt = $this->prepare($Query);
+        return $this->handleGeneric($stmt, function (PdoStatement $Statement) {
+            return $Statement->fetch(\PDO::FETCH_NUM)[0];
+        });
+    }
+
+    /**
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $Statement

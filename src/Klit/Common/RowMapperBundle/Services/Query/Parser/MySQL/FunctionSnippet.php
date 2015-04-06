@@ -20,6 +20,6 @@ class FunctionSnippet extends AbstractSnippet {
      * @return string
      */
     function getCode() {
-        return strtoupper($this->getType()->getName());
+        return strtoupper($this->getType()->getName()) .'(/@brace(f))';
     }
 }
