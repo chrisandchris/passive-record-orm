@@ -21,6 +21,7 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\IsNullType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\JoinType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\LimitType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\NullType;
+use Klit\Common\RowMapperBundle\Services\Query\Type\OffsetType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OnType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OrderByType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\OrderType;
@@ -32,7 +33,6 @@ use Klit\Common\RowMapperBundle\Services\Query\Type\UpdateType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\UsingType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\ValueType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\WhereType;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @name Builder
@@ -194,6 +194,11 @@ class Builder {
         return $this;
     }
 
+    public function offset($offset = 0) {
+        $this->append(new OffsetType($offset));
+        return $this;
+    }
+
     public function join($table, $type = 'inner') {
         $this->append(new JoinType($table, $type));
         return $this;
@@ -244,6 +249,7 @@ class Builder {
      * If not, until the next _end() or _else() nothing will be added to the query
      *
      * @param bool $condition the condition to validate
+     * @return $this
      */
     public function _if($condition) {
         $condition = (bool)$condition;
@@ -252,21 +258,26 @@ class Builder {
         } else {
             $this->stopPropagation = false;
         }
+        return $this;
     }
 
     /**
      * Else condition if the _if() condition failed
+     * @return $this
      */
     public function _else() {
         // simply swap propagation
         $this->stopPropagation = !$this->stopPropagation;
+        return $this;
     }
 
     /**
      * Reset propagation state
+     * @return $this
      */
     public function _end() {
         $this->stopPropagation = null;
+        return $this;
     }
 
     /**
