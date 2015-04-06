@@ -3,6 +3,7 @@ namespace Klit\Common\RowMapperBundle\Services\Query;
 
 use Doctrine\Common\Cache\Cache;
 use Klit\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
+use Klit\Common\RowMapperBundle\Services\Query\Type\AliasType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\AndType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\AnyType;
 use Klit\Common\RowMapperBundle\Services\Query\Type\BraceType;
@@ -101,6 +102,11 @@ class Builder {
 
     public function where() {
         $this->append(new WhereType());
+        return $this;
+    }
+
+    public function alias($alias) {
+        $this->append(new AliasType($alias));
         return $this;
     }
 
