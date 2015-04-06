@@ -10,9 +10,11 @@ namespace Klit\Common\RowMapperBundle\Services\Query\Type;
  */
 class TableType implements TypeInterface {
     private $table;
+    private $alias;
 
-    function __construct($table = null) {
+    function __construct($table, $alias = null) {
         $this->table = $table;
+        $this->alias = $alias;
     }
 
     /**
@@ -27,5 +29,9 @@ class TableType implements TypeInterface {
      */
     public function getTable() {
         return $this->table;
+    }
+
+    public function getAlias() {
+        return $this->alias;
     }
 }
