@@ -89,8 +89,8 @@ class Builder {
         return $this;
     }
 
-    public function table($table) {
-        $this->append(new TableType($table));
+    public function table($table, $alias = null) {
+        $this->append(new TableType($table, $alias));
         return $this;
     }
 

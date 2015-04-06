@@ -27,12 +27,15 @@ class FieldlistSnippet extends AbstractSnippet {
         return '#getFields';
     }
 
-    // @todo implement explicit name database.table.field
     public function getFields() {
         $sql = '';
         $fieldCount = count($this->type->getFields());
         $idx = 0;
         foreach ($this->type->getFields() as $key => $value) {
+            if (strstr($key, ':') !== false) {
+                $key = explode(':', $key);
+                $key = '`' . implode('`.`', $key) . '`';
+            }
             if (!is_numeric($key)) {
                 $sql .= '`' . $key .'` as `' . $value . '`';
             } else {
