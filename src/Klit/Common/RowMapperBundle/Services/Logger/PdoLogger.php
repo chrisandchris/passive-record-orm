@@ -114,18 +114,9 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
     private function getQueryType($meta) {
         $lines = explode("\n", $meta, 2);
         $metaLine = mb_strtolower($lines[0]);
-        if (mb_strstr($metaLine, 'insert')) {
-            return 'INSERT';
-        } else if (mb_strstr($metaLine, 'delete')) {
-            return 'DELETE';
-        } else if (mb_strstr($metaLine, 'update')) {
-            return 'UPDATE';
-        } else if (mb_strstr($metaLine, 'select')) {
-            return 'SELECT';
-        } else if (mb_strstr($metaLine, 'create')) {
-            return 'create';
-        } else if (mb_strstr($metaLine, 'alter')) {
-            return 'alter';
+        $metaLine = explode(' ', $metaLine, 2);
+        if (is_array($metaLine)) {
+            return $metaLine[0];
         }
         return null;
     }
