@@ -1,0 +1,19 @@
+services:
+  common_rowmapper.dependencyProvider:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
+      arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.pdoLogger, @common_rowmapper.queryBuilder]
+  common_rowmapper.pdoLayer:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
+      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+  common_rowmapper.pdoLogger:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Logger\PdoLogger
+      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+  common_rowmapper.rowMapper:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper
+  common_rowmapper.errorHandler:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
+  common_rowmapper.queryBuilder:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
+      arguments: [@common_rowmapper.defaultParser]
+  common_rowmapper.defaultParser:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser

@@ -1,10 +1,10 @@
 {
-    "name": "klit/symfony-rowmapper",
-    "license": "Creative Common",
+    "name": "chrisandchris/symfony-rowmapper",
+    "license": "GNU General Public License 2",
     "type": "project",
-    "description": "A RowMapper for Symfony",
+    "description": "A RowMapper/DatabaseLayer designed for symfony ",
     "autoload": {
-        "psr-0": { "Klit\\Common\\RowMapper": "src/" }
+        "psr-0": { "ChrisAndChris\\Common\\RowMapper": "src/" }
     },
     "require": {
         "php": ">=5.4.0",
@@ -21,11 +21,5 @@
         "sensio/generator-bundle": "2.3.*",
         "incenteev/composer-parameter-handler": "~2.0"
     },
-    "minimum-stability": "stable",
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "http://packagist.lc/"
-        }
-    ]
+    "minimum-stability": "stable"
 }

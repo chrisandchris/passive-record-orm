@@ -9,10 +9,10 @@
 /app/*
 /src/.htaccess
 web/*
-src/Klit/Common/RowMapperBundle/Resources/doc/*
-src/Klit/Common/RowMapperBundle/Resources/views/*
-src/Klit/Common/RowMapperBundle/Resources/config/routing.yml
-src/Klit/Common/RowMapperBundle/Resources/config/parameters.yml
+src/ChrisAndChris/Common/RowMapperBundle/Resources/doc/*
+src/ChrisAndChris/Common/RowMapperBundle/Resources/views/*
+src/ChrisAndChris/Common/RowMapperBundle/Resources/config/routing.yml
+src/ChrisAndChris/Common/RowMapperBundle/Resources/config/parameters.yml
 *.db
 *.sql
 *.log
