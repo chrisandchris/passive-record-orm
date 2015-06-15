@@ -2,16 +2,16 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
 
 /**
- * Indicates a database related exception
+ * Thrown if the type is not properly declared
  *
- * @name DatabaseException
+ * @name TypeInterfaceException
  * @version   1.0.0
- * @since     1.0.0
- * @package   RowMapperBundle
+ * @since     2.0.0
+ * @package   RowMapperbundle
  * @author    Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
  * @link      http://www.klit.ch
  */
-class DatabaseException extends GeneralDatabaseException {
+class TypeInterfaceException extends \Exception {
 
 }

@@ -11,8 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @name ModelDependencyProvider
  * @version    1.0.1
  * @since      v2.0.0
- * @package    KlitCommon
- * @subpackage RowMapperBundle
+ * @package    RowMapperBundle
  * @author     Christian Klauenbösch <christian@klit.ch>
  * @copyright  Klauenbösch IT Services
  * @link       http://www.klit.ch
@@ -87,6 +86,7 @@ class ModelDependencyProvider {
         if ($this->Container === null) {
             return null;
         }
+
         return $this->Container->getParameter($name);
     }
 }

@@ -1,6 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValuesType;
 use Doctrine\Common\Cache\Cache;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AliasType;
@@ -36,22 +38,23 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\WhereType;
 
 /**
  * @name Builder
- * @version 1.0.0-dev
- * @since v2.0.0
- * @package CommonRowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   CommonRowMapper
+ * @author    Christian Klauenbösch <christian@klit.ch>
  * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @link      http://www.klit.ch
  */
 class Builder {
+
     /** @var array the statement */
     private $statement = [];
     /** @var ParserInterface */
     private $Parser;
     /** @var Cache Doctrine cache interface */
     private $Cache;
-    /** @var bool if true, no new statements will be added */
-    private $stopPropagation = null;
+    /** @var array an array, which handles the if/else-statements */
+    private $stopPropagation = [];
 
     function __construct(ParserInterface $Parser, Cache $Cache = null) {
         $this->Cache = $Cache;
@@ -63,63 +66,86 @@ class Builder {
     }
 
     private function append(TypeInterface $type) {
-        // on anything else than true, we still add the types
-        if ($this->stopPropagation === true) {
-            return ;
+        // for speed, we first check only the last index
+        // if the last index says we should append, we check all other indexes
+        // any of the index must be false
+        $maxIndex = $this->getHighestPropagationKey();
+        if ($maxIndex !== null && $this->stopPropagation[$maxIndex] === true) {
+            return;
+        } else {
+            // do check only if the latest says that we should append
+            foreach ($this->stopPropagation as $status) {
+                if ($status === true) {
+                    return;
+                }
+            }
         }
         $this->statement[] = $type;
     }
 
     public function select() {
         $this->append(new SelectType());
+
         return $this;
     }
 
     public function update($table) {
         $this->append(new UpdateType($table));
+
         return $this;
     }
 
     public function delete($table) {
         $this->append(new DeleteType($table));
+
         return $this;
     }
 
     public function insert($table) {
         $this->append(new InsertType($table));
+
         return $this;
     }
 
     public function table($table, $alias = null) {
         $this->append(new TableType($table, $alias));
+
         return $this;
     }
 
     public function fieldlist(array $fields) {
         $this->append(new FieldlistType($fields));
+
         return $this;
     }
 
     public function where() {
         $this->append(new WhereType());
+
         return $this;
     }
 
     public function alias($alias) {
         $this->append(new AliasType($alias));
+
         return $this;
     }
 
     public function close() {
         $this->append(new CloseType());
+
         return $this;
     }
 
     /**
      * Synonym for close()
+     *
+     * @return $this
      */
     public function end() {
         $this->close();
+
+        return $this;
     }
 
     /**
@@ -131,6 +157,7 @@ class Builder {
      */
     public function field($identifier) {
         $this->append(new FieldType($identifier));
+
         return $this;
     }
 
@@ -138,79 +165,117 @@ class Builder {
      * Opens a new function<br />
      * <br />
      * <i>close this type by close()</i>
+     *
      * @param $name
      * @return $this
      */
     public function f($name) {
         $this->append(new FunctionType($name));
+
         return $this;
     }
 
     public function any() {
         $this->append(new AnyType());
+
         return $this;
     }
 
     public function equals() {
         $this->append(new EqualsType());
+
         return $this;
     }
 
     public function compare($comparison) {
-        $comparisons = array(
-            '<', '>', '<>', '=', '!=', '>=', '<='
-        );
+        $comparisons = [
+            '<',
+            '>',
+            '<>',
+            '=',
+            '!=',
+            '>=',
+            '<='
+        ];
         if (in_array($comparisons, $comparison)) {
             $this->append(new ComparisonType($comparison));
         }
         throw new \Exception("No such comparison known");
     }
 
+    /**
+     * Adds a new raw value to the statement<br />
+     * The value gets encoded as parameter
+     *
+     * @param $value
+     * @return $this
+     */
     public function value($value) {
         $this->append(new ValueType($value));
+
+        return $this;
+    }
+
+    /**
+     * Adds a new VALUES()-Statement
+     *
+     * @return $this
+     */
+    public function values() {
+        $this->append(new ValuesType());
+
         return $this;
     }
 
     public function null() {
         $this->append(new NullType());
+
         return $this;
     }
+
     public function isNull($isNull = true) {
         if ($isNull) {
             $this->append(new IsNullType());
         } else {
             $this->append(new IsNullType(false));
         }
+
         return $this;
     }
 
     public function brace() {
         $this->append(new BraceType());
+
         return $this;
     }
 
     public function limit($limit = 1) {
         $this->append(new LimitType($limit));
+
         return $this;
     }
 
     public function offset($offset = 0) {
         $this->append(new OffsetType($offset));
+
         return $this;
     }
 
     public function join($table, $type = 'inner') {
         $this->append(new JoinType($table, $type));
+
         return $this;
     }
 
     public function using($field) {
         $this->append(new UsingType($field));
+
         return $this;
     }
 
     public function on() {
         $this->append(new OnType());
+
         return $this;
     }
 
@@ -221,6 +286,7 @@ class Builder {
      * After this method, add fields by field()<br />
      * <br />
      * <i>must be closed by close()</i>
+     *
      * @param null $field
      * @return $this
      */
@@ -230,6 +296,7 @@ class Builder {
             $this->append(new FieldType($field));
             $this->append(new CloseType());
         }
+
         return $this;
     }
 
@@ -237,10 +304,12 @@ class Builder {
      * Add a new order<br />
      * <br />
      * <i>must be closed by close()</i>
+     *
      * @return $this
      */
     public function order() {
         $this->append(new OrderType());
+
         return $this;
     }
 
@@ -254,29 +323,55 @@ class Builder {
     public function _if($condition) {
         $condition = (bool)$condition;
         if ($condition !== true) {
-            $this->stopPropagation = true;
+            $this->stopPropagation[] = true;
         } else {
-            $this->stopPropagation = false;
+            $this->stopPropagation[] = false;
         }
+
         return $this;
     }
 
     /**
      * Else condition if the _if() condition failed
+     *
      * @return $this
+     * @throws MalformedQueryException
      */
     public function _else() {
-        // simply swap propagation
-        $this->stopPropagation = !$this->stopPropagation;
+        // simply swap the latest item propagation
+        $maxIndex = $this->getHighestPropagationKey();
+        if ($maxIndex === null) {
+            throw new MalformedQueryException("No if statement previous to else. If required");
+        }
+        $this->stopPropagation[$maxIndex] = !($this->stopPropagation[$maxIndex]);
+
         return $this;
+    }
+
+    private function getHighestPropagationKey() {
+        if (count($this->stopPropagation) == 0) {
+            return null;
+        }
+
+        return max(array_keys($this->stopPropagation));
     }
 
     /**
      * Reset propagation state
+     *
      * @return $this
+     * @throws MalformedQueryException
      */
     public function _end() {
-        $this->stopPropagation = null;
+        $maxIndex = $this->getHighestPropagationKey();
+
+        if ($maxIndex === null) {
+            throw new MalformedQueryException("Unable to close condition statement. Opening required.");
+        }
+
+        // delete highest key
+        unset($this->stopPropagation[$this->getHighestPropagationKey()]);
+
         return $this;
     }
 
@@ -300,18 +395,20 @@ class Builder {
             }
         }
         $this->append(new CloseType());
+
         return $this;
     }
 
     /**
      * Add a order by field
      *
-     * @param $field
+     * @param        $field
      * @param string $order
      * @return $this
      */
     public function by($field, $order = 'desc') {
         $this->append(new OrderByType($field, $order));
+
         return $this;
     }
 
@@ -321,11 +418,13 @@ class Builder {
             case '&' :
             case '&&' :
                 $this->append(new AndType());
+
                 return $this;
             case 'or' :
             case '|' :
             case '||' :
                 $this->append(new OrType());
+
                 return $this;
         }
         throw new \Exception("unknown connection type: " . $relation);
@@ -333,6 +432,7 @@ class Builder {
 
     public function c() {
         $this->append(new CommaType());
+
         return $this;
     }
 
@@ -372,6 +472,7 @@ class Builder {
 
         $this->cacheItem($this->getHash($this->statement), $this->statement, $Query);
         $this->clear();
+
         return $Query;
     }
 
@@ -382,17 +483,19 @@ class Builder {
         $hash = $this->getHash($statement);
         if ($this->Cache->contains($hash)) {
             $data = $this->Cache->fetch($hash);
+
             return unserialize($data);
         }
+
         return false;
     }
 
     private function cacheItem($hash, array $statement, SqlQuery $Query) {
         if (is_object($this->Cache)) {
-            $this->Cache->save($hash, serialize(array(
+            $this->Cache->save($hash, serialize([
                 'statement' => $statement,
-                'query' => $Query
-            )), 3600);
+                'query'     => $Query
+            ]), 3600);
         }
     }
 
