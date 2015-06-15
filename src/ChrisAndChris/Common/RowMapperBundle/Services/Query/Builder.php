@@ -2,6 +2,7 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LikeType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValuesType;
 use Doctrine\Common\Cache\Cache;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
@@ -432,6 +433,18 @@ class Builder {
 
     public function c() {
         $this->append(new CommaType());
+
+        return $this;
+    }
+
+    /**
+     * Adds a new LIKE statement
+     *
+     * @param $pattern
+     * @return $this
+     */
+    public function like($pattern) {
+        $this->append(new LikeType($pattern));
 
         return $this;
     }
