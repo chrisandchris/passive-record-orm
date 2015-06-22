@@ -21,6 +21,6 @@ class ValuesSnippet extends AbstractSnippet {
      * @return string
      */
     function getCode() {
-        return 'VALUES @brace(values)';
+        return 'VALUES';
     }
 }
