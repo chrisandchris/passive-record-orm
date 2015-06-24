@@ -8,57 +8,19 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapper
- * @version 2.0.0
- * @package CommonRowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   2.0.0
+ * @since     v1.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class RowMapper {
-
-    /**
-     * Maps a result from a statement into an entity
-     *
-     * @param \PDOStatement $statement the statement to map
-     * @param Entity $Entity the entity to use
-     * @param int $limit max amount of rows to map
-     * @return array list of mapped rows
-     */
-    public function mapFromResult(\PDOStatement $statement, Entity $Entity, $limit = null) {
-        $return = array();
-        $c = 0;
-        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) && (++$c <= $limit || $limit == null)) {
-            $return[] = $this->mapRow($row, clone $Entity);
-        }
-        return $return;
-    }
-
-    /**
-     * Map a single row by calling setter or getter methods
-     *
-     * @param array $row the single row to map
-     * @param $Entity Entity entity to map to
-     * @return Entity mapped entity
-     * @throws DatabaseException if there is no such property
-     */
-    private function mapRow(array $row, Entity $Entity) {
-        foreach ($row as $key => $value) {
-            if (property_exists($Entity, $key) && method_exists($Entity, 'set' . ucfirst($key))) {
-                call_user_func(array($Entity, 'set' . ucfirst($key)), $value);
-            } else if (property_exists($Entity, $key)) {
-                $Entity->$key = $value;
-            } else {
-                throw new DatabaseException("No property '$key' found for Entity");
-            }
-        }
-        return $Entity;
-    }
 
     /**
      * Map a single result from a statement
      *
      * @param \PDOStatement $statement the statement to map
-     * @param Entity $Entity the entity to map into
+     * @param Entity        $Entity    the entity to map into
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
     public function mapSingleFromResult(\PDOStatement $statement, Entity $Entity) {
@@ -66,7 +28,50 @@ class RowMapper {
         if (count($list) == 0) {
             throw new NotFoundHttpException;
         }
+
         return $list[0];
+    }
+
+    /**
+     * Maps a result from a statement into an entity
+     *
+     * @param \PDOStatement $statement the statement to map
+     * @param Entity $Entity the entity to use
+     * @param int    $limit  max amount of rows to map
+     * @return array list of mapped rows
+     */
+    public function mapFromResult(\PDOStatement $statement, Entity $Entity, $limit = null) {
+        $return = [];
+        $c = 0;
+        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) && (++$c <= $limit || $limit == null)) {
+            $return[] = $this->mapRow($row, clone $Entity);
+        }
+
+        return $return;
+    }
+
+    /**
+     * Map a single row by calling setter or getter methods
+     *
+     * @param array $row    the single row to map
+     * @param       $Entity Entity entity to map to
+     * @return Entity mapped entity
+     * @throws DatabaseException if there is no such property
+     */
+    private function mapRow(array $row, Entity $Entity) {
+        foreach ($row as $key => $value) {
+            if (method_exists($Entity, 'set' . ucfirst($key))) {
+                call_user_func([$Entity, 'set' . ucfirst($key)], $value);
+            } else {
+                if (property_exists($Entity, $key)) {
+                    $Entity->$key = $value;
+                } else {
+                    throw new DatabaseException("No property '$key' found for Entity");
+                }
+            }
+        }
+
+        return $Entity;
     }
 
     /**
@@ -78,13 +83,13 @@ class RowMapper {
      *
      * @throws FatalErrorException
      * @param \PDOStatement $statement the statement to map
-     * @param Entity $entity the entity to map from
+     * @param Entity   $entity   the entity to map from
      * @param \Closure $callable the callable to use to map any row
      * @return array the associative mapped array
      */
     public function mapToArray($statement, Entity $entity, \Closure $callable) {
         $array = $this->mapFromResult($statement, $entity);
-        $return = array();
+        $return = [];
         foreach ($array as $row) {
             $a = $callable($row);
             if (!is_array($a)) {
@@ -96,6 +101,7 @@ class RowMapper {
                 $return[] = $a['value'];
             }
         }
+
         return $return;
     }
 }

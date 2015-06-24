@@ -8,11 +8,11 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name BuilderTest
- * @version   1.0.0
- * @package   CommonRowMapper
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @version   1
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class BuilderTest extends TestKernel {
 
@@ -66,6 +66,13 @@ class BuilderTest extends TestKernel {
         $this->assertEquals(4, count($query->getParameters()));
     }
 
+    public function testSelect() {
+        $Builder = $this->getBuilder();
+        $Builder->select();
+
+        $this->equals('SELECT', $Builder);
+    }
+
     /**
      * @return Builder
      */
@@ -78,13 +85,6 @@ class BuilderTest extends TestKernel {
     private function equals($expected, Builder $Builder) {
         $this->assertEquals($expected, $Builder->getSqlQuery()
                                                ->getQuery());
-    }
-
-    public function testSelect() {
-        $Builder = $this->getBuilder();
-        $Builder->select();
-
-        $this->equals('SELECT', $Builder);
     }
 
     public function testUpdate() {

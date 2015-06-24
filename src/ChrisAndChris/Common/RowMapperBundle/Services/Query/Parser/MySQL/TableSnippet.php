@@ -6,15 +6,14 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TableType;
 
 /**
  * @name TableSnippet
- * @version 1.0.0
- * @since v2.0.0
- * @package Common
- * @subpackage RowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class TableSnippet extends AbstractSnippet {
+
     /** @var TableType */
     protected $type;
 
@@ -32,6 +31,7 @@ class TableSnippet extends AbstractSnippet {
         if (is_array($table)) {
             return implode('`.`', $table);
         }
+
         return $this->type->getTable();
     }
 
@@ -39,6 +39,7 @@ class TableSnippet extends AbstractSnippet {
         if ($this->type->getAlias() != null) {
             return 'as `' . $this->type->getAlias() . '`';
         }
+
         return null;
     }
 }

@@ -8,32 +8,31 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 
 /**
  * @name ErrorHandler
- * @version 1.0.0
- * @since v2.0.0
- * @package Common
- * @subpackage RowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class ErrorHandler {
-    private $databaseExceptions = array(
+
+    private $databaseExceptions = [
         'HY093',    // pdo not enough values bound
         1064,       // syntax error
         1054        // unknown column
-    );
+    ];
 
-    private $uniqueConstraintExceptions = array(
+    private $uniqueConstraintExceptions = [
         1062        // unique constraint problem
-    );
+    ];
 
-    private $foreignKeyConstraintExceptions = array(
+    private $foreignKeyConstraintExceptions = [
         1215,
         1216,
         1217,
         1451,
         1452
-    );
+    ];
 
     /**
      * Validates an MySQL error number

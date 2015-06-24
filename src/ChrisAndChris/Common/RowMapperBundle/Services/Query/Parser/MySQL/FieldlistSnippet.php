@@ -6,15 +6,14 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\FieldlistType;
 
 /**
  * @name FieldSnippet
- * @version 1.0.0
- * @since v2.0.0
- * @package KlitCommon
- * @subpackage RowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class FieldlistSnippet extends AbstractSnippet {
+
     /** @var FieldlistType */
     protected $type;
 
@@ -34,10 +33,14 @@ class FieldlistSnippet extends AbstractSnippet {
         foreach ($this->type->getFields() as $key => $value) {
             if (strstr($key, ':') !== false) {
                 $key = explode(':', $key);
-                $key = '`' . implode('`.`', $key) . '`';
+                $key = implode('`.`', $key);
+            }
+            if (strstr($value, ':') !== false && is_numeric($key) === true) {
+                $value = explode(':', $value);
+                $value = implode('`.`', $value);
             }
             if (!is_numeric($key)) {
-                $sql .= '`' . $key .'` as `' . $value . '`';
+                $sql .= '`' . $key . '` as `' . $value . '`';
             } else {
                 $sql .= '`' . $value . '`';
             }
@@ -45,6 +48,7 @@ class FieldlistSnippet extends AbstractSnippet {
                 $sql .= ', ';
             }
         }
+
         return $sql;
     }
 }

@@ -6,11 +6,11 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\JoinType;
 
 /**
  * @name JoinSnippet
- * @version
- * @package
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class JoinSnippet extends AbstractSnippet {
 
@@ -22,6 +22,7 @@ class JoinSnippet extends AbstractSnippet {
     function getCode() {
         /** @var $Type JoinType */
         $Type = $this->getType();
+
         return strtoupper($Type->getJoinType()) . ' JOIN `' . $Type->getTable() . '`';
     }
 }

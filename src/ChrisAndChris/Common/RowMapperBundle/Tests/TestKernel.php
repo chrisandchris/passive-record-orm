@@ -7,13 +7,14 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * @name TestKernel
- * @version 1.0.0
- * @package CommonRowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1
+ * @since     v1.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 abstract class TestKernel extends WebTestCase {
+
     /**
      * @var \AppKernel
      */

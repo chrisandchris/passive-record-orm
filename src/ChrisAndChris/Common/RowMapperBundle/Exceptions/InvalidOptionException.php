@@ -2,15 +2,13 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
 
 /**
- * Thrown if the type is not properly declared
- *
- * @name TypeInterfaceException
+ * @name InvalidOptionException
  * @version   1.0.0
- * @since     2.0.0
+ * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class TypeInterfaceException extends \Exception {
+class InvalidOptionException extends \Exception {
 
 }

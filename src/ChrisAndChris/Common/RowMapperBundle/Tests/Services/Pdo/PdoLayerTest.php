@@ -8,13 +8,13 @@ use Symfony\Component\Debug\Exception\FatalErrorException;
 
 /**
  * @name PdoLayerTest
- * @version 1.0.0
- * @package CommonRowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class PdoLayerTest extends TestKernel {
+
     function testConstruct() {
         // we do not test the container load because we don't have configuration available
         // $PdoLayer = $this->container->get('common_rowmapper.pdoLayer');

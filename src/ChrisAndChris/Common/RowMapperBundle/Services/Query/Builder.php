@@ -2,9 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LikeType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValuesType;
-use Doctrine\Common\Cache\Cache;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AliasType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AndType;
@@ -22,6 +19,7 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\GroupType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\InsertType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\IsNullType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\JoinType;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LikeType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LimitType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\NullType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OffsetType;
@@ -29,22 +27,24 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OnType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrderByType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrderType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrType;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\RawType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\SelectType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TableType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\UpdateType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\UsingType;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValuesType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValueType;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\WhereType;
+use Doctrine\Common\Cache\Cache;
 
 /**
  * @name Builder
- * @version   1.0.0
+ * @version   1.0.1
  * @since     v2.0.0
- * @package   CommonRowMapper
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class Builder {
 
@@ -66,6 +66,12 @@ class Builder {
         $this->Parser = $Parser;
     }
 
+    public function select() {
+        $this->append(new SelectType());
+
+        return $this;
+    }
+
     private function append(TypeInterface $type) {
         // for speed, we first check only the last index
         // if the last index says we should append, we check all other indexes
@@ -84,10 +90,12 @@ class Builder {
         $this->statement[] = $type;
     }
 
-    public function select() {
-        $this->append(new SelectType());
+    private function getHighestPropagationKey() {
+        if (count($this->stopPropagation) == 0) {
+            return null;
+        }
 
-        return $this;
+        return max(array_keys($this->stopPropagation));
     }
 
     public function update($table) {
@@ -114,6 +122,18 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Append a fieldlist. Accepts an array with following options<br />
+     * <br />
+     * <ul>
+     *  <li>extended: key is real table/field name, value is alias</li>
+     *  <li>simple: value is real table/field name, key does not matter</li>
+     * </ul>
+     * You have to separate table and field names by double-colon (":")
+     *
+     * @param array $fields
+     * @return $this
+     */
     public function fieldlist(array $fields) {
         $this->append(new FieldlistType($fields));
 
@@ -132,12 +152,6 @@ class Builder {
         return $this;
     }
 
-    public function close() {
-        $this->append(new CloseType());
-
-        return $this;
-    }
-
     /**
      * Synonym for close()
      *
@@ -145,6 +159,12 @@ class Builder {
      */
     public function end() {
         $this->close();
+
+        return $this;
+    }
+
+    public function close() {
+        $this->append(new CloseType());
 
         return $this;
     }
@@ -315,6 +335,19 @@ class Builder {
     }
 
     /**
+     * Adds parameterized raw sql
+     *
+     * @param       $raw
+     * @param array $params
+     * @return $this
+     */
+    public function raw($raw, array $params = []) {
+        $this->append(new RawType($raw, $params));
+
+        return $this;
+    }
+
+    /**
      * If the condition is true, the following types will be added<br />
      * If not, until the next _end() or _else() nothing will be added to the query
      *
@@ -347,14 +380,6 @@ class Builder {
         $this->stopPropagation[$maxIndex] = !($this->stopPropagation[$maxIndex]);
 
         return $this;
-    }
-
-    private function getHighestPropagationKey() {
-        if (count($this->stopPropagation) == 0) {
-            return null;
-        }
-
-        return max(array_keys($this->stopPropagation));
     }
 
     /**
@@ -503,6 +528,10 @@ class Builder {
         return false;
     }
 
+    private function getHash(array $statement) {
+        return md5(serialize($statement));
+    }
+
     private function cacheItem($hash, array $statement, SqlQuery $Query) {
         if (is_object($this->Cache)) {
             $this->Cache->save($hash, serialize([
@@ -510,10 +539,6 @@ class Builder {
                 'query'     => $Query
             ]), 3600);
         }
-    }
-
-    private function getHash(array $statement) {
-        return md5(serialize($statement));
     }
 
     /**

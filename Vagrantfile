@@ -2,9 +2,12 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-    config.vm.box = "ubuntu/trusty32"
-    config.vm.network :private_network, ip: "192.168.80.2"
+    config.vm.provider "parallels" do |v|
+      v.memory = 1024
+    end
+    config.vm.box = "parallels/ubuntu-14.04"
+    config.vm.network :private_network, ip: "192.168.50.2"
     config.vm.network :forwarded_port, guest: 80, host: 8000
     config.vm.provision :shell, :path => "bootstrap.sh"
-    config.vm.synced_folder ".", "/vagrant", :nfs => { :mount_options => ['dmode=755','fmode=644'] }
+    config.vm.synced_folder ".", "/vagrant"
 end

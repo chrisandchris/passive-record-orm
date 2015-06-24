@@ -6,15 +6,14 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\FieldType;
 
 /**
  * @name FieldSnippet
- * @version 1.0.0
- * @since v2.0.0
- * @package KlitCommon
- * @subpackage RowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class FieldSnippet extends AbstractSnippet {
+
     /** @var FieldType */
     protected $type;
     /** @var int internal counter */
@@ -38,6 +37,7 @@ class FieldSnippet extends AbstractSnippet {
         } else {
             $code = '`#getNextIdentifier`';
         }
+
         return $code;
     }
 
@@ -49,6 +49,7 @@ class FieldSnippet extends AbstractSnippet {
         if (is_array($this->type->getIdentifier())) {
             return $this->type->getIdentifier()[$this->key++];
         }
+
         return $this->type->getIdentifier();
     }
 }

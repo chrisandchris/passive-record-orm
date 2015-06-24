@@ -5,13 +5,14 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
 
 /**
  * @name OrderBySnippet
- * @version
- * @package
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class OrderBySnippet extends AbstractSnippet {
+
     /**
      * Get the code
      *
@@ -22,10 +23,12 @@ class OrderBySnippet extends AbstractSnippet {
     }
 
     public function getField() {
-        return $this->getType()->getField();
+        return $this->getType()
+                    ->getField();
     }
 
     public function getDirection() {
-        return strtoupper($this->getType()->getDirection());
+        return strtoupper($this->getType()
+                               ->getDirection());
     }
 }

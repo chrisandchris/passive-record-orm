@@ -5,14 +5,22 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
 
 /**
  * @name AbstractType
- * @version 1.0.0-dev
- * @package CommonRowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 abstract class AbstractSnippet implements SnippetInterface {
+
     protected $type;
+
+    /**
+     * @return TypeInterface
+     */
+    protected function getType() {
+        return $this->type;
+    }
 
     /**
      * Set the type interface
@@ -22,13 +30,4 @@ abstract class AbstractSnippet implements SnippetInterface {
     function setType(TypeInterface $type) {
         $this->type = $type;
     }
-
-    /**
-     * @return TypeInterface
-     */
-    protected function getType() {
-        return $this->type;
-    }
-
-
 }

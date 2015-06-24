@@ -7,14 +7,14 @@ use Symfony\Component\Debug\Exception\FatalErrorException;
 /**
  * This is the main database connection which is used for the application
  *
- * @name PdoLayer.php
- * @version 1.1.1
- * @package CommonRowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @name PdoLayer
+ * @version   1.1.1
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class PdoLayer extends \PDO {
+
     function __construct($system, $host, $port = null, $name = null, $user = null, $password = null) {
         $system = self::getPdoSystem($system);
         $dsn = $this->getDsn($system, $host, $port, $name);
@@ -26,15 +26,9 @@ class PdoLayer extends \PDO {
             // $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             // force to use own pdo statement class
             $this->setPdoAttributes();
-        } catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             throw new FatalErrorException("Unable to init PdoLayer: " . $e->getMessage());
         }
-    }
-
-    private function setPdoAttributes() {
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array(
-            'ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement',
-        ));
     }
 
     public static function getPdoSystem($system = 'pdo_mysql') {
@@ -66,5 +60,11 @@ class PdoLayer extends \PDO {
 
     private static function getSqliteDsn($host) {
         return 'sqlite:' . $host;
+    }
+
+    private function setPdoAttributes() {
+        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, [
+            'ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement',
+        ]);
     }
 }

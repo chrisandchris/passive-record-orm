@@ -10,15 +10,14 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name ErrorHandlerTest
- * @version 1.0.0
- * @since v2.0.0
- * @package Common
- * @subpackage RowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class ErrorHandlerTest extends TestKernel {
+
     public function testHandle() {
         $Handler = new ErrorHandler();
 

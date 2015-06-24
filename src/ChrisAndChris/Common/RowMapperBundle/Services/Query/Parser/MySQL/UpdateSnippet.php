@@ -5,15 +5,14 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
 
 /**
  * @name UpdateSnippet
- * @version 1.0.0
- * @since 1.1.0
- * @package Common
- * @subpackage RowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
-class UpdateSnippet extends AbstractSnippet{
+class UpdateSnippet extends AbstractSnippet {
+
     /**
      * Get the code
      *
@@ -24,6 +23,7 @@ class UpdateSnippet extends AbstractSnippet{
     }
 
     public function getTable() {
-        return $this->getType()->getTable();
+        return $this->getType()
+                    ->getTable();
     }
 }

@@ -8,6 +8,8 @@ sudo apt-get update
 echo "--- MySQL time ---"
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password root'
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password root'
+sudo sed -i 's/#max_connections/max_connections/' /etc/mysql/my.cnf
+sudo sed -i 's/max_connections[ ]*= 100/max_connections = 1000' /etc/mysql/my.cnf
 
 echo "--- Installing base packages ---"
 sudo apt-get install -y vim curl python-software-properties
@@ -34,7 +36,13 @@ phpunit --version
 echo "--- Installing and configuring Xdebug ---"
 sudo apt-get install -y php5-xdebug
 
-cat << EOF | sudo tee -a /etc/php5/mods-available/xdebug.ini
+cat << EOF | sudo tee -a /etc/php5/apache2/conf.d/xdebug.ini
+xdebug.scream=1
+xdebug.cli_color=1
+xdebug.show_local_vars=1
+EOF
+
+cat << EOF | sudo tee -a /etc/php5/cli/conf.d/xdebug.ini
 xdebug.scream=1
 xdebug.cli_color=1
 xdebug.show_local_vars=1
@@ -74,5 +82,21 @@ sudo mv composer.phar /usr/local/bin/composer
 #
 # Project specific packages
 #
+
+echo "-- Configure xdebug --"
+sudo echo "xdebug.remote_enable=1
+xdebug.profiler_enable=1
+xdebug.remote_connect_back=1
+xdebug.remote_port=9000
+xdebug.remote_log=/tmp/php5-xdebug.log" >> /etc/php5/apache2/conf.d/xdebug.ini
+sudo echo "xdebug.remote_enable=1
+xdebug.profiler_enable=1
+xdebug.remote_connect_back=1
+xdebug.remote_port=9000
+xdebug.remote_log=/tmp/php5-xdebug.log" >> /etc/php5/cli/conf.d/xdebug.ini
+
+echo "alias phpx=\"php -dxdebug.remote_host=10.211.55.2 -dxdebug.remote_autostart=1\"" >> /home/vagrant/.bash_profile
+echo "alias phpunitx=\"phpunit -dxdebug.remote_host=10.211.55.2 -dxdebug.remote_autostart=1\"" >> /home/vagrant/.bash_profile
+echo "alias ll=\"ls -al\"" >> /home/vagrant/.bash_profile
 
 echo "--- All done, enjoy! :) ---"

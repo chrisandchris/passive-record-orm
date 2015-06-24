@@ -11,18 +11,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapperTest
- * @version 1.0.0
- * @package CommonRowMapperBundle
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class RowMapperTest extends TestKernel {
-
-    public function getStatementMockup() {
-        PdoStatementDummy::$id = 0;
-        return new PdoStatementDummy();
-    }
 
     public function getRowMapper() {
         return new RowMapper();
@@ -41,6 +35,12 @@ class RowMapperTest extends TestKernel {
         $Row = $rows[1];
         $this->assertEquals(2, $Row->getId());
         $this->assertEquals('Name 2', $Row->getName());
+    }
+
+    public function getStatementMockup() {
+        PdoStatementDummy::$id = 0;
+
+        return new PdoStatementDummy();
     }
 
     public function testMapFromResultLimit() {
@@ -84,11 +84,11 @@ class RowMapperTest extends TestKernel {
     public function testMapToArray() {
         $Mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
-        $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
-            return array(
+        $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
+            return [
                 'key' => $entity->getId(),
                 'value' => $entity->getName()
-            );
+            ];
         });
 
         $this->assertEquals($array[1], 'Name 1');
@@ -99,10 +99,11 @@ class RowMapperTest extends TestKernel {
     public function testMapToArrayErrors() {
         $Mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
-        try{
-            $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
-                return null;
-            });
+        try {
+            $array =
+                $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
+                    return null;
+                });
             $this->fail('Must fail due to wrong response of closure');
         } catch (FatalErrorException $e) {
             // ignore
@@ -112,10 +113,10 @@ class RowMapperTest extends TestKernel {
     public function testMapToArrayImplicitKey() {
         $Mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
-        $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function(DummyEntity $entity) {
-            return array(
+        $array = $Mapper->mapToArray($this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
+            return [
                 'value' => $entity->getName()
-            );
+            ];
         });
 
         $this->assertEquals($array[0], 'Name 1');
@@ -125,6 +126,7 @@ class RowMapperTest extends TestKernel {
 }
 
 class PdoStatementDummy extends \PDOStatement {
+
     public static $id = 0;
     public static $maxId = 5;
 
@@ -133,14 +135,16 @@ class PdoStatementDummy extends \PDOStatement {
             return false;
         }
         self::$id++;
-        return array(
+
+        return [
             'id' => self::$id,
             'name' => 'Name ' . self::$id
-        );
+        ];
     }
 }
 
 class DummyEntity implements Entity {
+
     private $id;
     private $name;
 
@@ -174,19 +178,6 @@ class DummyEntity implements Entity {
 }
 
 class WrongDummyEntity implements Entity {
-    private $id;
 
-    /**
-     * @return mixed
-     */
-    public function getId() {
-        return $this->id;
-    }
-
-    /**
-     * @param mixed $id
-     */
-    public function setId($id) {
-        $this->id = $id;
-    }
+    public $id;
 }

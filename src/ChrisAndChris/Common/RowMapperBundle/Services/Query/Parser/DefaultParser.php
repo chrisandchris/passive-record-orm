@@ -11,10 +11,9 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
  * @name DefaultParser
  * @version   1.1.0
  * @since     v2.0.0
- * @package   CommonRowMapper
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class DefaultParser implements ParserInterface {
 
@@ -93,6 +92,54 @@ class DefaultParser implements ParserInterface {
     }
 
     /**
+     * Run the parser
+     *
+     * @throws MalformedQueryException
+     */
+    public function execute() {
+        $this->clear();
+        /** @var TypeInterface $type */
+        foreach ($this->statement as $type) {
+            $Snippet = $this->getSnippet($type);
+            $code = $Snippet->getCode();
+            $this->query .= $this->parseCode($code, $type, $Snippet);
+        }
+
+        if (count($this->braces) != 0) {
+            throw new MalformedQueryException("There are still open braces.");
+        }
+    }
+
+    /**
+     * Clear and prepare builder for next query
+     */
+    private function clear() {
+        $this->parameters = [];
+        $this->query = '';
+        $this->braces = [];
+    }
+
+    /**
+     * Gets an instance of a snippet
+     *
+     * @param string $type the snippet name
+     * @return SnippetInterface the snippet instance
+     * @throws ClassNotFoundException
+     */
+    public function getSnippet($type) {
+        /** @var TypeInterface $type */
+        $class = $this->namespace . ucfirst($type->getTypeName()) . $this->suffix;
+        if (!class_exists($class)) {
+            throw new ClassNotFoundException("Unable to parse this statement, class not found: " . $class);
+        }
+        /** @var SnippetInterface $Snippet */
+        $Snippet = new $class;
+        $Snippet->setType($type);
+
+        return $Snippet;
+    }
+
+    /**
      * Parses the code
      *
      * @param string           $code    the snippet code to parse
@@ -163,59 +210,11 @@ class DefaultParser implements ParserInterface {
     }
 
     /**
-     * Gets an instance of a snippet
-     *
-     * @param string $type the snippet name
-     * @return SnippetInterface the snippet instance
-     * @throws ClassNotFoundException
-     */
-    public function getSnippet($type) {
-        /** @var TypeInterface $type */
-        $class = $this->namespace . ucfirst($type->getTypeName()) . $this->suffix;
-        if (!class_exists($class)) {
-            throw new ClassNotFoundException("Unable to parse this statement, class not found: " . $class);
-        }
-        /** @var SnippetInterface $Snippet */
-        $Snippet = new $class;
-        $Snippet->setType($type);
-
-        return $Snippet;
-    }
-
-    /**
-     * Run the parser
-     *
-     * @throws MalformedQueryException
-     */
-    public function execute() {
-        $this->clear();
-        /** @var TypeInterface $type */
-        foreach ($this->statement as $type) {
-            $Snippet = $this->getSnippet($type);
-            $code = $Snippet->getCode();
-            $this->query .= $this->parseCode($code, $type, $Snippet);
-        }
-
-        if (count($this->braces) != 0) {
-            throw new MalformedQueryException("There are still open braces.");
-        }
-    }
-
-    /**
      * Add a used parameter
      *
      * @param $parameter
      */
     private function addParameter($parameter) {
         $this->parameters[] = $parameter;
-    }
-
-    /**
-     * Clear and prepare builder for next query
-     */
-    private function clear() {
-        $this->parameters = [];
-        $this->query = '';
-        $this->braces = [];
     }
 }

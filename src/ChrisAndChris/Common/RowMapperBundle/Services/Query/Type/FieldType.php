@@ -3,13 +3,14 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Type;
 
 /**
  * @name FieldType
- * @version 1.0.0-dev
- * @package CommonRowMapper
- * @author Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link http://www.klit.ch
+ * @version   1.0.0
+ * @since     v2.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class FieldType implements TypeInterface {
+
     private $identifier;
 
     function __construct($identifier) {
