@@ -12,6 +12,6 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class ChrisAndChrisCommonRowMapperBundle extends Bundle {
+class ChrisAndChrisRowMapperBundle extends Bundle {
 
 }
