@@ -26,6 +26,6 @@ class ChrisAndChrisRowMapperExtension extends Extension {
     }
 
     public function getAlias() {
-        return 'klit_common_row_mapper';
+        return 'chris_and_chris_row_mapper';
     }
 }
