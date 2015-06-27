@@ -94,9 +94,10 @@ abstract class Model {
                 $options[$option] = null;
             }
         }
-        foreach ($options as $option) {
-            if (!in_array($option, $availableOptions, true)) {
-                throw new InvalidOptionException("Option '" . $option . "' is unknown to this method.");
+        foreach ($options as $name => $value) {
+            if (!isset($option[$name])) {
+                throw new InvalidOptionException("Option '" . $name .
+                    "' is unknown to this method.");
             }
         }
     }
@@ -169,40 +170,45 @@ abstract class Model {
     }
 
     /**
-     * Handles a statement including mapping to entity (if given) and error handling<br />
-     * If no entity is given returns true on success, false otherwise
+     * Handles a statement including mapping to entity (if given) and error
+     * handling<br /> If no entity is given returns true on success, false
+     * otherwise
      *
      * @param PdoStatement $Statement
      * @param Entity       $Entity
      * @return Entity[]|bool
      */
     protected function handle(PdoStatement $Statement, Entity $Entity = null) {
-        return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity) {
-            if ($Entity === null) {
-                if ((int)$Statement->errorCode() == 0) {
-                    return true;
+        return $this->handleGeneric($Statement,
+            function (PdoStatement $Statement) use ($Entity) {
+                if ($Entity === null) {
+                    if ((int)$Statement->errorCode() == 0) {
+                        return true;
+                    }
+
+                    return false;
                 }
 
-                return false;
-            }
-
-            return $this->getMapper()
-                        ->mapFromResult($Statement, $Entity);
-        });
+                return $this->getMapper()
+                            ->mapFromResult($Statement, $Entity);
+            });
     }
 
     /**
      * Generic handle method
      *
      * @param PdoStatement $Statement
-     * @param callable     $MappingCallback a callback taking the statement as first and only argument
+     * @param callable     $MappingCallback a callback taking the statement as
+     *                                      first and only argument
      * @return bool
      */
     protected function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($Statement)) {
-            if ($Statement->rowCount() === 0 && ($mustHaveRow || $Statement->isMustHaveResult())) {
+            if ($Statement->rowCount() === 0 &&
+                ($mustHaveRow || $Statement->isMustHaveResult())
+            ) {
                 throw new NotFoundHttpException("No row found with query");
             }
 
@@ -264,7 +270,8 @@ abstract class Model {
         }
 
         return $this->getErrorHandler()
-                    ->handle($statement->errorInfo()[1], $statement->errorInfo()[2]);
+                    ->handle($statement->errorInfo()[1],
+                        $statement->errorInfo()[2]);
     }
 
     /**
@@ -333,10 +340,11 @@ abstract class Model {
      * @return bool|int
      */
     protected function handleWithLastInsertId(PdoStatement $Statement) {
-        return $this->handleGeneric($Statement, function (\PDOStatement $Statement) {
-            return $this->getPDO()
-                        ->lastInsertId();
-        });
+        return $this->handleGeneric($Statement,
+            function (\PDOStatement $Statement) {
+                return $this->getPDO()
+                            ->lastInsertId();
+            });
     }
 
     /**
@@ -363,10 +371,11 @@ abstract class Model {
      * @throws \Symfony\Component\Debug\Exception\FatalErrorException
      */
     protected function handleArray(PdoStatement $Statement, Entity $Entity, \Closure $Closure) {
-        return $this->handleGeneric($Statement, function (PdoStatement $Statement) use ($Entity, $Closure) {
-            return $this->getMapper()
-                        ->mapToArray($Statement, $Entity, $Closure);
-        });
+        return $this->handleGeneric($Statement,
+            function (PdoStatement $Statement) use ($Entity, $Closure) {
+                return $this->getMapper()
+                            ->mapToArray($Statement, $Entity, $Closure);
+            });
     }
 
     /**
@@ -390,15 +399,17 @@ abstract class Model {
      * @return bool
      */
     protected function handleKeyValue(PdoStatement $Statement) {
-        return $this->handleGeneric($Statement, function (PdoStatement $Statement) {
-            return $this->getMapper()
-                        ->mapToArray($Statement, new KeyValueEntity(), function (KeyValueEntity $Entity) {
-                            return [
-                                'key'   => $Entity->key,
-                                'value' => $Entity->value
-                            ];
-                        });
-        });
+        return $this->handleGeneric($Statement,
+            function (PdoStatement $Statement) {
+                return $this->getMapper()
+                            ->mapToArray($Statement, new KeyValueEntity(),
+                                function (KeyValueEntity $Entity) {
+                                    return [
+                                        'key'   => $Entity->key,
+                                        'value' => $Entity->value
+                                    ];
+                                });
+            });
     }
 
     /**
@@ -416,7 +427,8 @@ abstract class Model {
     }
 
     /**
-     * Returns the first column of the first row or a NotFoundHttpException if no row available
+     * Returns the first column of the first row or a NotFoundHttpException if
+     * no row available
      *
      * @param PdoStatement $Statement
      * @return bool
@@ -424,9 +436,10 @@ abstract class Model {
     protected function handleWithFirstRowFirstColumn(PdoStatement $Statement) {
         $Statement->setMustHaveResult();
 
-        return $this->handleGeneric($Statement, function (PdoStatement $Statement) {
-            return $Statement->fetch(\PDO::FETCH_NUM)[0];
-        });
+        return $this->handleGeneric($Statement,
+            function (PdoStatement $Statement) {
+                return $Statement->fetch(\PDO::FETCH_NUM)[0];
+            });
     }
 
     /**
@@ -443,23 +456,25 @@ abstract class Model {
      * Runs the query and returns whether the row count is equal to one or not
      *
      * @param SqlQuery $Query      the query
-     * @param bool     $forceEqual if set to true, only a row count of one and only one returns true
+     * @param bool     $forceEqual if set to true, only a row count of one and
+     *                             only one returns true
      * @return bool whether there is a row or not
      */
     protected function _handleHas(SqlQuery $Query, $forceEqual = true) {
         $stmt = $this->prepare($Query);
 
-        return $this->handleGeneric($stmt, function (PdoStatement $Statement) use ($forceEqual) {
-            if ($Statement->rowCount() == 1 && $forceEqual) {
-                return true;
-            } else {
-                if ($Statement->rowCount() > 0 && !$forceEqual) {
+        return $this->handleGeneric($stmt,
+            function (PdoStatement $Statement) use ($forceEqual) {
+                if ($Statement->rowCount() == 1 && $forceEqual) {
                     return true;
+                } else {
+                    if ($Statement->rowCount() > 0 && !$forceEqual) {
+                        return true;
+                    }
                 }
-            }
 
-            return false;
-        });
+                return false;
+            });
     }
 
     /**
