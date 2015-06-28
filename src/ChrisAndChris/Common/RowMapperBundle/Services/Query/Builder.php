@@ -40,7 +40,7 @@ use Doctrine\Common\Cache\Cache;
 
 /**
  * @name Builder
- * @version   1.0.1
+ * @version   1.0.2
  * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -171,7 +171,8 @@ class Builder {
 
     /**
      * Select a field<br />
-     * Provide a field name or a path to the field (e.g.: database.table.field as array(database, table, field))
+     * Provide a field name or a path to the field (e.g.: database.table.field
+     * as array(database, table, field))
      *
      * @param string|array $identifier path of field or field name
      * @return $this
@@ -349,7 +350,8 @@ class Builder {
 
     /**
      * If the condition is true, the following types will be added<br />
-     * If not, until the next _end() or _else() nothing will be added to the query
+     * If not, until the next _end() or _else() nothing will be added to the
+     * query
      *
      * @param bool $condition the condition to validate
      * @return $this
@@ -377,7 +379,8 @@ class Builder {
         if ($maxIndex === null) {
             throw new MalformedQueryException("No if statement previous to else. If required");
         }
-        $this->stopPropagation[$maxIndex] = !($this->stopPropagation[$maxIndex]);
+        $this->stopPropagation[$maxIndex] =
+            !($this->stopPropagation[$maxIndex]);
 
         return $this;
     }
@@ -494,7 +497,9 @@ class Builder {
 
         // try to use cache
         $data = $this->validateCache($this->statement);
-        if ($data !== false && isset($data['statement']) && isset($data['query'])) {
+        if ($data !== false && isset($data['statement']) &&
+            isset($data['query'])
+        ) {
             $this->statement = $data['statement'];
             $Query = $data['query'];
         }
@@ -508,7 +513,8 @@ class Builder {
             );
         }
 
-        $this->cacheItem($this->getHash($this->statement), $this->statement, $Query);
+        $this->cacheItem($this->getHash($this->statement), $this->statement,
+            $Query);
         $this->clear();
 
         return $Query;
@@ -545,6 +551,7 @@ class Builder {
      * Clear the class
      */
     private function clear() {
+        $this->stopPropagation = [];
         $this->statement = [];
     }
 }

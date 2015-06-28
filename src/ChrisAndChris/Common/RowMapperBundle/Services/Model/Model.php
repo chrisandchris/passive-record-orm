@@ -16,7 +16,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
- * @version   2.0.0
+ * @version   2.0.1
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
@@ -95,7 +95,7 @@ abstract class Model {
             }
         }
         foreach ($options as $name => $value) {
-            if (!isset($option[$name])) {
+            if (!in_array($name, $availableOptions)) {
                 throw new InvalidOptionException("Option '" . $name .
                     "' is unknown to this method.");
             }

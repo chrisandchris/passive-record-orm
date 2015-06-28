@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Logger\PdoLogger;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
@@ -73,6 +74,73 @@ class ModelTest extends TestKernel {
 
         $Model = $this->getModel();
         $this->assertEquals('alpha', $Model->getRunningUser());
+    }
+
+    public function testPrepareOptions() {
+        $Model = $this->getModel();
+
+        $options = [
+            [
+                'offset' => 10
+            ],
+            [
+                'offset' => 10,
+                'articleId' => 50
+            ],
+            [
+                'articleId' => 10
+            ],
+            [
+                'offset' => 50,
+                'limit' => 1000
+            ]
+        ];
+        foreach ($options as $option) {
+            try {
+                $Model->prepareOptions(
+                    [
+                        'offset',
+                        'limit',
+                        'articleId'
+                    ],
+                    $option
+                );
+            } catch (InvalidOptionException $E) {
+                $this->fail('Must not fail due to correct options');
+            }
+        }
+
+        $options = [
+            [
+                'offset' => 10,
+                'nulloption' => false
+            ],
+            [
+                'offset' => 10,
+                'articleDd' => 50
+            ],
+            [
+                'idArticle' => 10
+            ],
+            [
+                'offset' => 50,
+                'limmmmit' => 1000
+            ]
+        ];
+        foreach ($options as $option) {
+            try {
+                $Model->prepareOptions(
+                    [
+                        'offset',
+                        'limit',
+                        'articleId'
+                    ],
+                    $option
+                );
+                $this->fail('Must fail due to incorrect options');
+            } catch (InvalidOptionException $E) {
+            }
+        }
     }
 }
 

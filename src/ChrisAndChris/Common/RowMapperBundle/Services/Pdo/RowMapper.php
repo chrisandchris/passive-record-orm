@@ -36,14 +36,15 @@ class RowMapper {
      * Maps a result from a statement into an entity
      *
      * @param \PDOStatement $statement the statement to map
-     * @param Entity $Entity the entity to use
-     * @param int    $limit  max amount of rows to map
+     * @param Entity        $Entity    the entity to use
+     * @param int           $limit     max amount of rows to map
      * @return array list of mapped rows
      */
     public function mapFromResult(\PDOStatement $statement, Entity $Entity, $limit = null) {
         $return = [];
         $c = 0;
-        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) && (++$c <= $limit || $limit == null)) {
+        while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
+            (++$c <= $limit || $limit == null)) {
             $return[] = $this->mapRow($row, clone $Entity);
         }
 
@@ -60,8 +61,9 @@ class RowMapper {
      */
     private function mapRow(array $row, Entity $Entity) {
         foreach ($row as $key => $value) {
-            if (method_exists($Entity, 'set' . ucfirst($key))) {
-                call_user_func([$Entity, 'set' . ucfirst($key)], $value);
+            $methodName = $this->buildMethodName($key);
+            if (method_exists($Entity, $methodName)) {
+                $Entity->$methodName($value);
             } else {
                 if (property_exists($Entity, $key)) {
                     $Entity->$key = $value;
@@ -78,13 +80,14 @@ class RowMapper {
      * Maps a statement to an associative array<br />
      * <br />
      * The closure is used to map any row, it must give back an array.<br />
-     * The array <i>may</i> contain an index "key" with the desired key value of the returned array and
-     * it <i>must</i> contain an index "value" with the value to map
+     * The array <i>may</i> contain an index "key" with the desired key value
+     * of the returned array and it <i>must</i> contain an index "value" with
+     * the value to map
      *
      * @throws FatalErrorException
      * @param \PDOStatement $statement the statement to map
-     * @param Entity   $entity   the entity to map from
-     * @param \Closure $callable the callable to use to map any row
+     * @param Entity        $entity    the entity to map from
+     * @param \Closure      $callable  the callable to use to map any row
      * @return array the associative mapped array
      */
     public function mapToArray($statement, Entity $entity, \Closure $callable) {
@@ -103,5 +106,14 @@ class RowMapper {
         }
 
         return $return;
+    }
+
+    public function buildMethodName($key) {
+        $partials = explode('_', $key);
+        foreach ($partials as $idx => $part) {
+            $partials[$idx] = ucfirst($part);
+        }
+
+        return 'set' . implode('', $partials);
     }
 }

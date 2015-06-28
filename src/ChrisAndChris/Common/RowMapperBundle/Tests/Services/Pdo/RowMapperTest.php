@@ -123,6 +123,15 @@ class RowMapperTest extends TestKernel {
         $this->assertEquals($array[1], 'Name 2');
         $this->assertEquals(2, count($array));
     }
+
+    public function testBuildMethodName() {
+        $Mapper = new RowMapper();
+        $this->assertEquals('setName', $Mapper->buildMethodName('name'));
+        $this->assertEquals('setSomeName', $Mapper->buildMethodName('some_name'));
+        $this->assertEquals('setSomeName', $Mapper->buildMethodName('someName'));
+        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('some_other_name'));
+        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('someOtherName'));
+    }
 }
 
 class PdoStatementDummy extends \PDOStatement {
