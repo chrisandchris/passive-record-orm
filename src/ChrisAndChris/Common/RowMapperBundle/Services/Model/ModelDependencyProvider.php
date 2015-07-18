@@ -61,29 +61,59 @@ class ModelDependencyProvider {
     /**
      * @return RowMapper
      */
-    protected function getMapper() {
+    public function getMapper() {
         return $this->mapper;
     }
 
     /**
      * @return ErrorHandler
      */
-    protected function getErrorHandler() {
+    public function getErrorHandler() {
         return $this->errorHandler;
     }
 
     /**
      * @return LoggerInterface
      */
-    protected function getLogger() {
+    public function getLogger() {
         return $this->logger;
     }
 
     /**
      * @return Builder
      */
-    protected function getBuilder() {
+    public function getBuilder() {
         return $this->builder;
+    }
+
+    /**
+     * Creates a new database event
+     *
+     * @param string $event      the event name
+     * @param string $type       the query type (select, update, ...)
+     * @param string $table      the primary affected table
+     * @param mixed  $primaryKey the primary key affected
+     * @return DatabaseEvent
+     * @throws InvalidOptionException
+     */
+    public function createEvent(
+        $event, $type, $table = null, $primaryKey = null) {
+
+        if ($this->eventDispatcher === null) {
+            throw new InvalidOptionException('No event dispatcher available to run event');
+        }
+
+        $eventData = new DatabaseEvent($type, $table, $primaryKey);
+
+        return $this->dispatchEvent($event, $eventData);
+    }
+
+    private function dispatchEvent($eventName, Event $event) {
+        return $this->eventDispatcher->dispatch($eventName, $event);
+    }
+
+    public function addListener($eventName, \Closure $callable, $priority = 0) {
+        return $this->eventDispatcher->addListener($eventName, $callable, $priority);
     }
 
     /**
@@ -99,31 +129,5 @@ class ModelDependencyProvider {
         }
 
         return $this->container->getParameter($name);
-    }
-
-    /**
-     * Creates a new database event
-     *
-     * @param string $event      the event name
-     * @param string $type       the query type (select, update, ...)
-     * @param string $table      the primary affected table
-     * @param mixed  $primaryKey the primary key affected
-     * @return DatabaseEvent
-     * @throws InvalidOptionException
-     */
-    protected function createEvent(
-        $event, $type, $table = null, $primaryKey = null) {
-
-        if ($this->eventDispatcher === null) {
-            throw new InvalidOptionException('No event dispatcher available to run event');
-        }
-
-        $eventData = new DatabaseEvent($type, $table, $primaryKey);
-
-        return $this->dispatchEvent($event, $eventData);
-    }
-
-    private function dispatchEvent($eventName, Event $event) {
-        return $this->eventDispatcher->dispatch($eventName, $event);
     }
 }
