@@ -19,11 +19,21 @@ class InsertSnippet extends AbstractSnippet {
      * @return string
      */
     function getCode() {
-        return 'INSERT INTO `#getTable`';
-    }
+        if ($this->getType()
+                 ->getMode() == 'ignore'
+        ) {
+            return 'INSERT IGNORE INTO `'.$this->getType()
+                                               ->getTable().'`';
+        } else {
+            if ($this->getType()
+                     ->getMode() == 'delayed'
+            ) {
+                return 'INSERT DELAYED INTO `'.$this->getType()
+                                                    ->getTable().'`';
+            }
+        }
 
-    public function getTable() {
-        return $this->getType()
-                    ->getTable();
+        return 'INSERT INTO `'.$this->getType()
+                                    ->getTable().'`';
     }
 }

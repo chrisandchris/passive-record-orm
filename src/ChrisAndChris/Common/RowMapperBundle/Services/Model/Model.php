@@ -152,9 +152,10 @@ abstract class Model {
      * Get the PDO class
      *
      * @return \PDO
+     * @deprecated v2.0.1, will be removed in v2.1.0
      */
     protected function getPDO() {
-        return $this->DependencyProvider->getPDO();
+        return $this->DependencyProvider->getPdo();
     }
 
     /**

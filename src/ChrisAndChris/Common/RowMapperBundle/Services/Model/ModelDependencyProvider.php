@@ -1,15 +1,18 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Logger\LoggerInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name ModelDependencyProvider
- * @version    1.0.1
+ * @version    2.0.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -18,61 +21,69 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ModelDependencyProvider {
 
     /** @var PdoLayer the pdo class */
-    private $PDO;
+    private $pdo;
     /** @var RowMapper the row mapper */
-    private $Mapper;
+    private $mapper;
     /** @var ErrorHandler */
-    private $ErrorHandler;
+    private $errorHandler;
     /** @var LoggerInterface the logger used to log statements */
-    private $Logger;
+    private $logger;
     /** @var Builder the query builder */
-    private $Builder;
+    private $builder;
     /** @var ContainerInterface the container */
-    private $Container;
+    private $container;
 
-    function __construct(PdoLayer $PDO, RowMapper $mapper, ErrorHandler $ErrorHandler,
-                         LoggerInterface $Logger, Builder $Builder, ContainerInterface $Container = null) {
-        $this->PDO = $PDO;
-        $this->Mapper = $mapper;
-        $this->ErrorHandler = $ErrorHandler;
-        $this->Logger = $Logger;
-        $this->Builder = $Builder;
-        $this->Container = $Container;
+    function __construct(
+        PdoLayer $pdo,
+        RowMapper $mapper,
+        ErrorHandler $errorHandler,
+        LoggerInterface $logger,
+        Builder $builder,
+        ContainerInterface $container = null,
+        EventDispatcherInterface $eventDispatcher = null) {
+
+        $this->pdo = $pdo;
+        $this->mapper = $mapper;
+        $this->errorHandler = $errorHandler;
+        $this->logger = $logger;
+        $this->builder = $builder;
+        $this->container = $container;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
      * @return PdoLayer
      */
-    public function getPDO() {
-        return $this->PDO;
+    public function getPdo() {
+        return $this->pdo;
     }
 
     /**
      * @return RowMapper
      */
-    public function getMapper() {
-        return $this->Mapper;
+    protected function getMapper() {
+        return $this->mapper;
     }
 
     /**
      * @return ErrorHandler
      */
-    public function getErrorHandler() {
-        return $this->ErrorHandler;
+    protected function getErrorHandler() {
+        return $this->errorHandler;
     }
 
     /**
      * @return LoggerInterface
      */
-    public function getLogger() {
-        return $this->Logger;
+    protected function getLogger() {
+        return $this->logger;
     }
 
     /**
      * @return Builder
      */
-    public function getBuilder() {
-        return $this->Builder;
+    protected function getBuilder() {
+        return $this->builder;
     }
 
     /**
@@ -80,12 +91,39 @@ class ModelDependencyProvider {
      *
      * @param $name
      * @return mixed|null null if container is not set
+     * @throws InvalidOptionException
      */
-    public function getParameter($name) {
-        if ($this->Container === null) {
-            return null;
+    protected function getParameter($name) {
+        if ($this->container === null) {
+            throw new InvalidOptionException('No container available to fetch parameter');
         }
 
-        return $this->Container->getParameter($name);
+        return $this->container->getParameter($name);
+    }
+
+    /**
+     * Creates a new database event
+     *
+     * @param string $event      the event name
+     * @param string $type       the query type (select, update, ...)
+     * @param string $table      the primary affected table
+     * @param mixed  $primaryKey the primary key affected
+     * @return DatabaseEvent
+     * @throws InvalidOptionException
+     */
+    protected function createEvent(
+        $event, $type, $table = null, $primaryKey = null) {
+
+        if ($this->eventDispatcher === null) {
+            throw new InvalidOptionException('No event dispatcher available to run event');
+        }
+
+        $eventData = new DatabaseEvent($type, $table, $primaryKey);
+
+        return $this->dispatchEvent($event, $eventData);
+    }
+
+    private function dispatchEvent($eventName, Event $event) {
+        return $this->eventDispatcher->dispatch($eventName, $event);
     }
 }

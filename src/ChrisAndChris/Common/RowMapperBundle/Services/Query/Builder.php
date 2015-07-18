@@ -110,8 +110,8 @@ class Builder {
         return $this;
     }
 
-    public function insert($table) {
-        $this->append(new InsertType($table));
+    public function insert($table, $mode = null) {
+        $this->append(new InsertType($table, $mode));
 
         return $this;
     }
@@ -171,10 +171,11 @@ class Builder {
 
     /**
      * Select a field<br />
-     * Provide a field name or a path to the field (e.g.: database.table.field
-     * as array(database, table, field))
+     * Array usage of $identifier is deprecated, use only with double-colon<br />
+     * <br />
+     * database:table:field parses to database.table.field
      *
-     * @param string|array $identifier path of field or field name
+     * @param string $identifier path of field or field name
      * @return $this
      */
     public function field($identifier) {
@@ -221,6 +222,8 @@ class Builder {
         ];
         if (in_array($comparisons, $comparison)) {
             $this->append(new ComparisonType($comparison));
+
+            return $this;
         }
         throw new \Exception("No such comparison known");
     }

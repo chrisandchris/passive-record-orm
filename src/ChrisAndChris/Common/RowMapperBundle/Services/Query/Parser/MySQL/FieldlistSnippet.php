@@ -31,18 +31,14 @@ class FieldlistSnippet extends AbstractSnippet {
         $fieldCount = count($this->type->getFields());
         $idx = 0;
         foreach ($this->type->getFields() as $key => $value) {
-            if (strstr($key, ':') !== false) {
-                $key = explode(':', $key);
-                $key = implode('`.`', $key);
-            }
-            if (strstr($value, ':') !== false && is_numeric($key) === true) {
-                $value = explode(':', $value);
-                $value = implode('`.`', $value);
-            }
             if (!is_numeric($key)) {
-                $sql .= '`' . $key . '` as `' . $value . '`';
+                $key = $this->implodeIdentifier($key);
+            }
+            $value = $this->implodeIdentifier($value);
+            if (!is_numeric($key)) {
+                $sql .= $key.' as '.$value;
             } else {
-                $sql .= '`' . $value . '`';
+                $sql .= $value;
             }
             if (++$idx < $fieldCount) {
                 $sql .= ', ';

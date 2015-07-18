@@ -8,9 +8,8 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
  * @version   1.0.0
  * @since     v2.0.0
  * @package   RowMapperbundle
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @author ChrisAndChris
+ * @link   https://github.com/chrisandchris/symfony-rowmapper
  */
 class RawType implements ParameterizedTypeInterface {
 

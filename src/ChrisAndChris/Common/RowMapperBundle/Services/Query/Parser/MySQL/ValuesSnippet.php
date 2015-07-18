@@ -9,9 +9,8 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\AbstractSnippet;
  * @since      v2.0.0
  * @package    KlitCommon
  * @subpackage RowMapperBundle
- * @author     Christian Klauenbösch <christian@klit.ch>
- * @copyright  Klauenbösch IT Services
- * @link       http://www.klit.ch
+ * @author ChrisAndChris
+ * @link   https://github.com/chrisandchris/symfony-rowmapper
  */
 class ValuesSnippet extends AbstractSnippet {
 

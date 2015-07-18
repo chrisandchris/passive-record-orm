@@ -11,11 +11,15 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Type;
  */
 class InsertType implements TypeInterface {
 
+    /** @var string the table to insert */
     private $table;
+    /** @var string the mode to use (e.g. "ignore") */
+    private $mode;
 
 
-    function __construct($table) {
+    function __construct($table, $mode = null) {
         $this->table = $table;
+        $this->mode = $mode;
     }
 
     /**
@@ -32,5 +36,12 @@ class InsertType implements TypeInterface {
      */
     public function getTable() {
         return $this->table;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMode() {
+        return $this->mode;
     }
 }

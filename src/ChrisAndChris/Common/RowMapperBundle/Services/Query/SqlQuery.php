@@ -3,7 +3,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 /**
  * @name SqlStatement
- * @version   1.0.0
+ * @version   1.0.1
  * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -14,7 +14,7 @@ class SqlQuery {
     private $query;
     private $parameters;
 
-    function __construct($query, $parameters) {
+    function __construct($query, $parameters = []) {
         $this->query = $query;
         $this->parameters = $parameters;
     }

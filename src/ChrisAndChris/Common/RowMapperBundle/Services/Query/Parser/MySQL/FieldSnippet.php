@@ -35,7 +35,7 @@ class FieldSnippet extends AbstractSnippet {
                 }
             }
         } else {
-            $code = '`#getNextIdentifier`';
+            $code = $this->implodeIdentifier($this->type->getIdentifier());
         }
 
         return $code;

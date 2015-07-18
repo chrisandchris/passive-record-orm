@@ -10,9 +10,8 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @version   1.0.0
  * @since     v2.0.0
  * @package   RowMapperBundle
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @author ChrisAndChris
+ * @link   https://github.com/chrisandchris/symfony-rowmapper
  */
 class FieldlistSnippetTest extends TestKernel {
 
