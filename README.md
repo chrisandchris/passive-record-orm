@@ -185,6 +185,7 @@ You are allowed to nest ifs, and you are allowed to push a closure as parameter 
 ->_else()
     //
 ->_end()
+```
 
 ### Some other methods
 * f() - for functions
