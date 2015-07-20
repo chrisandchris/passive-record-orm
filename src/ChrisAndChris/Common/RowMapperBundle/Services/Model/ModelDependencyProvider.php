@@ -123,7 +123,7 @@ class ModelDependencyProvider {
      * @return mixed|null null if container is not set
      * @throws InvalidOptionException
      */
-    protected function getParameter($name) {
+    public function getParameter($name) {
         if ($this->container === null) {
             throw new InvalidOptionException('No container available to fetch parameter');
         }
