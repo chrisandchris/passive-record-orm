@@ -73,21 +73,28 @@ class Builder {
     }
 
     private function append(TypeInterface $type) {
+        if ($this->allowAppend()) {
+            $this->statement[] = $type;
+        }
+    }
+
+    private function allowAppend() {
         // for speed, we first check only the last index
         // if the last index says we should append, we check all other indexes
         // any of the index must be false
         $maxIndex = $this->getHighestPropagationKey();
         if ($maxIndex !== null && $this->stopPropagation[$maxIndex] === true) {
-            return;
+            return false;
         } else {
             // do check only if the latest says that we should append
             foreach ($this->stopPropagation as $status) {
                 if ($status === true) {
-                    return;
+                    return false;
                 }
             }
         }
-        $this->statement[] = $type;
+
+        return true;
     }
 
     private function getHighestPropagationKey() {
@@ -237,7 +244,7 @@ class Builder {
      * @return $this
      */
     public function value($value) {
-        if ($value instanceof \Closure) {
+        if ($value instanceof \Closure && $this->allowAppend()) {
             $value = $value();
         }
         $this->append(new ValueType($value));
@@ -366,7 +373,7 @@ class Builder {
      * @return $this
      */
     public function _if($condition) {
-        if ($condition instanceof \Closure) {
+        if ($condition instanceof \Closure && $this->allowAppend()) {
             $condition = $condition();
         }
         $condition = (bool)$condition;
@@ -486,7 +493,7 @@ class Builder {
      * @return $this
      */
     public function like($pattern) {
-        if ($pattern instanceof \Closure) {
+        if ($pattern instanceof \Closure && $this->allowAppend()) {
             $pattern = $pattern();
         }
         $this->append(new LikeType($pattern));
