@@ -73,21 +73,28 @@ class Builder {
     }
 
     private function append(TypeInterface $type) {
+        if ($this->allowAppend()) {
+            $this->statement[] = $type;
+        }
+    }
+
+    private function allowAppend() {
         // for speed, we first check only the last index
         // if the last index says we should append, we check all other indexes
         // any of the index must be false
         $maxIndex = $this->getHighestPropagationKey();
         if ($maxIndex !== null && $this->stopPropagation[$maxIndex] === true) {
-            return;
+            return false;
         } else {
             // do check only if the latest says that we should append
             foreach ($this->stopPropagation as $status) {
                 if ($status === true) {
-                    return;
+                    return false;
                 }
             }
         }
-        $this->statement[] = $type;
+
+        return true;
     }
 
     private function getHighestPropagationKey() {
@@ -220,22 +227,26 @@ class Builder {
             '>=',
             '<='
         ];
-        if (in_array($comparisons, $comparison)) {
+        if (in_array($comparison, $comparisons)) {
             $this->append(new ComparisonType($comparison));
 
             return $this;
         }
-        throw new \Exception("No such comparison known");
+        throw new MalformedQueryException("No such comparison known");
     }
 
     /**
      * Adds a new raw value to the statement<br />
-     * The value gets encoded as parameter
+     * The value gets encoded as parameter<br />
+     * If you give a closure, the return value of the closure is used
      *
-     * @param $value
+     * @param mixed|\Closure $value
      * @return $this
      */
     public function value($value) {
+        if ($value instanceof \Closure && $this->allowAppend()) {
+            $value = $value();
+        }
         $this->append(new ValueType($value));
 
         return $this;
@@ -354,12 +365,17 @@ class Builder {
     /**
      * If the condition is true, the following types will be added<br />
      * If not, until the next _end() or _else() nothing will be added to the
-     * query
+     * query<br />
+     * <br />
+     * If you give a closure as $condition, the result of the function call is used
      *
-     * @param bool $condition the condition to validate
+     * @param bool|\Closure $condition the condition to validate
      * @return $this
      */
     public function _if($condition) {
+        if ($condition instanceof \Closure && $this->allowAppend()) {
+            $condition = $condition();
+        }
         $condition = (bool)$condition;
         if ($condition !== true) {
             $this->stopPropagation[] = true;
@@ -469,12 +485,17 @@ class Builder {
     }
 
     /**
-     * Adds a new LIKE statement
+     * Adds a new LIKE statement<br />
+     * <br />
+     * If you give a closure as $pattern, the result of the function call is used
      *
-     * @param $pattern
+     * @param mixed|\Closure $pattern
      * @return $this
      */
     public function like($pattern) {
+        if ($pattern instanceof \Closure && $this->allowAppend()) {
+            $pattern = $pattern();
+        }
         $this->append(new LikeType($pattern));
 
         return $this;
