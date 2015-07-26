@@ -1,0 +1,6 @@
+.gitignore                                              export-ignore
+/src/ChrisAndChris/Common/RowMapperBundle/Tests/*       export-ignore
+/app/phpunit.xml.dist                                   export-ignore
+/app/phpunit.xml                                        export-ignore
+/changelog/*                                            export-ignore
+/roadmap/*                                              export-ignore
