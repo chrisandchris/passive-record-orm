@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
@@ -366,5 +367,32 @@ class BuilderTest extends TestKernel {
     public function testGetSqlQuery() {
         $Builder = $this->getBuilder();
         $this->assertTrue($Builder->getSqlQuery() instanceof SqlQuery);
+    }
+
+    public function testComparison() {
+        $b = $this->getBuilder();
+        $this->assertTrue($b->compare('<=') instanceof Builder);
+        $this->assertTrue($b->compare('<') instanceof Builder);
+        $this->assertTrue($b->compare('>=') instanceof Builder);
+        $this->assertTrue($b->compare('>') instanceof Builder);
+        $this->assertTrue($b->compare('<>') instanceof Builder);
+        $this->assertTrue($b->compare('!=') instanceof Builder);
+        $this->assertTrue($b->compare('=') instanceof Builder);
+
+        $tests = [
+            '>>',
+            '<<',
+            '1',
+            'a',
+            '()',
+        ];
+        foreach ($tests as $test) {
+            try {
+                $b->compare($test);
+                $this->fail('Must fail due to unknown comparison type');
+            } catch (MalformedQueryException $e) {
+                // ignore
+            }
+        }
     }
 }

@@ -61,44 +61,29 @@ class ModelDependencyProvider {
     /**
      * @return RowMapper
      */
-    protected function getMapper() {
+    public function getMapper() {
         return $this->mapper;
     }
 
     /**
      * @return ErrorHandler
      */
-    protected function getErrorHandler() {
+    public function getErrorHandler() {
         return $this->errorHandler;
     }
 
     /**
      * @return LoggerInterface
      */
-    protected function getLogger() {
+    public function getLogger() {
         return $this->logger;
     }
 
     /**
      * @return Builder
      */
-    protected function getBuilder() {
+    public function getBuilder() {
         return $this->builder;
-    }
-
-    /**
-     * Get a parameter
-     *
-     * @param $name
-     * @return mixed|null null if container is not set
-     * @throws InvalidOptionException
-     */
-    protected function getParameter($name) {
-        if ($this->container === null) {
-            throw new InvalidOptionException('No container available to fetch parameter');
-        }
-
-        return $this->container->getParameter($name);
     }
 
     /**
@@ -111,7 +96,7 @@ class ModelDependencyProvider {
      * @return DatabaseEvent
      * @throws InvalidOptionException
      */
-    protected function createEvent(
+    public function createEvent(
         $event, $type, $table = null, $primaryKey = null) {
 
         if ($this->eventDispatcher === null) {
@@ -125,5 +110,24 @@ class ModelDependencyProvider {
 
     private function dispatchEvent($eventName, Event $event) {
         return $this->eventDispatcher->dispatch($eventName, $event);
+    }
+
+    public function addListener($eventName, \Closure $callable, $priority = 0) {
+        return $this->eventDispatcher->addListener($eventName, $callable, $priority);
+    }
+
+    /**
+     * Get a parameter
+     *
+     * @param $name
+     * @return mixed|null null if container is not set
+     * @throws InvalidOptionException
+     */
+    public function getParameter($name) {
+        if ($this->container === null) {
+            throw new InvalidOptionException('No container available to fetch parameter');
+        }
+
+        return $this->container->getParameter($name);
     }
 }
