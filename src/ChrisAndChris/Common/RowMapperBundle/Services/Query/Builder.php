@@ -2,40 +2,11 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\SystemException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AliasType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AndType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\AnyType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\BraceType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\CloseType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\CommaType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ComparisonType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\DeleteType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\EqualsType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\FieldlistType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\FieldType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\FunctionType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\GroupType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\InsertType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\IsNullType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\JoinType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LikeType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\LimitType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\NullType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OffsetType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OnType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrderByType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrderType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\OrType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\RawType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\SelectType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TableType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\UpdateType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\UsingType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValuesType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ValueType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\WhereType;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use Doctrine\Common\Cache\Cache;
 
 /**
@@ -51,30 +22,60 @@ class Builder {
     /** @var array the statement */
     private $statement = [];
     /** @var ParserInterface */
-    private $Parser;
+    private $parser;
     /** @var Cache Doctrine cache interface */
     private $Cache;
     /** @var array an array, which handles the if/else-statements */
     private $stopPropagation = [];
+    /** @var TypeBag */
+    private $typeBag;
 
-    function __construct(ParserInterface $Parser, Cache $Cache = null) {
-        $this->Cache = $Cache;
-        $this->Parser = $Parser;
+    function __construct(ParserInterface $parser, TypeBag $parameterBag, Cache $cache = null) {
+        $this->Cache = $cache;
+        $this->parser = $parser;
+        $this->typeBag = $parameterBag;
     }
 
-    public function setParser(ParserInterface $Parser) {
-        $this->Parser = $Parser;
+    public function setParser(ParserInterface $parser) {
+        $this->parser = $parser;
     }
 
     public function select() {
-        $this->append(new SelectType());
+        $this->append('select');
 
         return $this;
     }
 
-    private function append(TypeInterface $type) {
-        if ($this->allowAppend()) {
-            $this->statement[] = $type;
+    private function append($typeName, array $params = []) {
+        if ($this->allowAppend() && $this->typeBag->has($typeName)) {
+            $endParams = [];
+            $type = $this->typeBag->get($typeName);
+            if (is_array($type['params'])) {
+                foreach ($type['params'] as $param) {
+                    if (in_array($param, $type['required']) &&
+                        !isset($params[$param])
+                    ) {
+                        throw new MissingParameterException(
+                            'Parameter "' . $param . '" for type "' .
+                            $typeName .
+                            '" is missing."'
+                        );
+                    }
+                    if (isset($params[$param])) {
+                        $endParams[$param] = $params[$param];
+                    } else {
+                        $endParams[$param] = null;
+                    }
+                }
+            }
+            $this->statement[] = [
+                'type'   => $typeName,
+                'params' => $endParams,
+            ];
+        } elseif ($this->typeBag->has($typeName)) {
+            throw new TypeNotFoundException(
+                'No type "' . $typeName . '" found'
+            );
         }
     }
 
@@ -106,25 +107,25 @@ class Builder {
     }
 
     public function update($table) {
-        $this->append(new UpdateType($table));
+        $this->append('update', ['table' => $table]);
 
         return $this;
     }
 
     public function delete($table) {
-        $this->append(new DeleteType($table));
+        $this->append('delete', ['table' => $table]);
 
         return $this;
     }
 
     public function insert($table, $mode = null) {
-        $this->append(new InsertType($table, $mode));
+        $this->append('insert', ['table' => $table, 'mode' => $mode]);
 
         return $this;
     }
 
     public function table($table, $alias = null) {
-        $this->append(new TableType($table, $alias));
+        $this->append('table', ['table' => $table, 'alias' => $alias]);
 
         return $this;
     }
@@ -142,19 +143,19 @@ class Builder {
      * @return $this
      */
     public function fieldlist(array $fields) {
-        $this->append(new FieldlistType($fields));
+        $this->append('fieldlist', ['fields' => $fields]);
 
         return $this;
     }
 
     public function where() {
-        $this->append(new WhereType());
+        $this->append('where');
 
         return $this;
     }
 
     public function alias($alias) {
-        $this->append(new AliasType($alias));
+        $this->append('alias', ['alias' => $alias]);
 
         return $this;
     }
@@ -171,14 +172,15 @@ class Builder {
     }
 
     public function close() {
-        $this->append(new CloseType());
+        $this->append('close');
 
         return $this;
     }
 
     /**
      * Select a field<br />
-     * Array usage of $identifier is deprecated, use only with double-colon<br />
+     * Array usage of $identifier is deprecated, use only with double-colon<br
+     * />
      * <br />
      * database:table:field parses to database.table.field
      *
@@ -186,7 +188,7 @@ class Builder {
      * @return $this
      */
     public function field($identifier) {
-        $this->append(new FieldType($identifier));
+        $this->append('field', ['identifier' => $identifier]);
 
         return $this;
     }
@@ -200,39 +202,27 @@ class Builder {
      * @return $this
      */
     public function f($name) {
-        $this->append(new FunctionType($name));
+        $this->append('function', ['name' => $name]);
 
         return $this;
     }
 
     public function any() {
-        $this->append(new AnyType());
+        $this->append('any');
 
         return $this;
     }
 
     public function equals() {
-        $this->append(new EqualsType());
+        $this->append('equals');
 
         return $this;
     }
 
     public function compare($comparison) {
-        $comparisons = [
-            '<',
-            '>',
-            '<>',
-            '=',
-            '!=',
-            '>=',
-            '<='
-        ];
-        if (in_array($comparison, $comparisons)) {
-            $this->append(new ComparisonType($comparison));
+        $this->append('comparison', ['comparison' => $comparison]);
 
-            return $this;
-        }
-        throw new MalformedQueryException("No such comparison known");
+        return $this;
     }
 
     /**
@@ -247,7 +237,7 @@ class Builder {
         if ($value instanceof \Closure && $this->allowAppend()) {
             $value = $value();
         }
-        $this->append(new ValueType($value));
+        $this->append('value', ['value' => $value]);
 
         return $this;
     }
@@ -258,59 +248,65 @@ class Builder {
      * @return $this
      */
     public function values() {
-        $this->append(new ValuesType());
+        $this->append('values');
 
         return $this;
     }
 
     public function null() {
-        $this->append(new NullType());
+        $this->append('null');
 
         return $this;
     }
 
     public function isNull($isNull = true) {
         if ($isNull) {
-            $this->append(new IsNullType());
+            $this->append('isnull', ['isnull' => true]);
         } else {
-            $this->append(new IsNullType(false));
+            $this->append('isnull', ['isNull' => false]);
         }
 
         return $this;
     }
 
     public function brace() {
-        $this->append(new BraceType());
+        $this->append('brace');
 
         return $this;
     }
 
     public function limit($limit = 1) {
-        $this->append(new LimitType($limit));
+        $this->append('limit', ['limit' => $limit]);
 
         return $this;
     }
 
     public function offset($offset = 0) {
-        $this->append(new OffsetType($offset));
+        $this->append('offset', ['offset' => $offset]);
 
         return $this;
     }
 
-    public function join($table, $type = 'inner') {
-        $this->append(new JoinType($table, $type));
+    public function join($table, $type = 'inner', $alias = null) {
+        $this->append(
+            'join', [
+                'table' => $table,
+                'type'  => $type,
+                'alias' => $alias,
+            ]
+        );
 
         return $this;
     }
 
     public function using($field) {
-        $this->append(new UsingType($field));
+        $this->append('using', ['field' => $field]);
 
         return $this;
     }
 
     public function on() {
-        $this->append(new OnType());
+        $this->append('on');
 
         return $this;
     }
@@ -327,10 +323,10 @@ class Builder {
      * @return $this
      */
     public function groupBy($field = null) {
-        $this->append(new GroupType());
+        $this->append('group');
         if ($field != null) {
-            $this->append(new FieldType($field));
-            $this->append(new CloseType());
+            $this->append('field', ['identifier' => $field]);
+            $this->append('close');
         }
 
         return $this;
@@ -344,7 +340,7 @@ class Builder {
      * @return $this
      */
     public function order() {
-        $this->append(new OrderType());
+        $this->append('order');
 
         return $this;
     }
@@ -357,7 +353,7 @@ class Builder {
      * @return $this
      */
     public function raw($raw, array $params = []) {
-        $this->append(new RawType($raw, $params));
+        $this->append('raw', ['raw' => $raw, 'params' => $params]);
 
         return $this;
     }
@@ -367,7 +363,8 @@ class Builder {
      * If not, until the next _end() or _else() nothing will be added to the
      * query<br />
      * <br />
-     * If you give a closure as $condition, the result of the function call is used
+     * If you give a closure as $condition, the result of the function call is
+     * used
      *
      * @param bool|\Closure $condition the condition to validate
      * @return $this
@@ -430,19 +427,29 @@ class Builder {
      * @return $this
      */
     public function orderBy(array $orders) {
-        $this->append(new OrderType());
+        $this->append('order');
         $idx = 0;
         foreach ($orders as $field => $direction) {
             if (is_numeric($field)) {
-                $this->append(new OrderByType($direction));
+                $this->append(
+                    'orderby', [
+                        'field'     => $direction,
+                        'direction' => 'desc',
+                    ]
+                );
             } else {
-                $this->append(new OrderByType($field, $direction));
+                $this->append(
+                    'orderby', [
+                        'field'     => $field,
+                        'direction' => $direction,
+                    ]
+                );
             }
             if (++$idx < count($orders)) {
-                $this->append(new CommaType());
+                $this->append('comma');
             }
         }
-        $this->append(new CloseType());
+        $this->append('close');
 
         return $this;
     }
@@ -455,7 +462,7 @@ class Builder {
      * @return $this
      */
     public function by($field, $order = 'desc') {
-        $this->append(new OrderByType($field, $order));
+        $this->append('orderby', ['field' => $field, 'direction' => $order]);
 
         return $this;
     }
@@ -465,13 +472,13 @@ class Builder {
             case 'and' :
             case '&' :
             case '&&' :
-                $this->append(new AndType());
+            $this->append('and');
 
                 return $this;
             case 'or' :
             case '|' :
             case '||' :
-                $this->append(new OrType());
+            $this->append('or');
 
                 return $this;
         }
@@ -479,7 +486,7 @@ class Builder {
     }
 
     public function c() {
-        $this->append(new CommaType());
+        $this->append('comma');
 
         return $this;
     }
@@ -487,7 +494,8 @@ class Builder {
     /**
      * Adds a new LIKE statement<br />
      * <br />
-     * If you give a closure as $pattern, the result of the function call is used
+     * If you give a closure as $pattern, the result of the function call is
+     * used
      *
      * @param mixed|\Closure $pattern
      * @return $this
@@ -496,7 +504,7 @@ class Builder {
         if ($pattern instanceof \Closure && $this->allowAppend()) {
             $pattern = $pattern();
         }
-        $this->append(new LikeType($pattern));
+        $this->append('like', ['pattern' => $pattern]);
 
         return $this;
     }
@@ -511,12 +519,13 @@ class Builder {
     }
 
     /**
+     * @param ParserInterface $parser
      * @return SqlQuery
-     * @throws \Exception
+     * @throws SystemException
      */
-    public function getSqlQuery() {
-        if ($this->Parser === null) {
-            throw new \Exception("no parser given");
+    public function getSqlQuery(ParserInterface $parser = null) {
+        if ($this->parser === null && $parser === null) {
+            throw new SystemException('No parser given');
         }
 
         // try to use cache
@@ -525,23 +534,28 @@ class Builder {
             isset($data['query'])
         ) {
             $this->statement = $data['statement'];
-            $Query = $data['query'];
+            $query = $data['query'];
         }
 
-        if (!isset($Query)) {
-            $this->Parser->setStatement($this->statement);
-            $this->Parser->execute();
-            $Query = new SqlQuery(
-                $this->Parser->getSqlQuery(),
-                $this->Parser->getParameters()
+        if ($parser === null) {
+            $parser = $this->parser;
+        }
+        if (!isset($query)) {
+            $parser->setStatement($this->statement);
+            $parser->execute();
+            $query = new SqlQuery(
+                $parser->getSqlQuery(),
+                $parser->getParameters()
             );
         }
 
-        $this->cacheItem($this->getHash($this->statement), $this->statement,
-            $Query);
+        $this->cacheItem(
+            $this->getHash($this->statement), $this->statement,
+            $query
+        );
         $this->clear();
 
-        return $Query;
+        return $query;
     }
 
     private function validateCache(array $statement) {
@@ -564,10 +578,14 @@ class Builder {
 
     private function cacheItem($hash, array $statement, SqlQuery $Query) {
         if (is_object($this->Cache)) {
-            $this->Cache->save($hash, serialize([
-                'statement' => $statement,
-                'query'     => $Query
-            ]), 3600);
+            $this->Cache->save(
+                $hash, serialize(
+                [
+                    'statement' => $statement,
+                    'query'     => $Query,
+                ]
+            ), 3600
+            );
         }
     }
 

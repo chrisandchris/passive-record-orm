@@ -4,10 +4,11 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests;
 use AppKernel;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @name TestKernel
- * @version   1
+ * @version   2
  * @since     v1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -15,25 +16,23 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 abstract class TestKernel extends WebTestCase {
 
-    /**
-     * @var \AppKernel
-     */
+    /** @var \AppKernel */
     protected $appKernel;
-
-    /**
-     * @var Client
-     */
+    /** @var Client */
     protected $client;
-
-    function _construct() {
-        $this->client = static::createClient();
-    }
+    /** @var ContainerInterface */
+    protected $container;
 
     /**
      * This method is run before each test
      */
     public function setUp() {
-        parent::setUp();
+        $this->client = static::createClient();
+
+        $this->appKernel = new AppKernel('test', true);
+        $this->appKernel->boot();
+
+        $this->container = $this->appKernel->getContainer();
     }
 
     /**

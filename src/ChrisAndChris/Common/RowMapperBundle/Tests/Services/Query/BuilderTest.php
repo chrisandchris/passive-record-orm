@@ -4,12 +4,13 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name BuilderTest
- * @version   1
+ * @version   2
  * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -19,7 +20,7 @@ class BuilderTest extends TestKernel {
 
     function testSimpleQuery() {
         // @formatter:off
-        $Builder = new Builder(new DefaultParser());
+        $Builder = $this->getBuilder();
         $Builder->select()
             ->fieldlist([
                 'field1' => 'aliasName',
@@ -67,6 +68,13 @@ class BuilderTest extends TestKernel {
         $this->assertEquals(4, count($query->getParameters()));
     }
 
+    private function getBuilder() {
+        $typeBag = $this->container->get('common_rowmapper.typeBag');
+        $snippetBag = $this->container->get('common_rowmapper.snippetBag');
+
+        return new Builder(new DefaultParser($typeBag, $snippetBag), $typeBag);
+    }
+
     public function testSelect() {
         $Builder = $this->getBuilder();
         $Builder->select();
@@ -74,18 +82,21 @@ class BuilderTest extends TestKernel {
         $this->equals('SELECT', $Builder);
     }
 
-    /**
-     * @return Builder
-     */
-    private function getBuilder() {
-        $B = new Builder(new DefaultParser());
-
-        return $B;
+    private function equals($expected, Builder $Builder) {
+        $this->assertEquals(
+            $expected, $this->minify(
+            $Builder->getSqlQuery()
+                    ->getQuery()
+        )
+        );
     }
 
-    private function equals($expected, Builder $Builder) {
-        $this->assertEquals($expected, $Builder->getSqlQuery()
-                                               ->getQuery());
+    private function minify($query) {
+        while (strstr($query, '  ') !== false) {
+            $query = str_replace('  ', ' ', $query);
+        }
+
+        return $query;
     }
 
     public function testUpdate() {
@@ -115,36 +126,46 @@ class BuilderTest extends TestKernel {
 
     public function testFieldlist() {
         $B = $this->getBuilder();
-        $B->fieldlist([
-            'field1'
-        ]);
+        $B->fieldlist(
+            [
+                'field1',
+            ]
+        );
         $this->equals('`field1`', $B);
 
         $B = $this->getBuilder();
-        $B->fieldlist([
-            'field1',
-            'field2'
-        ]);
+        $B->fieldlist(
+            [
+                'field1',
+                'field2',
+            ]
+        );
         $this->equals('`field1`, `field2`', $B);
 
         $B = $this->getBuilder();
-        $B->fieldlist([
-            'field1' => 'alias1'
-        ]);
+        $B->fieldlist(
+            [
+                'field1' => 'alias1',
+            ]
+        );
         $this->equals('`field1` as `alias1`', $B);
 
         $B = $this->getBuilder();
-        $B->fieldlist([
-            'field1' => 'alias1',
-            'field2' => 'alias2'
-        ]);
+        $B->fieldlist(
+            [
+                'field1' => 'alias1',
+                'field2' => 'alias2',
+            ]
+        );
         $this->equals('`field1` as `alias1`, `field2` as `alias2`', $B);
 
         $B = $this->getBuilder();
-        $B->fieldlist([
-            'field1' => 'alias1',
-            'field2'
-        ]);
+        $B->fieldlist(
+            [
+                'field1' => 'alias1',
+                'field2',
+            ]
+        );
         $this->equals('`field1` as `alias1`, `field2`', $B);
     }
 
@@ -156,7 +177,7 @@ class BuilderTest extends TestKernel {
           ->value('1')
           ->close();
         // be careful, two whitespaces after WHERE
-        $this->equals('WHERE  `field1` = ?', $B);
+        $this->equals('WHERE `field1` = ?', $B);
 
         $B = $this->getBuilder();
         $B->where()
@@ -169,7 +190,7 @@ class BuilderTest extends TestKernel {
           ->field('field3')
           ->close();
 
-        $this->equals('WHERE  `field1` = ? AND `field2` = `field3`', $B);
+        $this->equals('WHERE `field1` = ? AND `field2` = `field3`', $B);
     }
 
     public function testField() {
@@ -211,8 +232,7 @@ class BuilderTest extends TestKernel {
         $B = $this->getBuilder();
         $B->brace()
           ->close();
-        // got three whitespaces if nothing in it
-        $this->equals('(   )', $B);
+        $this->equals('( )', $B);
     }
 
     public function testLimit() {
@@ -256,7 +276,7 @@ class BuilderTest extends TestKernel {
           ->equals()
           ->field('field2')
           ->close();
-        $this->equals('ON (  `field1` = `field2`  )', $B);
+        $this->equals('ON ( `field1` = `field2` )', $B);
 
         $B = $this->getBuilder();
         $B->on()
@@ -264,13 +284,13 @@ class BuilderTest extends TestKernel {
           ->equals()
           ->field(['t2', 'field2'])
           ->close();
-        $this->equals('ON (  `t1`.`field1` = `t2`.`field2`  )', $B);
+        $this->equals('ON ( `t1`.`field1` = `t2`.`field2` )', $B);
     }
 
     public function testGroupBy() {
         $B = $this->getBuilder();
         $B->groupBy('field1');
-        $this->equals('GROUP BY  `field1`', $B);
+        $this->equals('GROUP BY `field1`', $B);
 
         $B = $this->getBuilder();
         $B->groupBy()
@@ -278,7 +298,7 @@ class BuilderTest extends TestKernel {
           ->c()
           ->field('field2')
           ->close();
-        $this->equals('GROUP BY  `field1` , `field2`', $B);
+        $this->equals('GROUP BY `field1` , `field2`', $B);
     }
 
     public function testOrder() {
@@ -286,13 +306,13 @@ class BuilderTest extends TestKernel {
         $B->order()
           ->by('field1')
           ->close();
-        $this->equals('ORDER BY  `field1` DESC', $B);
+        $this->equals('ORDER BY `field1` DESC', $B);
 
         $B = $this->getBuilder();
         $B->order()
           ->by('field1', 'asc')
           ->close();
-        $this->equals('ORDER BY  `field1` ASC', $B);
+        $this->equals('ORDER BY `field1` ASC', $B);
 
         $B = $this->getBuilder();
         $B->order()
@@ -300,28 +320,34 @@ class BuilderTest extends TestKernel {
           ->c()
           ->by('field2')
           ->close();
-        $this->equals('ORDER BY  `field1` ASC , `field2` DESC', $B);
+        $this->equals('ORDER BY `field1` ASC , `field2` DESC', $B);
     }
 
     public function testOderBy() {
         $B = $this->getBuilder();
-        $B->orderBy([
-            'field1'
-        ]);
-        $this->equals('ORDER BY  `field1` DESC', $B);
+        $B->orderBy(
+            [
+                'field1',
+            ]
+        );
+        $this->equals('ORDER BY `field1` DESC', $B);
 
         $B = $this->getBuilder();
-        $B->orderBy([
-            'field1' => 'asc'
-        ]);
-        $this->equals('ORDER BY  `field1` ASC', $B);
+        $B->orderBy(
+            [
+                'field1' => 'asc',
+            ]
+        );
+        $this->equals('ORDER BY `field1` ASC', $B);
 
         $B = $this->getBuilder();
-        $B->orderBy([
-            'field1' => 'asc',
-            'field2'
-        ]);
-        $this->equals('ORDER BY  `field1` ASC , `field2` DESC', $B);
+        $B->orderBy(
+            [
+                'field1' => 'asc',
+                'field2',
+            ]
+        );
+        $this->equals('ORDER BY `field1` ASC , `field2` DESC', $B);
     }
 
     public function testConnect() {
@@ -370,14 +396,20 @@ class BuilderTest extends TestKernel {
     }
 
     public function testComparison() {
-        $b = $this->getBuilder();
-        $this->assertTrue($b->compare('<=') instanceof Builder);
-        $this->assertTrue($b->compare('<') instanceof Builder);
-        $this->assertTrue($b->compare('>=') instanceof Builder);
-        $this->assertTrue($b->compare('>') instanceof Builder);
-        $this->assertTrue($b->compare('<>') instanceof Builder);
-        $this->assertTrue($b->compare('!=') instanceof Builder);
-        $this->assertTrue($b->compare('=') instanceof Builder);
+        $tests = [
+            '<=',
+            '<',
+            '>=',
+            '>',
+            '<>',
+            '!=',
+            '=',
+        ];
+        foreach ($tests as $test) {
+            $builder = $this->getBuilder();
+            $builder->compare($test)
+                    ->getSqlQuery();
+        }
 
         $tests = [
             '>>',
@@ -388,7 +420,9 @@ class BuilderTest extends TestKernel {
         ];
         foreach ($tests as $test) {
             try {
-                $b->compare($test);
+                $builder = $this->getBuilder();
+                $builder->compare($test)
+                        ->getSqlQuery();
                 $this->fail('Must fail due to unknown comparison type');
             } catch (MalformedQueryException $e) {
                 // ignore

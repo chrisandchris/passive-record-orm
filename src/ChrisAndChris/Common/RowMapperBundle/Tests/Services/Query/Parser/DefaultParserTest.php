@@ -3,14 +3,13 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\BraceType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\CloseType;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\SelectType;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name DefaultParserTest
- * @version   1
+ * @version   2
  * @since     v2.0.1
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -19,22 +18,35 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 class DefaultParserTest extends TestKernel {
 
     public function testSimpleExecute() {
-        $parser = new DefaultParser();
+        $parser = $this->getParser();
         $parser->setStatement(
             [
-                new SelectType(),
+                [
+                    'type'   => 'select',
+                    'params' => [],
+                ],
             ]
         );
         $parser->execute();
         $this->assertEquals('SELECT', $parser->getSqlQuery());
     }
 
+    private function getParser() {
+        return new DefaultParser(new TypeBag(), new SnippetBag());
+    }
+
     public function testOpenBraces() {
-        $parser = new DefaultParser();
+        $parser = $this->getParser();
         $parser->setStatement(
             [
-                new SelectType(),
-                new BraceType(),
+                [
+                    'type'   => 'select',
+                    'params' => [],
+                ],
+                [
+                    'type'   => 'brace',
+                    'params' => [],
+                ],
             ]
         );
         try {
@@ -46,11 +58,17 @@ class DefaultParserTest extends TestKernel {
     }
 
     public function testNotOpenedBraces() {
-        $parser = new DefaultParser();
+        $parser = $this->getParser();
         $parser->setStatement(
             [
-                new SelectType(),
-                new CloseType(),
+                [
+                    'type'   => 'select',
+                    'params' => [],
+                ],
+                [
+                    'type'   => 'close',
+                    'params' => [],
+                ],
             ]
         );
         try {

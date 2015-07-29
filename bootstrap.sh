@@ -96,7 +96,7 @@ xdebug.remote_port=9000
 xdebug.remote_log=/tmp/php5-xdebug.log" >> /etc/php5/cli/conf.d/xdebug.ini
 
 echo "alias phpx=\"php -dxdebug.remote_host=10.211.55.2 -dxdebug.remote_autostart=1\"" >> /home/vagrant/.bash_profile
-echo "alias phpunitx=\"phpunit -dxdebug.remote_host=10.211.55.2 -dxdebug.remote_autostart=1\"" >> /home/vagrant/.bash_profile
+echo "alias phpunitx=\"./vendor/phpunit/phpunit/phpunit  -dxdebug.remote_host=10.211.55.2 -dxdebug.remote_autostart=1\"" >> /home/vagrant/.bash_profile
 echo "alias ll=\"ls -al\"" >> /home/vagrant/.bash_profile
 
 echo "--- All done, enjoy! :) ---"
