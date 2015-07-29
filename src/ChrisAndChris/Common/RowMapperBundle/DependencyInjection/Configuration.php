@@ -18,35 +18,6 @@ class Configuration implements ConfigurationInterface {
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('chris_and_chris_row_mapper');
 
-        // @formatter:off
-        $rootNode->children()
-            ->arrayNode('types')
-                ->prototype('array')
-                    ->children()
-                        ->arrayNode('params')
-                            ->isRequired()
-                            ->prototype('scalar')->end()
-                        ->end()
-                        ->arrayNode('required')
-                            ->prototype('scalar')->end()
-                        ->end()
-                    ->end()
-                ->end()
-            ->end()
-            ->arrayNode('snippets')
-                ->prototype('array')
-                    ->children()
-                        ->scalarNode('code')
-                            ->isRequired()->end()
-                        ->arrayNode('routine')
-                            ->prototype('scalar')->end()
-                        ->end()
-                    ->end()
-                ->end()
-            ->end()
-        ->end();
-        // @formatter:on
-
         return $treeBuilder;
     }
 }

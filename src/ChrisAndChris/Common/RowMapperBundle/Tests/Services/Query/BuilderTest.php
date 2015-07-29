@@ -5,6 +5,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
@@ -69,8 +70,8 @@ class BuilderTest extends TestKernel {
     }
 
     private function getBuilder() {
-        $typeBag = $this->container->get('common_rowmapper.typeBag');
-        $snippetBag = $this->container->get('common_rowmapper.snippetBag');
+        $typeBag = new TypeBag();
+        $snippetBag = new SnippetBag();
 
         return new Builder(new DefaultParser($typeBag, $snippetBag), $typeBag);
     }
