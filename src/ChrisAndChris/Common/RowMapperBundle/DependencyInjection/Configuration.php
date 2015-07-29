@@ -16,7 +16,6 @@ class Configuration implements ConfigurationInterface {
      */
     public function getConfigTreeBuilder() {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('chris_and_chris_row_mapper');
 
         return $treeBuilder;
     }

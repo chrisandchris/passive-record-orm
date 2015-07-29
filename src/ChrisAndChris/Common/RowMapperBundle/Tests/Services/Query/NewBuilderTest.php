@@ -31,7 +31,7 @@ class NewBuilderTest extends TestKernel {
         $typeBag = new TypeBag();
         $snippetBag = new SnippetBag();
 
-        return new Builder(new DefaultParser($typeBag, $snippetBag), $typeBag);
+        return new Builder(new DefaultParser($snippetBag), $typeBag);
     }
 
     public function testAlias() {

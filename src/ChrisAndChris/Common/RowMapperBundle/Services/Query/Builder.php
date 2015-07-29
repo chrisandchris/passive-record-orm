@@ -324,7 +324,7 @@ class Builder {
      */
     public function groupBy($field = null) {
         $this->append('group');
-        if ($field != null) {
+        if ($field !== null) {
             $this->append('field', ['identifier' => $field]);
             $this->append('close');
         }

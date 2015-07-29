@@ -44,7 +44,7 @@ class RowMapper {
         $return = [];
         $c = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
-            (++$c <= $limit || $limit == null)) {
+            (++$c <= $limit || $limit === null)) {
             $return[] = $this->mapRow($row, clone $Entity);
         }
 
@@ -74,6 +74,15 @@ class RowMapper {
         }
 
         return $Entity;
+    }
+
+    public function buildMethodName($key) {
+        $partials = explode('_', $key);
+        foreach ($partials as $idx => $part) {
+            $partials[$idx] = ucfirst($part);
+        }
+
+        return 'set' . implode('', $partials);
     }
 
     /**
@@ -106,14 +115,5 @@ class RowMapper {
         }
 
         return $return;
-    }
-
-    public function buildMethodName($key) {
-        $partials = explode('_', $key);
-        foreach ($partials as $idx => $part) {
-            $partials[$idx] = ucfirst($part);
-        }
-
-        return 'set' . implode('', $partials);
     }
 }

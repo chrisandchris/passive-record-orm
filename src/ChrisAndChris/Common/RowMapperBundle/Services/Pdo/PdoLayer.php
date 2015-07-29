@@ -27,7 +27,6 @@ class PdoLayer extends \PDO {
                 $dsn, $user, $password
             );
 
-            // $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             // force to use own pdo statement class
             $this->setPdoAttributes();
         } catch (\PDOException $e) {

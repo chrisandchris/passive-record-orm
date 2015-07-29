@@ -38,8 +38,6 @@ class DefaultParser implements ParserInterface {
      * @var array
      */
     private $parameters = [];
-    /** @var TypeBag */
-    private $parameterBag;
     /** @var SnippetBag */
     private $snippetBag;
 
@@ -49,8 +47,7 @@ class DefaultParser implements ParserInterface {
      * @param TypeBag    $parameterBag
      * @param SnippetBag $snippetBag
      */
-    function __construct(TypeBag $parameterBag, SnippetBag $snippetBag) {
-        $this->parameterBag = $parameterBag;
+    function __construct(SnippetBag $snippetBag) {
         $this->snippetBag = $snippetBag;
     }
 

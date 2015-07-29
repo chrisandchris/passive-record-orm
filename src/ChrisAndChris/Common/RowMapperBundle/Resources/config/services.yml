@@ -17,7 +17,7 @@ services:
       arguments: [@common_rowmapper.defaultParser, @common_rowmapper.typeBag]
   common_rowmapper.defaultParser:
       class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
-      arguments: [@common_rowmapper.typeBag, @common_rowmapper.snippetBag]
+      arguments: [@common_rowmapper.snippetBag]
   common_rowmapper.typeBag:
       class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
   common_rowmapper.snippetBag:

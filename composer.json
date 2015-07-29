@@ -1,6 +1,6 @@
 {
     "name": "chrisandchris/symfony-rowmapper",
-    "license": "GNU General Public License 2",
+    "license": "GPL-2.0",
     "type": "project",
     "description": "A RowMapper/DatabaseLayer designed for symfony ",
     "autoload": {

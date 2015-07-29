@@ -47,7 +47,7 @@ class ModelTest extends TestKernel {
             new RowMapper(),
             new ErrorHandler(),
             new PdoLogger('sqlite', 'log.db'),
-            new Builder(new DefaultParser(new TypeBag(), new SnippetBag()), new TypeBag())
+            new Builder(new DefaultParser(new SnippetBag()), new TypeBag())
         );
 
         $Model = new EmptyModel($DP);

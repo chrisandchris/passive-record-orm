@@ -4,7 +4,6 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
@@ -32,7 +31,7 @@ class DefaultParserTest extends TestKernel {
     }
 
     private function getParser() {
-        return new DefaultParser(new TypeBag(), new SnippetBag());
+        return new DefaultParser(new SnippetBag());
     }
 
     public function testOpenBraces() {
