@@ -14,6 +14,11 @@ services:
       class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
   common_rowmapper.queryBuilder:
       class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
-      arguments: [@common_rowmapper.defaultParser]
+      arguments: [@common_rowmapper.defaultParser, @common_rowmapper.typeBag]
   common_rowmapper.defaultParser:
       class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
+      arguments: [@common_rowmapper.snippetBag]
+  common_rowmapper.typeBag:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
+  common_rowmapper.snippetBag:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag

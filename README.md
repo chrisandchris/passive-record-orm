@@ -167,6 +167,22 @@ a raw method. And gladly, this method is able to use parameters :D
 ]);
 ```
 
+### The in()
+You can simply build IN-clauses with the two following methods:
+
+```php
+// option a
+->in([1, 2, 3, 4, 5, 6])
+// option b
+->in()
+    ->select()
+    ->value(1)
+->close()
+```
+
+Option A uses prepared statements all-the-way, any value within the array gets
+is way as a parameter to the database.
+
 ### Conditional appending
 There are three methods to provide conditional appending:
 * _if()
