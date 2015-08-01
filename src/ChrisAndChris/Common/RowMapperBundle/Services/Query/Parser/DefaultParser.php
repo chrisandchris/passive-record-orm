@@ -1,11 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser;
 
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\ClassNotFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeInterfaceException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\ParameterizedTypeInterface;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
 
 /**
  * @name DefaultParser
@@ -17,12 +14,6 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Type\TypeInterface;
  */
 class DefaultParser implements ParserInterface {
 
-    /**
-     * The namespace where the snippets are located
-     *
-     * @var string
-     */
-    private $namespace;
     /**
      * The statement array
      *
@@ -36,12 +27,6 @@ class DefaultParser implements ParserInterface {
      */
     private $query = '';
     /**
-     * The suffix of the snippet classes
-     *
-     * @var string
-     */
-    private $suffix = 'Snippet';
-    /**
      * An array of open braces
      *
      * @var array
@@ -53,15 +38,17 @@ class DefaultParser implements ParserInterface {
      * @var array
      */
     private $parameters = [];
+    /** @var SnippetBag */
+    private $snippetBag;
 
     /**
      * Initialize class
      *
-     * @param string $namespace the namespace of the parser snippets
+     * @param TypeBag    $parameterBag
+     * @param SnippetBag $snippetBag
      */
-    function __construct(
-        $namespace = 'ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\MySQL\\') {
-        $this->namespace = $namespace;
+    function __construct(SnippetBag $snippetBag) {
+        $this->snippetBag = $snippetBag;
     }
 
     /**
@@ -79,7 +66,11 @@ class DefaultParser implements ParserInterface {
      * @return string
      */
     function getSqlQuery() {
-        return trim($this->query);
+        if (!is_array($this->query)) {
+            $this->query = [];
+        }
+
+        return trim(implode(' ', $this->query));
     }
 
     /**
@@ -98,11 +89,9 @@ class DefaultParser implements ParserInterface {
      */
     public function execute() {
         $this->clear();
-        /** @var TypeInterface $type */
         foreach ($this->statement as $type) {
-            $snippet = $this->getSnippet($type);
-            $code = $snippet->getCode();
-            $this->query .= $this->parseCode($code, $type, $snippet);
+            $snippet = $this->getSnippet($type['type']);
+            $this->query[] = $this->parseCode($type, $snippet);
         }
 
         if (count($this->braces) != 0) {
@@ -123,48 +112,40 @@ class DefaultParser implements ParserInterface {
      * Gets an instance of a snippet
      *
      * @param string $type the snippet name
-     * @return SnippetInterface the snippet instance
-     * @throws ClassNotFoundException
+     * @return \Closure
      */
     private function getSnippet($type) {
-        /** @var TypeInterface $type */
-        $class = $this->namespace.ucfirst($type->getTypeName()).$this->suffix;
-        if (!class_exists($class)) {
-            throw new ClassNotFoundException(
-                "Unable to parse this statement, class not found: ".$class
-            );
-        }
-        /** @var SnippetInterface $snippet */
-        $snippet = new $class;
-        $snippet->setType($type);
-
-        return $snippet;
+        return $this->snippetBag->get($type);
     }
 
     /**
      * Parses the code
      *
-     * @param string           $code    the snippet code to parse
-     * @param TypeInterface    $type    the type interface to use
-     * @param SnippetInterface $snippet the snippet interface to use
+     * @param array    $type    the type interface to use
+     * @param \Closure $snippet the snippet interface to use
      * @return string the generated query
-     * @throws TypeInterfaceException
+     * @throws MalformedQueryException
      */
-    private function parseCode(
-        $code,
-        TypeInterface $type,
-        SnippetInterface $snippet) {
+    private function parseCode($type, \Closure $snippet) {
+        $result = $snippet($type['params']);
 
-        // check if it's a close
-        if ($code == '/@close') {
-            // put members down
-            $code = $this->minimizeBrace();
+        if (!isset($result['code'])) {
+            throw new MalformedQueryException(
+                'Invalid result of snippet named "' . $type['type'] . '"'
+            );
         }
-        $code = $this->runMethods($code, $type, $snippet);
-        $this->checkForParameters($code, $type);
-        $code = $this->checkForMethodChaining($code);
+        if (!isset($result['params'])) {
+            $result['params'] = [];
+        }
 
-        return $code.' ';
+        if ($result['code'] == '/@close') {
+            $result['code'] = $this->minimizeBrace();
+        }
+
+        $this->checkForParameters($type, $result['code'], $result['params']);
+        $result['code'] = $this->checkForMethodChaining($result['code']);
+
+        return $result['code'];
     }
 
     /**
@@ -179,11 +160,25 @@ class DefaultParser implements ParserInterface {
                 'You must open braces before closing them.'
             );
         }
-        $this->query =
-            $this->braces[max(array_keys($this->braces))]['query']
-            .$this->braces[max(array_keys($this->braces))]['before']
-            .$this->query
-            .$this->braces[max(array_keys($this->braces))]['after'];
+
+        $maxKey = max(array_keys($this->braces));
+        $merges = [
+            $this->braces[$maxKey]['query'],
+            $this->braces[$maxKey]['before'],
+            $this->query,
+            $this->braces[$maxKey]['after'],
+        ];
+
+        $this->query = [];
+        foreach ($merges as $merge) {
+            if (is_array($merge)) {
+                foreach ($merge as $entry) {
+                    $this->query[] = $entry;
+                }
+            } else {
+                $this->query[] = $merge;
+            }
+        }
         $code = '';
         unset($this->braces[max(array_keys($this->braces))]);
 
@@ -191,63 +186,30 @@ class DefaultParser implements ParserInterface {
     }
 
     /**
-     * Runs methods within the code
-     *
-     * @param                  $code
-     * @param TypeInterface    $type
-     * @param SnippetInterface $snippet
-     * @return string
-     */
-    private function runMethods(
-        $code,
-        TypeInterface $type,
-        SnippetInterface $snippet) {
-
-        // collect methods
-        $match = preg_match_all('/#([a-zA-Z]+)/', $code, $matches);
-        if ($match > 0) {
-            foreach ($matches as $match) {
-                foreach ($match as $method) {
-                    if (mb_strstr($method, '#') === false) {
-                        if (method_exists($snippet, $method) ||
-                            is_callable([$snippet, '__call'])
-                        ) {
-                            $code = str_replace(
-                                '#'.$method,
-                                $snippet->{$method}($type),
-                                $code
-                            );
-                        }
-                    }
-                }
-            }
-
-            return $code;
-        }
-
-        return $code;
-    }
-
-    /**
      * Checks for parameters used in the code
      *
-     * @param               $code
-     * @param TypeInterface $type
-     * @throws TypeInterfaceException
+     * @param string $type
+     * @param string $code
+     * @param        $params
+     * @throws MissingParameterException
      */
-    private function checkForParameters($code, TypeInterface $type) {
+    private function checkForParameters($type, $code, $params) {
         // detect parameters
         $offset = 0;
         $idx = 0;
+        if (!is_array($params)) {
+            $this->addParameter($params);
+
+            return;
+        }
         while (false !== ($pos = mb_strpos($code, '?', $offset))) {
             $offset = $pos + 1;
-            if (!($type instanceof ParameterizedTypeInterface)) {
-                throw new TypeInterfaceException(
-                    "Type must be parameterized to use parameters, use ParameterizedTypeInterface"
+            if (!isset($params[$idx])) {
+                throw new MissingParameterException(
+                    'Missing parameter of type "' . $type . '"'
                 );
             }
-            /** @var ParameterizedTypeInterface $type */
-            $this->addParameter($type->getParameter($idx++));
+            $this->addParameter($params[$idx++]);
         }
     }
 

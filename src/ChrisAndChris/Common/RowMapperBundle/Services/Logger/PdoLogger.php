@@ -8,6 +8,7 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
  * @name PdoLogger
  * @version    1.0.0
  * @since      v1.1.0
+ * @deprecated v2.0.2, removed in v3.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris/symfony-rowmapper
@@ -53,7 +54,8 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
             $logStatement = $this->prepare(
                 "INSERT INTO log
               (user_id, log_requestid, log_type, log_date, log_querymeta, log_exectime)
-              VALUES (:uid, :requestId, :type, '".$now."', :meta, :exectime) ".
+              VALUES (:uid, :requestId, :type, '" . $now .
+                "', :meta, :exectime) " .
                 self::DNL_POSTFIX
             );
 
@@ -63,7 +65,7 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
             }
             // on error, append error information
             if (!empty($statement->errorInfo())) {
-                $meta .= "\n".serialize($statement->errorInfo());
+                $meta .= "\n" . serialize($statement->errorInfo());
             }
 
             $logStatement->bindValue('uid', $userId, \PDO::PARAM_INT);
@@ -105,7 +107,7 @@ class PdoLogger extends PdoLayer implements LoggerInterface {
             return $neededMeta;
         }
         foreach ($meta['params'] as $parameter => $value) {
-            $neededMeta .= "\t".$parameter.': '.$value."\n";
+            $neededMeta .= "\t" . $parameter . ': ' . $value . "\n";
         }
 
         return $neededMeta;

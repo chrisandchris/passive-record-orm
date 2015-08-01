@@ -1,8 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Pdo;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use PDO;
-use Symfony\Component\Debug\Exception\FatalErrorException;
 
 /**
  * This is the main database connection which is used for the application
@@ -27,13 +27,10 @@ class PdoLayer extends \PDO {
                 $dsn, $user, $password
             );
 
-            // $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             // force to use own pdo statement class
             $this->setPdoAttributes();
         } catch (\PDOException $e) {
-            throw new FatalErrorException(
-                "Unable to init PdoLayer: ".$e->getMessage()
-            );
+            throw new DatabaseException('Unable to init pdo layer', null, $e);
         }
     }
 
