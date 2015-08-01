@@ -204,12 +204,12 @@ class DefaultParser implements ParserInterface {
         }
         while (false !== ($pos = mb_strpos($code, '?', $offset))) {
             $offset = $pos + 1;
-            if (!isset($params[$idx++])) {
+            if (!isset($params[$idx])) {
                 throw new MissingParameterException(
                     'Missing parameter of type "' . $type . '"'
                 );
             }
-            $this->addParameter($params[$idx]);
+            $this->addParameter($params[$idx++]);
         }
     }
 

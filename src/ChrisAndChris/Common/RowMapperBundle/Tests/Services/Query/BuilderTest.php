@@ -112,6 +112,21 @@ class BuilderTest extends TestKernel {
         $this->equals('INSERT INTO `table1`', $B);
     }
 
+    public function testInClause() {
+        $b = $this->getBuilder();
+        $b->in(['1', '2', '3']);
+        $this->equals('IN (?, ?, ?)', $b);
+
+        $b = $this->getBuilder();
+        // @formatter:off
+        $b->in()
+            ->select()
+            ->value(1)
+        ->close();
+        $this->equals('IN ( SELECT ? )', $b);
+        // @formatter:on
+    }
+
     public function testDelete() {
         $B = $this->getBuilder();
         $B->delete('table1');

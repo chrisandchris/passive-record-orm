@@ -3,7 +3,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Pdo;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
-use Symfony\Component\Debug\Exception\FatalErrorException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -93,11 +93,12 @@ class RowMapper {
      * of the returned array and it <i>must</i> contain an index "value" with
      * the value to map
      *
-     * @throws FatalErrorException
+     *
      * @param \PDOStatement $statement the statement to map
      * @param Entity        $entity    the entity to map from
      * @param \Closure      $callable  the callable to use to map any row
-     * @return array the associative mapped array
+     * @return array
+     * @throws InvalidOptionException if invalid input is given
      */
     public function mapToArray($statement, Entity $entity, \Closure $callable) {
         $array = $this->mapFromResult($statement, $entity);
@@ -105,7 +106,7 @@ class RowMapper {
         foreach ($array as $row) {
             $a = $callable($row);
             if (!is_array($a)) {
-                throw new FatalErrorException("Callable must return an array with at least index 'value'");
+                throw new InvalidOptionException('Callable must return array with at lest index "value"');
             }
             if (isset($a['key']) && !empty($a['key'])) {
                 $return[$a['key']] = $a['value'];

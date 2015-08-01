@@ -7,6 +7,7 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
  * @name LoggerInterface
  * @version    1.0.0
  * @since      v1.1.0
+ * @deprecated v2.0.2, removed in v3.0.0
  * @package    Common
  * @subpackage RowMapperBundle
  * @author     ChrisAndChris

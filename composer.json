@@ -8,7 +8,7 @@
     },
     "require": {
         "php": ">=5.5",
-        "symfony/symfony": "2.3.*"
+        "symfony/symfony": "2.3.*|2.7.*"
     },
     "suggest": {
         "doctrine/doctrine-cache-bundle": "1.0.*"

@@ -1,10 +1,9 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Pdo;
 
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use SebastianBergmann\Exporter\Exception;
-use Symfony\Component\Debug\Exception\FatalErrorException;
 
 /**
  * @name PdoLayerTest
@@ -21,16 +20,17 @@ class PdoLayerTest extends TestKernel {
 
         // connect to a local sqlite-DB
         $PdoLayer = new PdoLayer('sqlite', 'sqlite.db');
-        $this->assertEquals('ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement',
+        $this->assertEquals(
+            'ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement',
             $PdoLayer->getAttribute(\PDO::ATTR_STATEMENT_CLASS)[0]
         );
     }
 
     function testConstructFail() {
         try {
-            $PdoLayer = new PdoLayer('mysql', 'localhost', 3306, uniqid(), uniqid(), uniqid());
+            new PdoLayer('mysql', 'localhost', 3306, uniqid(), uniqid(), uniqid());
             $this->fail('Must fail due to wrong connection parameters');
-        } catch (FatalErrorException $e) {
+        } catch (DatabaseException $e) {
             // that's good
         }
     }

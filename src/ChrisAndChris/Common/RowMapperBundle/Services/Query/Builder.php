@@ -52,6 +52,9 @@ class Builder {
             $type = $this->typeBag->get($typeName);
             if (is_array($type['params'])) {
                 foreach ($type['params'] as $param) {
+                    if (!isset($type['required'])) {
+                        $type['required'] = [];
+                    }
                     if (in_array($param, $type['required']) &&
                         !isset($params[$param])
                     ) {
@@ -255,6 +258,21 @@ class Builder {
 
     public function null() {
         $this->append('null');
+
+        return $this;
+    }
+
+    /**
+     * Add a new IN()-clause<br />
+     * <br />
+     * If is $in is an array, each contained value is a parameter,
+     * else use builder to build query and close with close()
+     *
+     * @param null|array $in
+     * @return $this
+     */
+    public function in($in = null) {
+        $this->append('in', ['in' => $in]);
 
         return $this;
     }

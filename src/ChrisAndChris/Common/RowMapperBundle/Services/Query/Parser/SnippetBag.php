@@ -141,6 +141,28 @@ class SnippetBag implements BagInterface {
                     'params' => null,
                 ];
             },
+            'in' => function (array $params) {
+                if (is_array($params['in'])) {
+                    $code = '';
+                    $count = count($params['in']);
+                    for ($i = 0; $i < $count; $i++) {
+                        $code .= '?';
+                        if ($i + 1 < $count) {
+                            $code .= ', ';
+                        }
+                    }
+
+                    return [
+                        'code'   => 'IN (' . $code . ')',
+                        'params' => $params['in'],
+                    ];
+                }
+
+                return [
+                    'code'   => 'IN ( /@brace(in) )',
+                    'params' => null,
+                ];
+            },
             'insert'     => function (array $params) {
                 $modes = [
                     'ignore',
