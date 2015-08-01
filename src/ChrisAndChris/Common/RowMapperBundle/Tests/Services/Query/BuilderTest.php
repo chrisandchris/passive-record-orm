@@ -2,14 +2,11 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
-use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
+ * Does simple query tests
+ *
  * @name BuilderTest
  * @version   2
  * @since     v2.0.0
@@ -17,7 +14,7 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class BuilderTest extends TestKernel {
+class BuilderTest extends AbstractBuilderTest {
 
     function testSimpleQuery() {
         // @formatter:off
@@ -69,35 +66,11 @@ class BuilderTest extends TestKernel {
         $this->assertEquals(4, count($query->getParameters()));
     }
 
-    private function getBuilder() {
-        $typeBag = new TypeBag();
-        $snippetBag = new SnippetBag();
-
-        return new Builder(new DefaultParser($snippetBag), $typeBag);
-    }
-
     public function testSelect() {
         $Builder = $this->getBuilder();
         $Builder->select();
 
         $this->equals('SELECT', $Builder);
-    }
-
-    private function equals($expected, Builder $Builder) {
-        $this->assertEquals(
-            $expected, $this->minify(
-            $Builder->getSqlQuery()
-                    ->getQuery()
-        )
-        );
-    }
-
-    private function minify($query) {
-        while (strstr($query, '  ') !== false) {
-            $query = str_replace('  ', ' ', $query);
-        }
-
-        return $query;
     }
 
     public function testUpdate() {
