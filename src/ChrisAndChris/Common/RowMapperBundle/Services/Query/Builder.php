@@ -11,7 +11,7 @@ use Doctrine\Common\Cache\Cache;
 
 /**
  * @name Builder
- * @version   1.0.2
+ * @version   1.0.3
  * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -24,14 +24,16 @@ class Builder {
     /** @var ParserInterface */
     private $parser;
     /** @var Cache Doctrine cache interface */
-    private $Cache;
+    private $cache;
     /** @var array an array, which handles the if/else-statements */
     private $stopPropagation = [];
+    /** @var bool indicator, if the current query uses closures */
+    private $usedClosures = false;
     /** @var TypeBag */
     private $typeBag;
 
     function __construct(ParserInterface $parser, TypeBag $parameterBag, Cache $cache = null) {
-        $this->Cache = $cache;
+        $this->cache = $cache;
         $this->parser = $parser;
         $this->typeBag = $parameterBag;
     }
@@ -65,6 +67,10 @@ class Builder {
                         );
                     }
                     if (isset($params[$param])) {
+                        if ($params[$param] instanceof \Closure) {
+                            $this->usedClosures = true;
+                            $params[$param] = $params[$param]();
+                        }
                         $endParams[$param] = $params[$param];
                     } else {
                         $endParams[$param] = null;
@@ -237,9 +243,6 @@ class Builder {
      * @return $this
      */
     public function value($value) {
-        if ($value instanceof \Closure && $this->allowAppend()) {
-            $value = $value();
-        }
         $this->append('value', ['value' => $value]);
 
         return $this;
@@ -389,6 +392,7 @@ class Builder {
      */
     public function _if($condition) {
         if ($condition instanceof \Closure && $this->allowAppend()) {
+            $this->usedClosures = true;
             $condition = $condition();
         }
         $condition = (bool)$condition;
@@ -519,9 +523,6 @@ class Builder {
      * @return $this
      */
     public function like($pattern) {
-        if ($pattern instanceof \Closure && $this->allowAppend()) {
-            $pattern = $pattern();
-        }
         $this->append('like', ['pattern' => $pattern]);
 
         return $this;
@@ -547,10 +548,11 @@ class Builder {
         }
 
         // try to use cache
-        $data = $this->validateCache($this->statement);
-        if ($data !== false && isset($data['statement']) &&
-            isset($data['query'])
-        ) {
+        $data = false;
+        if ($this->isCacheAvailable()) {
+            $data = $this->validateCache($this->statement);
+        }
+        if (isset($data['statement']) && isset($data['query'])) {
             $this->statement = $data['statement'];
             $query = $data['query'];
         }
@@ -567,22 +569,37 @@ class Builder {
             );
         }
 
-        $this->cacheItem(
-            $this->getHash($this->statement), $this->statement,
-            $query
-        );
+        if ($this->isCacheAvailable()) {
+            $this->cacheItem(
+                $this->getHash($this->statement), $this->statement,
+                $query
+            );
+        }
         $this->clear();
 
         return $query;
     }
 
+    /**
+     * Validates whether cache is available
+     *
+     * @return bool
+     */
+    private function isCacheAvailable() {
+        if ($this->usedClosures) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function validateCache(array $statement) {
-        if (!is_object($this->Cache)) {
+        if (!is_object($this->cache)) {
             return false;
         }
         $hash = $this->getHash($statement);
-        if ($this->Cache->contains($hash)) {
-            $data = $this->Cache->fetch($hash);
+        if ($this->cache->contains($hash)) {
+            $data = $this->cache->fetch($hash);
 
             return unserialize($data);
         }
@@ -595,8 +612,8 @@ class Builder {
     }
 
     private function cacheItem($hash, array $statement, SqlQuery $Query) {
-        if (is_object($this->Cache)) {
-            $this->Cache->save(
+        if (is_object($this->cache)) {
+            $this->cache->save(
                 $hash, serialize(
                 [
                     'statement' => $statement,
@@ -613,5 +630,6 @@ class Builder {
     private function clear() {
         $this->stopPropagation = [];
         $this->statement = [];
+        $this->usedClosures = false;
     }
 }
