@@ -81,7 +81,7 @@ class Builder {
                 'type'   => $typeName,
                 'params' => $endParams,
             ];
-        } elseif ($this->typeBag->has($typeName)) {
+        } elseif (!$this->typeBag->has($typeName)) {
             throw new TypeNotFoundException(
                 'No type "' . $typeName . '" found'
             );
@@ -175,9 +175,7 @@ class Builder {
      * @return $this
      */
     public function end() {
-        $this->close();
-
-        return $this;
+        return $this->close();
     }
 
     public function close() {
@@ -514,6 +512,21 @@ class Builder {
     }
 
     /**
+     * Appends a custom type
+     *
+     * @param string $type   the type name
+     * @param array  $params the params
+     * @return $this
+     * @throws MissingParameterException
+     * @throws TypeNotFoundException
+     */
+    public function custom($type, array $params = []) {
+        $this->append($type, $params);
+
+        return $this;
+    }
+
+    /**
      * Adds a new LIKE statement<br />
      * <br />
      * If you give a closure as $pattern, the result of the function call is
@@ -540,11 +553,16 @@ class Builder {
     /**
      * @param ParserInterface $parser
      * @return SqlQuery
-     * @throws SystemException
+     * @throws MalformedQueryException if the query is (probably) malformed
+     * @throws SystemException if no parser is available
      */
     public function getSqlQuery(ParserInterface $parser = null) {
         if ($this->parser === null && $parser === null) {
             throw new SystemException('No parser given');
+        }
+
+        if ($this->getHighestPropagationKey() !== null) {
+            throw new MalformedQueryException('Probable bug: not every if ended with ::_end()');
         }
 
         // try to use cache
