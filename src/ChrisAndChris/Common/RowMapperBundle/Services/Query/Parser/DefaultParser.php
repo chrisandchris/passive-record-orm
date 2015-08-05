@@ -127,6 +127,11 @@ class DefaultParser implements ParserInterface {
      * @throws MalformedQueryException
      */
     private function parseCode($type, \Closure $snippet) {
+        if (!array_key_exists('params', $type)) {
+            throw new MissingParameterException(
+                'Missing parameters for type "' . $type['type'] . '"'
+            );
+        }
         $result = $snippet($type['params']);
 
         if (!isset($result['code'])) {
@@ -134,8 +139,8 @@ class DefaultParser implements ParserInterface {
                 'Invalid result of snippet named "' . $type['type'] . '"'
             );
         }
-        if (!isset($result['params'])) {
-            $result['params'] = [];
+        if (!is_array($result['params'])) {
+            $result['params'] = [$result['params']];
         }
 
         if ($result['code'] == '/@close') {
@@ -197,16 +202,11 @@ class DefaultParser implements ParserInterface {
         // detect parameters
         $offset = 0;
         $idx = 0;
-        if (!is_array($params)) {
-            $this->addParameter($params);
-
-            return;
-        }
         while (false !== ($pos = mb_strpos($code, '?', $offset))) {
             $offset = $pos + 1;
-            if (!isset($params[$idx])) {
+            if (!array_key_exists($idx, $params)) {
                 throw new MissingParameterException(
-                    'Missing parameter of type "' . $type . '"'
+                    'Missing parameter of type "' . $type['type'] . '"'
                 );
             }
             $this->addParameter($params[$idx++]);

@@ -2,6 +2,7 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
@@ -76,5 +77,46 @@ class DefaultParserTest extends TestKernel {
         } catch (MalformedQueryException $e) {
             // ignore
         }
+    }
+
+    public function testNullParameters() {
+        $parser = $this->getParser();
+        $parser->setStatement(
+            [
+                [
+                    'type' => 'value',
+                ],
+            ]
+        );
+        try {
+            $parser->execute();
+            $this->fail('Must fail due to missing parameter');
+        } catch (MissingParameterException $e) {
+            // ignore
+        }
+
+        $parser = $this->getParser();
+        $parser->setStatement(
+            [
+                [
+                    'type'   => 'value',
+                    'params' => ['value' => 13],
+                ],
+            ]
+        );
+        // must not throw any exception
+        $parser->execute();
+
+        $parser = $this->getParser();
+        $parser->setStatement(
+            [
+                [
+                    'type'   => 'value',
+                    'params' => ['value' => null],
+                ],
+            ]
+        );
+        // must not throw any exception
+        $parser->execute();
     }
 }
