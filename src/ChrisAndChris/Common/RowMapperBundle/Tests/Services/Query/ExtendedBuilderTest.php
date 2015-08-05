@@ -181,6 +181,14 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         } catch (MissingParameterException $e) {
             // ignore
         }
+
+        $builder = $this->getBuilder();
+
+        try {
+            $builder->value(null);
+        } catch (MissingParameterException $e) {
+            $this->fail('Must not fail due to existing (but null) parameter');
+        }
     }
 
     public function testClosure() {

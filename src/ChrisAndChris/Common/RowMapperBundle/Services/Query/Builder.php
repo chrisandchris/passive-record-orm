@@ -58,7 +58,7 @@ class Builder {
                         $type['required'] = [];
                     }
                     if (in_array($param, $type['required']) &&
-                        !isset($params[$param])
+                        !array_key_exists($param, $params)
                     ) {
                         throw new MissingParameterException(
                             'Parameter "' . $param . '" for type "' .
