@@ -7,11 +7,10 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\SystemException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
-use Doctrine\Common\Cache\Cache;
 
 /**
  * @name Builder
- * @version   1.0.3
+ * @version   1.1.0
  * @since     v2.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
@@ -23,8 +22,6 @@ class Builder {
     private $statement = [];
     /** @var ParserInterface */
     private $parser;
-    /** @var Cache Doctrine cache interface */
-    private $cache;
     /** @var array an array, which handles the if/else-statements */
     private $stopPropagation = [];
     /** @var bool indicator, if the current query uses closures */
@@ -32,8 +29,7 @@ class Builder {
     /** @var TypeBag */
     private $typeBag;
 
-    function __construct(ParserInterface $parser, TypeBag $parameterBag, Cache $cache = null) {
-        $this->cache = $cache;
+    function __construct(ParserInterface $parser, TypeBag $parameterBag) {
         $this->parser = $parser;
         $this->typeBag = $parameterBag;
     }
@@ -565,16 +561,6 @@ class Builder {
             throw new MalformedQueryException('Probable bug: not every if ended with ::_end()');
         }
 
-        // try to use cache
-        $data = false;
-        if ($this->isCacheAvailable()) {
-            $data = $this->validateCache($this->statement);
-        }
-        if (isset($data['statement']) && isset($data['query'])) {
-            $this->statement = $data['statement'];
-            $query = $data['query'];
-        }
-
         if ($parser === null) {
             $parser = $this->parser;
         }
@@ -586,60 +572,9 @@ class Builder {
                 $parser->getParameters()
             );
         }
-
-        if ($this->isCacheAvailable()) {
-            $this->cacheItem(
-                $this->getHash($this->statement), $this->statement,
-                $query
-            );
-        }
         $this->clear();
 
         return $query;
-    }
-
-    /**
-     * Validates whether cache is available
-     *
-     * @return bool
-     */
-    private function isCacheAvailable() {
-        if ($this->usedClosures) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private function validateCache(array $statement) {
-        if (!is_object($this->cache)) {
-            return false;
-        }
-        $hash = $this->getHash($statement);
-        if ($this->cache->contains($hash)) {
-            $data = $this->cache->fetch($hash);
-
-            return unserialize($data);
-        }
-
-        return false;
-    }
-
-    private function getHash(array $statement) {
-        return md5(serialize($statement));
-    }
-
-    private function cacheItem($hash, array $statement, SqlQuery $Query) {
-        if (is_object($this->cache)) {
-            $this->cache->save(
-                $hash, serialize(
-                [
-                    'statement' => $statement,
-                    'query'     => $Query,
-                ]
-            ), 3600
-            );
-        }
     }
 
     /**

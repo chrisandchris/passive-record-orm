@@ -13,6 +13,7 @@ class SqlQuery {
 
     private $query;
     private $parameters;
+    private $requiresResult = false;
 
     function __construct($query, $parameters = []) {
         $this->query = $query;
@@ -31,5 +32,21 @@ class SqlQuery {
      */
     public function getParameters() {
         return $this->parameters;
+    }
+
+    /**
+     * Toggle requires result mode on and off
+     */
+    public function requiresResult() {
+        $this->requiresResult = $this->requiresResult ? false : true;
+    }
+
+    /**
+     * Returns true if result is required, default value is false
+     *
+     * @return bool
+     */
+    public function isResultRequired() {
+        return $this->requiresResult;
     }
 }

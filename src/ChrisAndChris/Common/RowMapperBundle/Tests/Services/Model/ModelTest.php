@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Logger\PdoLogger;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
@@ -40,17 +39,14 @@ class ModelTest extends TestKernel {
      * @return Model
      */
     private function getModel() {
-        $Logger = new PdoLogger('sqlite', 'log.db');
-
-        $DP = new ModelDependencyProvider(
+        $provider = new ModelDependencyProvider(
             new PdoLayer('sqlite', 'sqlite.db'),
             new RowMapper(),
             new ErrorHandler(),
-            new PdoLogger('sqlite', 'log.db'),
             new Builder(new DefaultParser(new SnippetBag()), new TypeBag())
         );
 
-        $Model = new EmptyModel($DP);
+        $Model = new EmptyModel($provider);
 
         return $Model;
     }

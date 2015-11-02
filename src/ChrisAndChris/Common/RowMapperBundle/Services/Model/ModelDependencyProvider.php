@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Logger\LoggerInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
@@ -12,7 +11,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name ModelDependencyProvider
- * @version    2.0.0
+ * @version    2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -26,18 +25,15 @@ class ModelDependencyProvider {
     private $mapper;
     /** @var ErrorHandler */
     private $errorHandler;
-    /** @var LoggerInterface the logger used to log statements */
-    private $logger;
     /** @var Builder the query builder */
     private $builder;
     /** @var ContainerInterface the container */
     private $container;
 
     function __construct(
-        PdoLayer $pdo,
+        \PDO $pdo,
         RowMapper $mapper,
         ErrorHandler $errorHandler,
-        LoggerInterface $logger,
         Builder $builder,
         ContainerInterface $container = null,
         EventDispatcherInterface $eventDispatcher = null) {
@@ -45,7 +41,6 @@ class ModelDependencyProvider {
         $this->pdo = $pdo;
         $this->mapper = $mapper;
         $this->errorHandler = $errorHandler;
-        $this->logger = $logger;
         $this->builder = $builder;
         $this->container = $container;
         $this->eventDispatcher = $eventDispatcher;
@@ -70,13 +65,6 @@ class ModelDependencyProvider {
      */
     public function getErrorHandler() {
         return $this->errorHandler;
-    }
-
-    /**
-     * @return LoggerInterface
-     */
-    public function getLogger() {
-        return $this->logger;
     }
 
     /**
