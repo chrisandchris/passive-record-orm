@@ -11,12 +11,11 @@ With query builder
 
 ```php
 $builder->insert('user')
-->brace()
 ->fieldlist([
     'username',
     'password',
     'salt'
-])->close()
+], true)
 ->values([
     [
         'root',
@@ -39,12 +38,11 @@ With query builder
 
 ```php
 $builder->insert('usert')
-->brace()
 ->fieldlist([
     'username',
     'password',
     'salt
-]);
+], true);
 ->values([
     [
         'root',

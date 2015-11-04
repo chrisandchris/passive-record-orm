@@ -156,6 +156,15 @@ class BuilderTest extends AbstractBuilderTest {
             ]
         );
         $this->equals('`field1` as `alias1`, `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'field1',
+                'field2',
+            ], true
+        );
+        $this->equals('( `field1`, `field2` )', $builder);
     }
 
     public function testWhere() {

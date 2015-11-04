@@ -156,11 +156,30 @@ class Builder {
      * </ul>
      * You have to separate table and field names by double-colon (":")
      *
-     * @param array $fields
+     * @param array $fields            the fields to add
+     * @param bool  $encloseWithBraces if set to true, enclose with braces
      * @return $this
      */
-    public function fieldlist(array $fields) {
+    public function fieldlist(array $fields, $encloseWithBraces = false) {
+        if ($encloseWithBraces) {
+            $this->brace();
+        }
         $this->append('fieldlist', ['fields' => $fields]);
+        if ($encloseWithBraces) {
+            $this->close();
+        }
+
+        return $this;
+    }
+
+    public function brace() {
+        $this->append('brace');
+
+        return $this;
+    }
+
+    public function close() {
+        $this->append('close');
 
         return $this;
     }
@@ -178,12 +197,6 @@ class Builder {
      */
     public function end() {
         return $this->close();
-    }
-
-    public function close() {
-        $this->append('close');
-
-        return $this;
     }
 
     /**
@@ -267,12 +280,6 @@ class Builder {
             return $this;
         }
         $this->append('values');
-
-        return $this;
-    }
-
-    public function brace() {
-        $this->append('brace');
 
         return $this;
     }
