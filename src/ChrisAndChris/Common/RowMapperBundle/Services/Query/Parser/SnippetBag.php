@@ -141,7 +141,7 @@ class SnippetBag implements BagInterface {
                     'params' => null,
                 ];
             },
-            'in' => function (array $params) {
+            'in'         => function (array $params) {
                 if (is_array($params['in'])) {
                     $code = '';
                     $count = count($params['in']);
@@ -284,6 +284,18 @@ class SnippetBag implements BagInterface {
                     'code'   => 'FROM `' . $table . '` ' . $alias,
                     'params' => null,
                 ];
+            },
+            'union'      => function (array $params) {
+                $mode = strtolower($params['mode']);
+                if ($mode == 'all') {
+                    return 'UNION ALL';
+                } else {
+                    if ($mode == 'distinct') {
+                        return 'UNION DISTINCT';
+                    }
+                }
+
+                return 'UNION';
             },
             'update'     => function (array $params) {
                 return [

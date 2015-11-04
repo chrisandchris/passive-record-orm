@@ -8,6 +8,7 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
@@ -43,12 +44,12 @@ class ModelTest extends TestKernel {
             new PdoLayer('sqlite', 'sqlite.db'),
             new RowMapper(),
             new ErrorHandler(),
-            new Builder(new DefaultParser(new SnippetBag()), new TypeBag())
+            new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag())
         );
 
-        $Model = new EmptyModel($provider);
+        $model = new EmptyModel($provider);
 
-        return $Model;
+        return $model;
     }
 
     public function testValidateLimit() {

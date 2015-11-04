@@ -93,7 +93,7 @@ class TypeBag implements BagInterface {
             'group'      => [
                 'params' => [],
             ],
-            'in'     => [
+            'in'         => [
                 'params'   => [
                     'in',
                 ],
@@ -109,7 +109,7 @@ class TypeBag implements BagInterface {
                     'table',
                 ],
             ],
-            'isnull' => [
+            'isnull'     => [
                 'params' => [
                     'isnull',
                 ],
@@ -190,6 +190,11 @@ class TypeBag implements BagInterface {
                 ],
                 'required' => [
                     'table',
+                ],
+            ],
+            'union'      => [
+                'params' => [
+                    'mode',
                 ],
             ],
             'update'     => [

@@ -1,24 +1,24 @@
 services:
-  common_rowmapper.dependencyProvider:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
-      arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.pdoLogger, @common_rowmapper.queryBuilder, @service_container, @event_dispatcher]
-  common_rowmapper.pdoLayer:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
-      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
-  common_rowmapper.pdoLogger:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Logger\PdoLogger
-      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
-  common_rowmapper.rowMapper:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper
-  common_rowmapper.errorHandler:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
-  common_rowmapper.queryBuilder:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
-      arguments: [@common_rowmapper.defaultParser, @common_rowmapper.typeBag]
-  common_rowmapper.defaultParser:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
-      arguments: [@common_rowmapper.snippetBag]
-  common_rowmapper.typeBag:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
-  common_rowmapper.snippetBag:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
+  common_rowmapper.dependencyprovider:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
+    arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.querybuilderfactory, @service_container, @event_dispatcher]
+  common_rowmapper.pdolayer:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
+    arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+  common_rowmapper.rowmapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper
+  common_rowmapper.errorhandler:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
+  common_rowmapper.querybuilder:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
+    factory: [ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory, createBuilder]
+  common_rowmapper.querybuilderfactory:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory
+    arguments: [@common_rowmapper.defaultparser, @common_rowmapper.typebag]
+  common_rowmapper.defaultparser:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
+    arguments: [@common_rowmapper.snippetBag]
+  common_rowmapper.typebag:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
+  common_rowmapper.snippetbag:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag

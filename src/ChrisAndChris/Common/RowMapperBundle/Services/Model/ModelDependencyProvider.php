@@ -5,6 +5,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -25,23 +26,23 @@ class ModelDependencyProvider {
     private $mapper;
     /** @var ErrorHandler */
     private $errorHandler;
-    /** @var Builder the query builder */
-    private $builder;
     /** @var ContainerInterface the container */
     private $container;
+    /** @var BuilderFactory the builder factory */
+    private $builderFactory;
 
     function __construct(
         \PDO $pdo,
         RowMapper $mapper,
         ErrorHandler $errorHandler,
-        Builder $builder,
+        BuilderFactory $builderFactory,
         ContainerInterface $container = null,
         EventDispatcherInterface $eventDispatcher = null) {
 
         $this->pdo = $pdo;
         $this->mapper = $mapper;
         $this->errorHandler = $errorHandler;
-        $this->builder = $builder;
+        $this->builderFactory = $builderFactory;
         $this->container = $container;
         $this->eventDispatcher = $eventDispatcher;
     }
@@ -71,7 +72,7 @@ class ModelDependencyProvider {
      * @return Builder
      */
     public function getBuilder() {
-        return $this->builder;
+        return $this->builderFactory->createBuilder();
     }
 
     /**

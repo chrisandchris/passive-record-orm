@@ -212,4 +212,166 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $builder->table('table');
         $this->equals('FROM `table`', $builder);
     }
+
+    public function testValuesStatement() {
+        $builder = $this->getBuilder();
+        $fieldValues = [
+            [
+                'Jordan',
+                'John',
+                'Alameda',
+                'San Jose',
+            ],
+        ];
+
+        $builder->values($fieldValues);
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('VALUES (   ? , ? , ? , ?  )', $query);
+
+        $builder = $this->getBuilder();
+
+        $fieldValues = [
+            [
+                'Jordan',
+                'John',
+                'Alameda',
+                'San Jose',
+            ],
+            [
+                'Simon',
+                'Peter',
+                'Alameda',
+                'San Jose',
+            ],
+        ];
+
+        $builder->values($fieldValues);
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('VALUES (   ? , ? , ? , ?  )  , (   ? , ? , ? , ?  )', $query);
+    }
+
+    public function testValuesInvalidInput() {
+        $builder = $this->getBuilder();
+        $fieldValues = [
+            null,
+        ];
+
+        try {
+            $builder->values($fieldValues);
+            $this->fail('Must fail due to invalid input [no array]');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $fieldValues = [
+            [
+
+            ],
+        ];
+
+        try {
+            $builder->values($fieldValues);
+            $this->fail('Must fail due to invalid input [array to small]');
+        } catch (MalformedQueryException $e) {
+        }
+    }
+
+    public function testAppendMultiple() {
+        $builder = $this->getBuilder();
+        $array = [0];
+        $builder->each(
+            $array,
+            function () {
+                $builder = $this->getBuilder();
+                $builder->field('field')
+                        ->field('1');
+
+                return $builder;
+            }
+        );
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('`field` `1`', $query);
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        $builder->each(
+            $array,
+            function () {
+                return [
+                    [
+                        'type'   => 'field',
+                        'params' => [
+                            'identifier' => 'field1',
+                        ],
+                    ],
+                    [
+                        'type'   => 'field',
+                        'params' => [
+                            'identifier' => 'field2',
+                        ],
+                    ],
+                ];
+            }
+        );
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('`field1` `field2`', $query);
+    }
+
+    public function testAppendMultipleWrongInput() {
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return [
+                        [
+                            'type' => 'field',
+                        ],
+                        [
+                            'type'   => 'field',
+                            'params' => [
+                                'identifier' => 'field2',
+                            ],
+                        ],
+                    ];
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return [
+                        [
+                            'type' => 'field',
+                        ],
+                    ];
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return null;
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+    }
 }

@@ -111,6 +111,18 @@ class Builder {
         return max(array_keys($this->stopPropagation));
     }
 
+    public function alias($alias) {
+        $this->append('alias', ['alias' => $alias]);
+
+        return $this;
+    }
+
+    public function any() {
+        $this->append('any');
+
+        return $this;
+    }
+
     public function update($table) {
         $this->append('update', ['table' => $table]);
 
@@ -155,12 +167,6 @@ class Builder {
 
     public function where() {
         $this->append('where');
-
-        return $this;
-    }
-
-    public function alias($alias) {
-        $this->append('alias', ['alias' => $alias]);
 
         return $this;
     }
@@ -210,12 +216,6 @@ class Builder {
         return $this;
     }
 
-    public function any() {
-        $this->append('any');
-
-        return $this;
-    }
-
     public function equals() {
         $this->append('equals');
 
@@ -224,6 +224,55 @@ class Builder {
 
     public function compare($comparison) {
         $this->append('comparison', ['comparison' => $comparison]);
+
+        return $this;
+    }
+
+    /**
+     * Adds a new VALUES()-Statement
+     *
+     * @param array|Builder $values the values to append
+     * @return $this
+     * @throws MalformedQueryException
+     * @throws MissingParameterException
+     * @throws TypeNotFoundException
+     */
+    public function values($values = null) {
+        if (is_array($values)) {
+            $this->append('values');
+
+            $insertCounter = 0;
+            foreach ($values as $insert) {
+                if (!is_array($insert) || count($insert) < 1) {
+                    throw new MalformedQueryException(
+                        sprintf('Value of $values must be array, %s given', gettype($insert))
+                    );
+                }
+                $this->brace();
+                $fieldCounter = 0;
+                foreach ($insert as $value) {
+                    $this->value($value);
+
+                    if (++$fieldCounter < count($insert)) {
+                        $this->c();
+                    }
+                }
+                $this->close();
+
+                if (++$insertCounter < count($values)) {
+                    $this->c();
+                }
+            }
+
+            return $this;
+        }
+        $this->append('values');
+
+        return $this;
+    }
+
+    public function brace() {
+        $this->append('brace');
 
         return $this;
     }
@@ -242,13 +291,8 @@ class Builder {
         return $this;
     }
 
-    /**
-     * Adds a new VALUES()-Statement
-     *
-     * @return $this
-     */
-    public function values() {
-        $this->append('values');
+    public function c() {
+        $this->append('comma');
 
         return $this;
     }
@@ -284,12 +328,6 @@ class Builder {
         return $this;
     }
 
-    public function brace() {
-        $this->append('brace');
-
-        return $this;
-    }
-
     public function limit($limit = 1) {
         $this->append('limit', ['limit' => $limit]);
 
@@ -312,6 +350,14 @@ class Builder {
         );
 
         return $this;
+    }
+
+    public function union($mode = '') {
+        $this->append(
+            'union', [
+                'mode' => $mode,
+            ]
+        );
     }
 
     public function using($field) {
@@ -488,23 +534,17 @@ class Builder {
             case 'and' :
             case '&' :
             case '&&' :
-            $this->append('and');
+                $this->append('and');
 
                 return $this;
             case 'or' :
             case '|' :
             case '||' :
-            $this->append('or');
+                $this->append('or');
 
                 return $this;
         }
         throw new \Exception("unknown connection type: " . $relation);
-    }
-
-    public function c() {
-        $this->append('comma');
-
-        return $this;
     }
 
     /**
@@ -538,12 +578,66 @@ class Builder {
     }
 
     /**
+     * Append the result of $callable() as long as $validator() equals to
+     * true<br>
+     * <br>
+     * $callable() may return a list of types as array or an instance of the
+     * Builder class
+     *
+     * @param \Closure $validator the validator to use
+     * @param \Closure $callable  the callable to execute on each turn
+     * @throws MalformedQueryException
+     */
+    public function asLong(\Closure $validator, \Closure $callable) {
+        while ($validator() === true) {
+            $this->appendMultiple($callable());
+        }
+    }
+
+    /**
+     * Append multiple types using the internal ::append() method
+     *
+     * @param array|Builder $types     the types to append
+     * @throws MalformedQueryException if the parameters are in a not support
+     *                                 format
+     * @throws MissingParameterException if parameters of types are missing
+     * @throws TypeNotFoundException if a type is not found
+     */
+    private function appendMultiple($types) {
+        if ($types instanceof Builder) {
+            $types = $types->getStatement();
+        } else {
+            if (!is_array($types)) {
+                throw new MalformedQueryException(
+                    'When adding multiple types, you must give an array or an instance of Builder'
+                );
+            }
+        }
+        foreach ($types as $type) {
+            if (!isset($type['type']) || !isseT($type['params'])) {
+                throw new MalformedQueryException('Type not fully configured, missing type name or params, have');
+            }
+            $this->append($type['type'], $type['params']);
+        }
+    }
+
+    /**
      * Get the query array
      *
      * @return array
      */
     public function getStatement() {
         return $this->statement;
+    }
+
+    public function each(array $items, \Closure $callable) {
+        $count = 0;
+        foreach ($items as $item) {
+            $count++;
+            $this->appendMultiple($callable($item, $count < count($items)));
+        }
+
+        return $this;
     }
 
     /**
