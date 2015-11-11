@@ -2,21 +2,23 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * @name ModelTest
- * @version   1
+ * @version   1.0.0
+ * @since     v1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
@@ -42,7 +44,7 @@ class ModelTest extends TestKernel {
     private function getModel() {
         $provider = new ModelDependencyProvider(
             new PdoLayer('sqlite', 'sqlite.db'),
-            new RowMapper(),
+            new RowMapperFactory(new EventDispatcher()),
             new ErrorHandler(),
             new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag())
         );

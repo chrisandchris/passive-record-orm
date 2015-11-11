@@ -8,8 +8,8 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintExceptio
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TransactionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -187,7 +187,7 @@ abstract class Model {
                 }
 
                 return $this->getMapper()
-                    ->mapFromResult($statement, $entity);
+                            ->mapFromResult($statement, $entity);
             }
         );
     }
@@ -258,10 +258,10 @@ abstract class Model {
         }
 
         return $this->getErrorHandler()
-            ->handle(
-                $statement->errorInfo()[1],
-                $statement->errorInfo()[2]
-            );
+                    ->handle(
+                        $statement->errorInfo()[1],
+                        $statement->errorInfo()[2]
+                    );
     }
 
     /**
@@ -370,7 +370,7 @@ abstract class Model {
             $statement,
             function (PdoStatement $statement) use ($entity, $closure) {
                 return $this->getMapper()
-                    ->mapToArray($statement, $entity, $closure);
+                            ->mapToArray($statement, $entity, $closure);
             }
         );
     }
@@ -388,15 +388,15 @@ abstract class Model {
             $stmt,
             function (PdoStatement $statement) {
                 return $this->getMapper()
-                    ->mapToArray(
-                        $statement, new KeyValueEntity(),
-                        function (KeyValueEntity $entity) {
+                            ->mapToArray(
+                                $statement, new KeyValueEntity(),
+                                function (KeyValueEntity $entity) {
                                     return [
                                         'key'   => $entity->key,
                                         'value' => $entity->value,
                                     ];
-                        }
-                    );
+                                }
+                            );
             }
         );
     }

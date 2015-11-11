@@ -1,26 +1,26 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Pdo;
+namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Services\DefaultEncryptionService;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
+use Defuse\Crypto\Crypto;
+use Defuse\Crypto\Key;
 use PDO;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapperTest
- * @version   1
+ * @version   1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
 class RowMapperTest extends TestKernel {
-
-    public function getRowMapper() {
-        return new RowMapper();
-    }
 
     public function testMapFromResult() {
         $Mapper = new RowMapper();
@@ -135,18 +135,38 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testBuildMethodName() {
-        $Mapper = new RowMapper();
-        $this->assertEquals('setName', $Mapper->buildMethodName('name'));
-        $this->assertEquals('setSomeName', $Mapper->buildMethodName('some_name'));
-        $this->assertEquals('setSomeName', $Mapper->buildMethodName('someName'));
-        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('some_other_name'));
-        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('someOtherName'));
+        $mapper = new RowMapper();
+        $this->assertEquals('setName', $mapper->buildMethodName('name'));
+        $this->assertEquals('setSomeName', $mapper->buildMethodName('some_name'));
+        $this->assertEquals('setSomeName', $mapper->buildMethodName('someName'));
+        $this->assertEquals('setSomeOtherName', $mapper->buildMethodName('some_other_name'));
+        $this->assertEquals('setSomeOtherName', $mapper->buildMethodName('someOtherName'));
+    }
+
+    public function testEncryptedEntity() {
+        // @todo go on herebegan
+        $mapper = $this->getRowMapper();
+
+        $encryptionService = new DefaultEncryptionService();
+        $executor = new StringBasedExecutor(new Crypto());
+        $encryptionService->useForField('name', $executor);
+        $encryptionService->makeResponsible(new DummyEntity());
+        $mapper->addEncryptionAbility($encryptionService);
+
+        $statement = $this->getStatementMockup();
+        $statement::$maxId = 1;
+        $entities = $mapper->mapFromResult($statement, new DummyEntity());
+        $this->assertEquals(1, count($entities));
+    }
+
+    public function getRowMapper() {
+        return new RowMapper();
     }
 }
 
 class PdoStatementDummy extends \PDOStatement {
 
-    public static $id = 0;
+    public static $id    = 0;
     public static $maxId = 5;
 
     public function fetch($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
@@ -164,8 +184,8 @@ class PdoStatementDummy extends \PDOStatement {
 
 class DummyEntity implements Entity {
 
-    private $id;
-    private $name;
+    public $id;
+    public $name;
 
     /**
      * @return mixed

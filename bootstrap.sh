@@ -25,7 +25,8 @@ sudo apt-get update
 
 echo "--- Installing PHP-specific packages ---"
 sudo apt-get install -y php5 apache2 libapache2-mod-php5 php5-curl php5-gd php5-mcrypt \
-    mysql-server-5.5 php5-mysql git-core php5-sqlite
+    mysql-server-5.5 php5-mysql git-core php5-sqlite php5-mcrypt
+sudo php5enmod mcrypt
 
 echo "--- Install PHPUnit ---"
 sudo wget -q https://phar.phpunit.de/phpunit.phar
