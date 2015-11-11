@@ -187,7 +187,7 @@ abstract class Model {
                 }
 
                 return $this->getMapper()
-                    ->mapFromResult($statement, $entity);
+                            ->mapFromResult($statement, $entity);
             }
         );
     }
@@ -258,10 +258,10 @@ abstract class Model {
         }
 
         return $this->getErrorHandler()
-            ->handle(
-                $statement->errorInfo()[1],
-                $statement->errorInfo()[2]
-            );
+                    ->handle(
+                        $statement->errorInfo()[1],
+                        $statement->errorInfo()[2]
+                    );
     }
 
     /**
@@ -329,7 +329,7 @@ abstract class Model {
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $statement
-     * @return bool|int
+     * @return int
      */
     private function handleWithLastInsertId(PdoStatement $statement) {
         return $this->handleGeneric(
@@ -339,6 +339,22 @@ abstract class Model {
                             ->getPdo()
                             ->lastInsertId();
             }
+        );
+    }
+
+    /**
+     * Call query and get first column of first row
+     *
+     * @param SqlQuery $query
+     * @return mixed
+     */
+    protected function runWithFirstKeyFirstValue(SqlQuery $query) {
+        $stmt = $this->prepare($query);
+
+        return $this->handleGeneric(
+            $stmt, function (PdoStatement $statement) {
+            return $statement->fetch(\PDO::FETCH_NUM)[0];
+        }
         );
     }
 
@@ -370,7 +386,7 @@ abstract class Model {
             $statement,
             function (PdoStatement $statement) use ($entity, $closure) {
                 return $this->getMapper()
-                    ->mapToArray($statement, $entity, $closure);
+                            ->mapToArray($statement, $entity, $closure);
             }
         );
     }
@@ -388,15 +404,15 @@ abstract class Model {
             $stmt,
             function (PdoStatement $statement) {
                 return $this->getMapper()
-                    ->mapToArray(
-                        $statement, new KeyValueEntity(),
-                        function (KeyValueEntity $entity) {
+                            ->mapToArray(
+                                $statement, new KeyValueEntity(),
+                                function (KeyValueEntity $entity) {
                                     return [
                                         'key'   => $entity->key,
                                         'value' => $entity->value,
                                     ];
-                        }
-                    );
+                                }
+                            );
             }
         );
     }
