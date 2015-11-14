@@ -21,30 +21,28 @@ class SqlQuery {
     }
 
     /**
-     * @return mixed
+     * @inheritdoc
      */
     public function getQuery() {
         return $this->query;
     }
 
     /**
-     * @return mixed
+     * @inheritdoc
      */
     public function getParameters() {
         return $this->parameters;
     }
 
     /**
-     * Toggle requires result mode on and off
+     * @inheritdoc
      */
     public function requiresResult() {
         $this->requiresResult = $this->requiresResult ? false : true;
     }
 
     /**
-     * Returns true if result is required, default value is false
-     *
-     * @return bool
+     * @inheritdoc
      */
     public function isResultRequired() {
         return $this->requiresResult;

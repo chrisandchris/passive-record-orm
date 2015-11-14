@@ -8,17 +8,19 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintExceptio
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TransactionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
- * @version   2.1.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2.1.0
+ * @lastChange v2.1.0
+ * @since      v1.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 abstract class Model {
 
@@ -127,7 +129,7 @@ abstract class Model {
     protected function prepare(SqlQuery $query) {
         $stmt = $this->createStatement($query->getQuery());
         $this->bindValues($stmt, $query);
-        $stmt->requiresResult($query);
+        $stmt->requiresResult($query->isResultRequired());
 
         return $stmt;
     }

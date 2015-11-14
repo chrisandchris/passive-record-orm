@@ -2,8 +2,9 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -13,6 +14,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * @name ModelDependencyProvider
  * @version    2.1.0
+ * @lastChange v2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -22,8 +24,8 @@ class ModelDependencyProvider {
 
     /** @var PdoLayer the pdo class */
     private $pdo;
-    /** @var RowMapper the row mapper */
-    private $mapper;
+    /** @var RowMapper the row mapper factory */
+    private $mapperFactory;
     /** @var ErrorHandler */
     private $errorHandler;
     /** @var ContainerInterface the container */
@@ -33,14 +35,14 @@ class ModelDependencyProvider {
 
     function __construct(
         \PDO $pdo,
-        RowMapper $mapper,
+        RowMapperFactory $mapperFactory,
         ErrorHandler $errorHandler,
         BuilderFactory $builderFactory,
         ContainerInterface $container = null,
         EventDispatcherInterface $eventDispatcher = null) {
 
         $this->pdo = $pdo;
-        $this->mapper = $mapper;
+        $this->mapperFactory = $mapperFactory;
         $this->errorHandler = $errorHandler;
         $this->builderFactory = $builderFactory;
         $this->container = $container;
@@ -58,7 +60,7 @@ class ModelDependencyProvider {
      * @return RowMapper
      */
     public function getMapper() {
-        return $this->mapper;
+        return $this->mapperFactory->getMapper();
     }
 
     /**

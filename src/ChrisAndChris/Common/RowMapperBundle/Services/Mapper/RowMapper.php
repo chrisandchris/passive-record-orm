@@ -1,20 +1,34 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Services\Pdo;
+namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionServiceInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapper
- * @version   2.0.1
- * @since     v1.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2.0.1
+ * @lastChange v2.1.0
+ * @since      v1.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class RowMapper {
+
+    /** @var EncryptionServiceInterface[] */
+    private $encryptionServices = [];
+
+    /**
+     * Add a new encryption ability
+     *
+     * @param EncryptionServiceInterface $encryptionService
+     */
+    public function addEncryptionAbility(EncryptionServiceInterface $encryptionService) {
+        $this->encryptionServices[] = $encryptionService;
+    }
 
     /**
      * Map a single result from a statement
@@ -68,22 +82,30 @@ class RowMapper {
      * @throws DatabaseException if there is no such property
      */
     public function mapRow(array $row, Entity $entity) {
-        foreach ($row as $key => $value) {
-            $methodName = $this->buildMethodName($key);
+        foreach ($row as $field => $value) {
+            $methodName = $this->buildMethodName($field);
             if (method_exists($entity, $methodName)) {
                 $entity->$methodName($value);
             } else {
-                if (property_exists($entity, $key)) {
-                    $entity->$key = $value;
+                if (property_exists($entity, $field)) {
+                    $entity->$field = $value;
                 } else {
-                    throw new DatabaseException("No property '$key' found for Entity");
+                    throw new DatabaseException(sprintf('No property %s found for Entity', $field));
                 }
             }
         }
 
+        $entity = $this->runDecryption($entity);
+
         return $entity;
     }
 
+    /**
+     * Build a method name
+     *
+     * @param $key
+     * @return string
+     */
     public function buildMethodName($key) {
         $partials = explode('_', $key);
         foreach ($partials as $idx => $part) {
@@ -91,6 +113,22 @@ class RowMapper {
         }
 
         return 'set' . implode('', $partials);
+    }
+
+    /**
+     * Run the decryption process
+     *
+     * @param Entity $entity
+     * @return Entity
+     */
+    private function runDecryption(Entity $entity) {
+        foreach ($this->encryptionServices as $encryptionService) {
+            if ($encryptionService->isResponsible($entity)) {
+                return $encryptionService->decrypt($entity);
+            }
+        }
+
+        return $entity;
     }
 
     /**

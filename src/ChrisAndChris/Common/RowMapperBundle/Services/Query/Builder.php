@@ -3,18 +3,21 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\SecurityBreachException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\SystemException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionExecutorInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 
 /**
  * @name Builder
- * @version   1.1.0
- * @since     v2.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.1.0
+ * @lastChange v2.1.0
+ * @since      v2.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class Builder {
 
@@ -28,6 +31,8 @@ class Builder {
     private $usedClosures = false;
     /** @var TypeBag */
     private $typeBag;
+    /** @var EncryptionExecutorInterface the encryption service used */
+    private $encryptionExecutor;
 
     function __construct(ParserInterface $parser, TypeBag $parameterBag) {
         $this->parser = $parser;
@@ -304,6 +309,43 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add a new raw value to the statement<br>
+     * The value gets encrypted if an encryption service is set
+     *
+     * @param mixed|\Closure $value
+     * @return $this
+     * @throws SecurityBreachException if no encryption service is set
+     */
+    public function encryptedValue($value) {
+        $this->append('value', ['value' => $this->encrypt($value)]);
+
+        return $this;
+    }
+
+    /**
+     * Encrypts the given input
+     *
+     * @param mixed|\Closure $value the value to encrypt
+     * @return string the encrypted value
+     * @throws SecurityBreachException if no executor is set
+     */
+    private function encrypt($value) {
+        if ($this->encryptionExecutor === null) {
+            throw new SecurityBreachException('No encryption executor is set');
+        }
+        if ($value instanceof \Closure) {
+            $value = $value();
+        }
+
+        return $this->encryptionExecutor->encrypt($value);
+    }
+
+    /**
+     * Append a NULL
+     *
+     * @return $this
+     */
     public function null() {
         $this->append('null');
 
@@ -325,6 +367,13 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add comparison to "IS NULL" if $isNull is true<br />
+     * or to "IS NOT NULL" if $isNull is false
+     *
+     * @param bool $isNull
+     * @return $this
+     */
     public function isNull($isNull = true) {
         if ($isNull) {
             $this->append('isnull', ['isnull' => true]);
@@ -335,12 +384,24 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Limit the length of the result set
+     *
+     * @param int $limit the maximal amount of rows
+     * @return $this
+     */
     public function limit($limit = 1) {
         $this->append('limit', ['limit' => $limit]);
 
         return $this;
     }
 
+    /**
+     * Set an offset for the query
+     *
+     * @param int $offset the offset
+     * @return $this
+     */
     public function offset($offset = 0) {
         $this->append('offset', ['offset' => $offset]);
 
@@ -685,5 +746,17 @@ class Builder {
         $this->stopPropagation = [];
         $this->statement = [];
         $this->usedClosures = false;
+    }
+
+    /**
+     * Use this encryption service if encryption is required for a field
+     *
+     * @param EncryptionExecutorInterface $executorService
+     * @return $this
+     */
+    public function useEncryptionService(EncryptionExecutorInterface $executorService) {
+        $this->encryptionExecutor = $executorService;
+
+        return $this;
     }
 }

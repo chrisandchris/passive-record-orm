@@ -6,7 +6,10 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
     arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
   common_rowmapper.rowmapper:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper
+  common_rowmapper.rowmapperfactory:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory
+    arguments: [@event_dispatcher]
   common_rowmapper.errorhandler:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
   common_rowmapper.querybuilder:
