@@ -14,6 +14,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * @name ModelDependencyProvider
  * @version    2.1.0
+ * @lastChange v2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris

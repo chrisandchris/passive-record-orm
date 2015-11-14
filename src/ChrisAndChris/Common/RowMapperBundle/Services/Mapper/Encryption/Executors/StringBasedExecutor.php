@@ -1,29 +1,31 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors;
 
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\CryptoInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionExecutorInterface;
-use Defuse\Crypto\Crypto;
 
 /**
  * @name StringBasedExecutor
- * @version
- * @since
- * @package
- * @subpackage
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @version    1.0.0
+ * @lastChange v2.1.0
+ * @since      v2.1.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class StringBasedExecutor implements EncryptionExecutorInterface {
 
-    /** @var Crypto */
+    /** @var CryptoInterface */
     private $crypto;
+    /** @var string encryption key */
     private $key;
+    /** @var string initialization vector */
+    private $iv;
 
     /**
-     * @param Crypto $crypto
+     * @param CryptoInterface $crypto
      */
-    public function __construct(Crypto $crypto) {
+    public function __construct(CryptoInterface $crypto) {
         $this->crypto = $crypto;
     }
 
@@ -31,21 +33,21 @@ class StringBasedExecutor implements EncryptionExecutorInterface {
      * @inheritDoc
      */
     public function decrypt($encryptedValue) {
-        return $this->crypto->decrypt($encryptedValue, $this->key);
+        return $this->crypto->decrypt($encryptedValue, $this->key, $this->iv);
     }
 
     /**
      * @inheritDoc
      */
     public function encrypt($decryptedValue) {
-        return $this->crypto->encrypt($decryptedValue, $this->key);
+        return $this->crypto->encrypt($decryptedValue, $this->key, $this->iv);
     }
 
     /**
      * @inheritDoc
      */
-    public function useKey($key) {
+    public function useKey($key, $iv) {
+        $this->iv = $iv;
         $this->key = $key;
     }
-
 }

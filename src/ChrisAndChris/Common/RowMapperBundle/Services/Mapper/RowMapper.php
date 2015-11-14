@@ -9,11 +9,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapper
- * @version   2.0.1
- * @since     v1.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2.0.1
+ * @lastChange v2.1.0
+ * @since      v1.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class RowMapper {
 

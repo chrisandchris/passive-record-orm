@@ -3,17 +3,22 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\SecurityBreachException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Wrappers\PhpSeclibAesWrapper;
+use phpseclib\Crypt\AES;
 
 /**
  * Does more complex tests
  *
  * @name ExtendedBuilderTest
- * @version   1
- * @since     v2.0.2
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2
+ * @lastChange v2.1.0
+ * @since      v2.0.2
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class ExtendedBuilderTest extends AbstractBuilderTest {
 
@@ -372,6 +377,47 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
             );
             $this->fail('Must fail due to invalid input');
         } catch (MalformedQueryException $e) {
+        }
+    }
+
+    public function testEncryptedBuilder() {
+        $builder = $this->getBuilder();
+
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
+
+        $query = $builder->useEncryptionService($executor)
+                         ->encryptedValue('Mr. Jones')
+                         ->getSqlQuery();
+
+        $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
+    }
+
+    public function testEncryptedBuilderWithClosure() {
+        $builder = $this->getBuilder();
+
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
+
+        $query = $builder->useEncryptionService($executor)
+                         ->encryptedValue(
+                             function () {
+                                 return 'Mr. Jones';
+                             }
+                         )
+                         ->getSqlQuery();
+
+        $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
+    }
+
+    public function testSecurityBreach() {
+        $builder = $this->getBuilder();
+
+        try {
+            $builder->encryptedValue('Mr. Jones');
+            $this->fail('Must throw SecurityBreachException');
+        } catch (SecurityBreachException $exception) {
+            // ignore
         }
     }
 }

@@ -2,12 +2,11 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Mapper\Encryption;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
-use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionExecutorInterface;
-use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionServiceInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Services\DefaultEncryptionService;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Wrappers\PhpSeclibAesWrapper;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use Defuse\Crypto\Crypto;
+use phpseclib\Crypt\AES;
 
 /**
  * @name EncryptedQueryTest
@@ -21,8 +20,8 @@ class EncryptedQueryTest extends TestKernel {
 
     public function testEncryptedQuerySingleFieldBased() {
         $encryptionService = new DefaultEncryptionService();
-        $executor = new StringBasedExecutor(new Crypto());
-        $executor->useKey((new Crypto())->createNewRandomKey());
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
 
         $encryptionService->useForField('name', $executor);
         $encryptionService->useForField('street', $executor);
@@ -46,11 +45,9 @@ class EncryptedQueryTest extends TestKernel {
     }
 
     public function testEncryptedQueryMultipleFieldBased() {
-        /** @var EncryptionServiceInterface $encryptionService */
         $encryptionService = new DefaultEncryptionService();
-        /** @var EncryptionExecutorInterface $executor */
-        $executor = new StringBasedExecutor(new Crypto());
-        $executor->useKey((new Crypto())->createNewRandomKey());
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
 
         $encryptionService->useForField(['name', 'street'], $executor);
 
@@ -73,11 +70,9 @@ class EncryptedQueryTest extends TestKernel {
     }
 
     public function testEncryptedQueryRowBased() {
-        /** @var EncryptionServiceInterface $encryptionService */
         $encryptionService = new DefaultEncryptionService();
-        /** @var EncryptionExecutorInterface $executor */
-        $executor = new StringBasedExecutor(new Crypto());
-        $executor->useKey((new Crypto())->createNewRandomKey());
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
 
         $encryptionService->useForRow($executor, ['doNotEncrypt']);
 

@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;

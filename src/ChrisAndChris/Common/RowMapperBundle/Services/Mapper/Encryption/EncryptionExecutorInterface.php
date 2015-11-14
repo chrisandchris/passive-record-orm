@@ -3,11 +3,12 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption;
 
 /**
  * @name EncryptionExecutorInterface
- * @version   1.0.0
- * @since     v2.1.0
- * @package   RowMapperbundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.0.0
+ * @lastChange v2.1.0
+ * @since      v2.1.0
+ * @package    RowMapperbundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 interface EncryptionExecutorInterface {
 
@@ -30,7 +31,9 @@ interface EncryptionExecutorInterface {
     /**
      * Set a key used for encryption and decryption
      *
-     * @param string|\Closure $key they key to use to encrypt/decrypt
+     * @param string $key they key to use to encrypt/decrypt
+     * @param string $iv
+     * @return
      */
-    public function useKey($key);
+    public function useKey($key, $iv);
 }

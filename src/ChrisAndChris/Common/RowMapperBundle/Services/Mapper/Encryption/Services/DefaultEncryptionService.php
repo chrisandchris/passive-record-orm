@@ -7,13 +7,12 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionSe
 
 /**
  * @name DefaultEncryptionService
- * @version
- * @since
- * @package
- * @subpackage
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @version    1.0.0
+ * @lastChange v2.1.0
+ * @since      v2.1.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class DefaultEncryptionService implements EncryptionServiceInterface {
 
