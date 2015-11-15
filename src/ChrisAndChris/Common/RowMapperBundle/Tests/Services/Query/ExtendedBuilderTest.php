@@ -433,7 +433,7 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $query = $queryObject->getQuery();
         $params = $queryObject->getParameters();
 
-        $this->assertEquals('`name`  = ?', $query);
+        $this->assertEquals('`name` = ?', $query);
         $this->assertEquals($params[0], 'Mr. Jones');
 
         $builder->updates(
@@ -446,7 +446,7 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $query = $queryObject->getQuery();
         $params = $queryObject->getParameters();
 
-        $this->assertEquals('`name`  = ? , `street` = ?', $query);
+        $this->assertEquals('`name` = ? , `street` = ?', $query);
         $this->assertEquals($params[0], 'Mr. Jones');
         $this->assertEquals($params[1], 'Alameda');
 
