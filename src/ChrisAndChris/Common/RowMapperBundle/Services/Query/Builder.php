@@ -134,6 +134,83 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Simplifies updating of columns
+     *
+     * @param array $updates the updates to append
+     * @return $this
+     * @throws MalformedQueryException
+     */
+    public function updates(array $updates) {
+        if (count($updates) > 0) {
+            $insertCounter = 0;
+            foreach ($updates as $update) {
+                if (!is_array($updates)) {
+                    throw new MalformedQueryException(
+                        sprintf('Value of $values must be array, %s given', gettype($update))
+                    );
+                }
+                if (count($update) != 2) {
+                    throw new MalformedQueryException(
+                        sprintf('Update value must have 2 indexes, %d given', count($update))
+                    );
+                }
+                $keys = array_keys($update);
+                $this->field($update[$keys[0]])
+                     ->equals()
+                     ->value($update[$keys[1]]);
+
+                if (++$insertCounter < count($updates)) {
+                    $this->c();
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds a new raw value to the statement<br />
+     * The value gets encoded as parameter<br />
+     * If you give a closure, the return value of the closure is used
+     *
+     * @param mixed|\Closure $value
+     * @return $this
+     */
+    public function value($value) {
+        $this->append('value', ['value' => $value]);
+
+        return $this;
+    }
+
+    public function equals() {
+        $this->append('equals');
+
+        return $this;
+    }
+
+    /**
+     * Select a field<br />
+     * Array usage of $identifier is deprecated, use only with double-colon<br
+     * />
+     * <br />
+     * database:table:field parses to database.table.field
+     *
+     * @param string $identifier path of field or field name
+     * @return $this
+     */
+    public function field($identifier) {
+        $this->append('field', ['identifier' => $identifier]);
+
+        return $this;
+    }
+
+    public function c() {
+        $this->append('comma');
+
+        return $this;
+    }
+
     public function delete($table) {
         $this->append('delete', ['table' => $table]);
 
@@ -205,22 +282,6 @@ class Builder {
     }
 
     /**
-     * Select a field<br />
-     * Array usage of $identifier is deprecated, use only with double-colon<br
-     * />
-     * <br />
-     * database:table:field parses to database.table.field
-     *
-     * @param string $identifier path of field or field name
-     * @return $this
-     */
-    public function field($identifier) {
-        $this->append('field', ['identifier' => $identifier]);
-
-        return $this;
-    }
-
-    /**
      * Opens a new function<br />
      * <br />
      * <i>close this type by close()</i>
@@ -234,12 +295,6 @@ class Builder {
         return $this;
     }
 
-    public function equals() {
-        $this->append('equals');
-
-        return $this;
-    }
-
     public function compare($comparison) {
         $this->append('comparison', ['comparison' => $comparison]);
 
@@ -249,14 +304,12 @@ class Builder {
     /**
      * Adds a new VALUES()-Statement
      *
-     * @param array|Builder $values the values to append
+     * @param array|null $values the values to append
      * @return $this
      * @throws MalformedQueryException
-     * @throws MissingParameterException
-     * @throws TypeNotFoundException
      */
-    public function values($values = null) {
-        if (is_array($values)) {
+    public function values(array $values = null) {
+        if (count($values) > 0) {
             $this->append('values');
 
             $insertCounter = 0;
@@ -285,26 +338,6 @@ class Builder {
             return $this;
         }
         $this->append('values');
-
-        return $this;
-    }
-
-    /**
-     * Adds a new raw value to the statement<br />
-     * The value gets encoded as parameter<br />
-     * If you give a closure, the return value of the closure is used
-     *
-     * @param mixed|\Closure $value
-     * @return $this
-     */
-    public function value($value) {
-        $this->append('value', ['value' => $value]);
-
-        return $this;
-    }
-
-    public function c() {
-        $this->append('comma');
 
         return $this;
     }
@@ -709,6 +742,8 @@ class Builder {
     }
 
     /**
+     * Get the SqlQuery object
+     *
      * @param ParserInterface $parser
      * @return SqlQuery
      * @throws MalformedQueryException if the query is (probably) malformed

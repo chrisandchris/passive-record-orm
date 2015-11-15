@@ -41,7 +41,7 @@ $builder->insert('usert')
 ->fieldlist([
     'username',
     'password',
-    'salt
+    'salt'
 ], true);
 ->values([
     [

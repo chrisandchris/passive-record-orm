@@ -420,4 +420,58 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
             // ignore
         }
     }
+
+    public function testUpdates() {
+        $builder = $this->getBuilder();
+
+        $builder->updates(
+            [
+                ['name', 'Mr. Jones'],
+            ]
+        );
+        $queryObject = $builder->getSqlQuery();
+        $query = $queryObject->getQuery();
+        $params = $queryObject->getParameters();
+
+        $this->assertEquals('`name`  = ?', $query);
+        $this->assertEquals($params[0], 'Mr. Jones');
+
+        $builder->updates(
+            [
+                ['name', 'Mr. Jones'],
+                ['street', 'Alameda'],
+            ]
+        );
+        $queryObject = $builder->getSqlQuery();
+        $query = $queryObject->getQuery();
+        $params = $queryObject->getParameters();
+
+        $this->assertEquals('`name`  = ? , `street` = ?', $query);
+        $this->assertEquals($params[0], 'Mr. Jones');
+        $this->assertEquals($params[1], 'Alameda');
+
+        $builder = $this->getBuilder();
+        try {
+            $builder->updates(
+                [
+
+                ]
+            );
+            $this->fail('Must throw MalformedQueryException');
+        } catch (MalformedQueryException $exception) {
+            // ignore
+        }
+
+        $builder = $this->getBuilder();
+        try {
+            $builder->updates(
+                [
+                    [1, 2, 3],
+                ]
+            );
+            $this->fail('Must throw MalformedQueryException');
+        } catch (MalformedQueryException $exception) {
+            // ignore
+        }
+    }
 }

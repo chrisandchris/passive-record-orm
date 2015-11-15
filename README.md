@@ -1,4 +1,7 @@
 # symfony-rowmapper
+
+[![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper)
+
 Despite it's name, it's not simply a row mapper. And it's not simply for Symfony.
 This project is a *QueryBuilder* and a *Mapper for SQL Result Sets*,
 both combined but still very separated, so you can use them independent.

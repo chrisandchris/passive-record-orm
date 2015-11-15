@@ -70,12 +70,12 @@ class EncryptedQueryTest extends TestKernel {
     }
 
     public function testEncryptedQueryRowBased() {
+
         $encryptionService = new DefaultEncryptionService();
         $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
         $executor->useKey('root', 'abc-def-def-efg-ahb');
 
         $encryptionService->useForRow($executor, ['doNotEncrypt']);
-
         $entity = new DemoEntity();
         $entity->name = 'Mr. Jones';
         $entity->street = '1st Street';

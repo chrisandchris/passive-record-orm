@@ -34,7 +34,9 @@ interface EncryptionServiceInterface {
      * Use the executor for any field in a row, disallow fields using $fields
      *
      * @param EncryptionExecutorInterface $executor
-     * @param array                       $disallowFields
+     * @param array                       $disallowFields do not
+     *                                                    encrypt/decrypt those
+     *                                                    fields
      * @return mixed
      */
     public function useForRow(EncryptionExecutorInterface $executor, array $disallowFields = null);
