@@ -308,6 +308,47 @@ abstract class Model {
     }
 
     /**
+     * Run a query with custom return
+     *
+     * @todo needs testing
+     *
+     * @param SqlQuery       $query
+     * @param mixed|\Closure $onSuccess on success
+     * @param mixed|\Closure $onFailure on failure
+     * @param null|\Closure  $onError   on exception, if null exception is
+     *                                  thrown
+     * @return mixed
+     * @throws \Exception
+     */
+    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null) {
+        try {
+            if ($this->runSimple($query)) {
+                if ($onSuccess instanceof \Closure) {
+                    return $onSuccess();
+                }
+
+                return $onSuccess;
+            } else {
+                if ($onFailure instanceof \Closure) {
+                    return $onFailure();
+                }
+
+                return $onFailure;
+            }
+        } catch (\Exception $exception) {
+            if ($onError === null) {
+                throw $exception;
+            } else {
+                if ($onError instanceof \Closure) {
+                    return $onError();
+                }
+            }
+
+            return $onError;
+        }
+    }
+
+    /**
      * Runs a simple query, just returning true on success
      *
      * @param SqlQuery $query
