@@ -142,27 +142,30 @@ class Builder {
      * @throws MalformedQueryException
      */
     public function updates(array $updates) {
-        if (count($updates) > 0) {
-            $insertCounter = 0;
-            foreach ($updates as $update) {
-                if (!is_array($updates)) {
-                    throw new MalformedQueryException(
-                        sprintf('Value of $values must be array, %s given', gettype($update))
-                    );
-                }
-                if (count($update) != 2) {
-                    throw new MalformedQueryException(
-                        sprintf('Update value must have 2 indexes, %d given', count($update))
-                    );
-                }
-                $keys = array_keys($update);
-                $this->field($update[$keys[0]])
-                     ->equals()
-                     ->value($update[$keys[1]]);
+        if (count($updates) < 1) {
+            throw new MalformedQueryException(
+                sprintf('Must update at least one field, %s given', count($updates))
+            );
+        }
+        $insertCounter = 0;
+        foreach ($updates as $update) {
+            if (!is_array($updates)) {
+                throw new MalformedQueryException(
+                    sprintf('Value of $values must be array, %s given', gettype($update))
+                );
+            }
+            if (count($update) != 2) {
+                throw new MalformedQueryException(
+                    sprintf('Update value must have 2 indexes, %d given', count($update))
+                );
+            }
+            $keys = array_keys($update);
+            $this->field($update[$keys[0]])
+                 ->equals()
+                 ->value($update[$keys[1]]);
 
-                if (++$insertCounter < count($updates)) {
-                    $this->c();
-                }
+            if (++$insertCounter < count($updates)) {
+                $this->c();
             }
         }
 

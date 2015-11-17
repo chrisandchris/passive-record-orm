@@ -1,7 +1,7 @@
 services:
   common_rowmapper.dependencyprovider:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
-    arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.querybuilderfactory, @service_container, @event_dispatcher]
+    arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowmapperfactory, @common_rowmapper.errorHandler, @common_rowmapper.querybuilderfactory, @service_container, @event_dispatcher]
   common_rowmapper.pdolayer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
     arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]

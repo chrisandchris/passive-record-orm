@@ -2,12 +2,13 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 /**
- * @name SqlStatement
- * @version   1.0.1
- * @since     v2.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @name SqlQuery
+ * @version    1.0.2
+ * @lastChange v2.1.0
+ * @since      v2.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class SqlQuery {
 
@@ -17,6 +18,9 @@ class SqlQuery {
 
     function __construct($query, $parameters = []) {
         $this->query = $query;
+        if (!is_array($parameters)) {
+            $parameters = [$parameters];
+        }
         $this->parameters = $parameters;
     }
 

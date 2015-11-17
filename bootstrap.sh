@@ -3,6 +3,8 @@
 echo "--- Let's get to work. Installing now. ---"
 
 echo "--- Updating packages list ---"
+sudo apt-get install -y python-software-properties software-properties-common
+sudo add-apt-repository -y ppa:ondrej/php5-5.6
 sudo apt-get update
 
 echo "--- MySQL time ---"
@@ -11,21 +13,9 @@ sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again p
 sudo sed -i 's/#max_connections/max_connections/' /etc/mysql/my.cnf
 sudo sed -i 's/max_connections[ ]*= 100/max_connections = 1000' /etc/mysql/my.cnf
 
-echo "--- Installing base packages ---"
-sudo apt-get install -y vim curl python-software-properties
-
-echo "--- Updating packages list ---"
-sudo apt-get update
-
-# echo "--- We want the bleeding edge of PHP ---"
-# sudo add-apt-repository -y ppa:ondrej/php5
-
-echo "--- Updating packages list ---"
-sudo apt-get update
-
 echo "--- Installing PHP-specific packages ---"
 sudo apt-get install -y php5 apache2 libapache2-mod-php5 php5-curl php5-gd php5-mcrypt \
-    mysql-server-5.5 php5-mysql git-core php5-sqlite php5-mcrypt
+    mysql-server-5.5 php5-mysql git-core php5-sqlite php5-mcrypt vim curl
 sudo php5enmod mcrypt
 
 echo "--- Install PHPUnit ---"
