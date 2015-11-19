@@ -107,12 +107,13 @@ abstract class Model {
         }
     }
 
+    /** @noinspection PhpDocSignatureInspection */
     /**
      * Runs a query
      *
      * @param SqlQuery $query
      * @param Entity   $entity
-     * @return array|bool
+     * @return $entity[]
      */
     protected function run(SqlQuery $query, Entity $entity) {
         $stmt = $this->prepare($query);
@@ -311,6 +312,7 @@ abstract class Model {
                     ->inTransaction();
     }
 
+    /** @noinspection PhpDocSignatureInspection */
     /**
      * Run a query with custom return
      *
@@ -321,7 +323,7 @@ abstract class Model {
      * @param mixed|\Closure $onFailure on failure
      * @param null|\Closure  $onError   on exception, if null exception is
      *                                  thrown
-     * @return mixed
+     * @return $onSuccess|$onFailure|$onError
      * @throws \Exception
      */
     protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null) {
@@ -356,7 +358,7 @@ abstract class Model {
      * Runs a simple query, just returning true on success
      *
      * @param SqlQuery $query
-     * @return bool|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity[]
+     * @return bool
      */
     protected function runSimple(SqlQuery $query) {
         return $this->handle($this->prepare($query), null);
@@ -366,7 +368,7 @@ abstract class Model {
      * Runs a simple query, returning the last insert id on success
      *
      * @param SqlQuery $query
-     * @return bool|int
+     * @return int
      */
     protected function runWithLastId(SqlQuery $query) {
         return $this->handleWithLastInsertId($this->prepare($query));
@@ -410,8 +412,8 @@ abstract class Model {
      *
      * @param SqlQuery $query
      * @param Entity   $entity
-     * @param callable $closure
-     * @return array|bool
+     * @param \Closure $closure
+     * @return array
      */
     protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure) {
         $stmt = $this->prepare($query);
@@ -442,7 +444,7 @@ abstract class Model {
      * Handles a key value query
      *
      * @param SqlQuery $query
-     * @return bool
+     * @return array
      */
     protected function runKeyValue(SqlQuery $query) {
         $stmt = $this->prepare($query);
