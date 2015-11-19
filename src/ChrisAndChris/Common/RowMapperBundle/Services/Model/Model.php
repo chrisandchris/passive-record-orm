@@ -271,21 +271,14 @@ abstract class Model {
      *
      * Throws an exception if no transaction is running
      *
-     * @throws TransactionException
+     * @throws TransactionException if unable to rollback
      */
     protected function _rollback() {
-        if ($this->getDependencyProvider()
-                 ->getPdo()
-                 ->inTransaction()
+        if (!$this->getDependencyProvider()
+                  ->getPdo()
+                  ->rollBack()
         ) {
-            if (!$this->getDependencyProvider()
-                      ->getPdo()
-                      ->rollBack()
-            ) {
-                throw new TransactionException("Unable to rollback");
-            }
-        } else {
-            throw new TransactionException("No transaction running");
+            throw new TransactionException("Unable to rollback");
         }
     }
 
@@ -305,6 +298,17 @@ abstract class Model {
      */
     protected function getMapper() {
         return $this->DependencyProvider->getMapper();
+    }
+
+    /**
+     * Returns whether a transaction is running or not
+     *
+     * @return bool
+     */
+    protected function _inTransaction() {
+        return $this->getDependencyProvider()
+                    ->getPdo()
+                    ->inTransaction();
     }
 
     /**
