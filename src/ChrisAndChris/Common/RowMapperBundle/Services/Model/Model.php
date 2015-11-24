@@ -275,12 +275,26 @@ abstract class Model {
      * @throws TransactionException if unable to rollback
      */
     protected function _rollback() {
+        if (!$this->_inTransaction()) {
+            return;
+        }
         if (!$this->getDependencyProvider()
                   ->getPdo()
                   ->rollBack()
         ) {
             throw new TransactionException("Unable to rollback");
         }
+    }
+
+    /**
+     * Returns whether a transaction is running or not
+     *
+     * @return bool
+     */
+    protected function _inTransaction() {
+        return $this->getDependencyProvider()
+                    ->getPdo()
+                    ->inTransaction();
     }
 
     /**
@@ -301,22 +315,12 @@ abstract class Model {
         return $this->DependencyProvider->getMapper();
     }
 
-    /**
-     * Returns whether a transaction is running or not
-     *
-     * @return bool
-     */
-    protected function _inTransaction() {
-        return $this->getDependencyProvider()
-                    ->getPdo()
-                    ->inTransaction();
-    }
-
     /** @noinspection PhpDocSignatureInspection */
+
     /**
      * Run a query with custom return
      *
-     * @todo needs testing
+     * @todo   needs testing
      *
      * @param SqlQuery       $query
      * @param mixed|\Closure $onSuccess on success
@@ -416,26 +420,27 @@ abstract class Model {
      * @return array
      */
     protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure) {
-        $stmt = $this->prepare($query);
-
-        return $this->handleArray($stmt, $entity, $closure);
-    }
-
-    /**
-     * Handles a statement including mapping to array and error handling
-     *
-     * @param PdoStatement $statement
-     * @param Entity       $entity
-     * @param \Closure     $closure
-     * @return array|bool
-     * @throws \Symfony\Component\Debug\Exception\FatalErrorException
-     */
-    private function handleArray(PdoStatement $statement, Entity $entity, \Closure $closure) {
         return $this->handleGeneric(
-            $statement,
+            $this->prepare($query),
             function (PdoStatement $statement) use ($entity, $closure) {
                 return $this->getMapper()
                             ->mapToArray($statement, $entity, $closure);
+            }
+        );
+    }
+
+    /**
+     * Runs the query and maps it to an associative array
+     *
+     * @param SqlQuery $query
+     * @return array
+     */
+    protected function runAssoc(SqlQuery $query) {
+        return $this->handleGeneric(
+            $this->prepare($query),
+            function (\PDOStatement $statement) {
+                return $this->getMapper()
+                            ->mapFromResult($statement);
             }
         );
     }
@@ -456,6 +461,11 @@ abstract class Model {
                             ->mapToArray(
                                 $statement, new KeyValueEntity(),
                                 function (KeyValueEntity $entity) {
+                                    static $count = 0;
+                                    if (empty($entity->key)) {
+                                        $entity->key = $count++;
+                                    }
+
                                     return [
                                         'key'   => $entity->key,
                                         'value' => $entity->value,
