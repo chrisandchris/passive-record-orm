@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\EmptyEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
@@ -54,17 +55,22 @@ class RowMapper {
      * @param int           $limit     max amount of rows to map
      * @return array list of mapped rows
      */
-    public function mapFromResult(\PDOStatement $statement, Entity $entity, $limit = null) {
+    public function mapFromResult(\PDOStatement $statement, Entity $entity = null, $limit = null) {
         $return = [];
         $count = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
             (++$count <= $limit || $limit === null)) {
-            $return[] = $this->mapRow($row, clone $entity);
+            if ($entity === null) {
+                $return[] = $this->mapRow($row);
+            } else {
+                $return[] = $this->mapRow($row, clone $entity);
+            }
         }
 
         return $return;
     }
 
+    /** @noinspection PhpDocSignatureInspection */
     /**
      * Map a single row by calling setter if possible or
      * accessing the properties directly if no setter available<br />
@@ -78,16 +84,27 @@ class RowMapper {
      *
      * @param array $row    the single row to map
      * @param       $entity Entity entity to map to
-     * @return Entity mapped entity
+     * @return Entity|array $entity the mapped entity
      * @throws DatabaseException if there is no such property
+     * @throws InvalidOptionException if a EmptyEntity instance is given
      */
-    public function mapRow(array $row, Entity $entity) {
+    public function mapRow(array $row, Entity $entity = null) {
+        if ($entity instanceof EmptyEntity) {
+            throw new InvalidOptionException(
+                'You are not allowed to map rows to an EmptyEntity instance'
+            );
+        }
+        if (!isset($entity)) {
+            $entity = new EmptyEntity();
+        }
         foreach ($row as $field => $value) {
             $methodName = $this->buildMethodName($field);
             if (method_exists($entity, $methodName)) {
                 $entity->$methodName($value);
             } else {
-                if (property_exists($entity, $field)) {
+                if (property_exists($entity, $field) ||
+                    $entity instanceof EmptyEntity
+                ) {
                     $entity->$field = $value;
                 } else {
                     throw new DatabaseException(sprintf('No property %s found for Entity', $field));
@@ -96,6 +113,14 @@ class RowMapper {
         }
 
         $entity = $this->runDecryption($entity);
+
+        if ($entity instanceof EmptyEntity) {
+            $fields = [];
+            foreach (get_object_vars($entity) as $property => $value) {
+                $fields[$property] = $value;
+            }
+            $entity = $fields;
+        }
 
         return $entity;
     }
@@ -152,7 +177,7 @@ class RowMapper {
         foreach ($array as $row) {
             $a = $callable($row);
             if (!is_array($a)) {
-                throw new InvalidOptionException('Callable must return array with at lest index "value"');
+                throw new InvalidOptionException('Callable must return array with at least index "value"');
             }
             if (isset($a['key']) && !empty($a['key'])) {
                 $return[$a['key']] = $a['value'];
