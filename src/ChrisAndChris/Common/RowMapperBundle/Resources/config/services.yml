@@ -31,8 +31,6 @@ services:
   common_rowmapper.utilty.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: [%kernel.cache_dir%, 'common_rowmapper']
-    tags:
-       - { name: kernel.event_listener, event: kernel.exception, method: readFromCache }
   common_rowmapper.mapping.repository:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
     arguments: [%kernel.cache_dir%, 'common_rowmapper']
@@ -40,8 +38,8 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
     arguments: [@common_rowmapper.dependencyprovider]
     calls:
-      - {setMappingRepository, [@common_rowmapper.mapping.repository]}
-      - {setQueryBuilder, [@common_rowmapper.search.query_builder]}
+        - [setMappingRepository, ['@common_rowmapper.mapping.repository']]
+        - [setQueryBuilder, ['@common_rowmapper.search.query_builder']]
   common_rowmapper.search.query_builder:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder
     arguments: [@common_rowmapper.querybuilderfactory, @common_rowmapper.mapping.repository, @common_rowmapper.mapping.validator]
