@@ -61,7 +61,7 @@ class SearchQueryBuilder {
 
         if ($searchContainer->joinedTables === null) {
             $searchContainer->joinedTables =
-                $this->repository->getCircularRelations($searchContainer->rootTable);
+                $this->repository->getRecursiveRelations($searchContainer->rootTable);
         } else {
             $this->validator->validateJoins($searchContainer->rootTable, $searchContainer->joinedTables);
         }

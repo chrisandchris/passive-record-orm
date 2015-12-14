@@ -55,10 +55,10 @@ class MappingRepositoryTest extends TestKernel {
     public function testCircularRelations() {
         $mapping = $this->getRepository();
 
-        $relations = $mapping->getCircularRelations('right');
+        $relations = $mapping->getRecursiveRelations('right');
         $this->assertEquals(0, count($relations));
 
-        $relations = $mapping->getCircularRelations('role_right');
+        $relations = $mapping->getRecursiveRelations('role_right');
         $this->assertEquals(3, count($relations));
     }
 

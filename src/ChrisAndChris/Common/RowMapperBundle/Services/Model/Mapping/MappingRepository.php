@@ -78,7 +78,7 @@ class MappingRepository {
      * @return array
      * @throws NoSuchTableException
      */
-    public function getCircularRelations($table, $deepness = 3) {
+    public function getRecursiveRelations($table, $deepness = 3) {
         $this->hasTable($table);
 
         if ($deepness === 0) {
@@ -88,7 +88,7 @@ class MappingRepository {
         $relations = [];
         foreach ($this->mapping[$table]['relations'] as $relation) {
             $relations[$relation['target'][0]] = $relation['target'][1];
-            $circularRelation = $this->getCircularRelations(
+            $circularRelation = $this->getRecursiveRelations(
                 $relation['target'][0], $deepness - 1
             );
             foreach ($circularRelation as $k => $v) {

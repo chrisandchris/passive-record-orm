@@ -41,7 +41,7 @@ class MappingValidator {
 
     public function validateJoins($root, array $joins) {
 
-        $availableJoins = $this->mapper->getCircularRelations($root);
+        $availableJoins = $this->mapper->getRecursiveRelations($root);
 
         $count = 0;
         foreach ($joins as $join) {
