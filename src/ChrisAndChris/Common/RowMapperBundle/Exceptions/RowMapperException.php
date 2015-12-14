@@ -3,13 +3,11 @@ namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
 
 /**
  * @name RowMapperException
- * @version
- * @since
- * @package
- * @subpackage
- * @author    Christian Klauenbösch <christian@klauenboesch.ch>
- * @copyright Klauenbosch IT Services
- * @link      http://www.klauenboesch.ch
+ * @version    1.0.0
+ * @since      v2.1.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class RowMapperException extends \Exception {
 

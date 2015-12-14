@@ -5,13 +5,11 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 
 /**
  * @name Listable
- * @version
- * @since
- * @package
- * @subpackage
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @version    1.0.0
+ * @since      v2.1.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class Listable extends Model {
 
