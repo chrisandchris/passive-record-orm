@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
@@ -17,9 +18,17 @@ class SearchResultUtility extends Model {
 
     /** @var MappingRepository */
     private $repository;
+    /** @var SearchQueryBuilder */
+    private $queryBuilder;
 
-    public function setMappingRepository($repository) {
+    public function setMappingRepository(MappingRepository $repository)
+    {
         $this->repository = $repository;
+    }
+
+    public function setQueryBuilder(SearchQueryBuilder $queryBuilder)
+    {
+        $this->queryBuilder = $queryBuilder;
     }
 
     /**
@@ -82,12 +91,34 @@ class SearchResultUtility extends Model {
     }
 
     /**
+     * Builds the search query and runs it
+     *
+     * @param SearchContainer $container
+     * @return int the id of the search result
+     */
+    public function runSearch(SearchContainer $container)
+    {
+        $this->_startTransaction();
+
+        $searchId = $this->generateSearchId($container->term);
+        $query = $this->queryBuilder->buildSearchQuery($container, function () use ($searchId) {
+            return $searchId;
+        });
+        $this->runSimple($query);
+
+        $this->_commit();
+
+        return $searchId;
+    }
+
+    /**
      * Generates a new unique search id
      *
      * @param $pattern
      * @return int
      */
-    public function generateSearchId($pattern) {
+    private function generateSearchId($pattern)
+    {
         // @formatter:off
         $query = $this->getDependencyProvider()->getBuilder()->insert('search')
             ->fieldlist([

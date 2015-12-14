@@ -41,6 +41,7 @@ services:
     arguments: [@common_rowmapper.dependencyprovider]
     calls:
       - {setMappingRepository, [@common_rowmapper.mapping.repository]}
+      - {setQueryBuilder, [@common_rowmapper.search.query_builder]}
   common_rowmapper.search.query_builder:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder
     arguments: [@common_rowmapper.querybuilderfactory, @common_rowmapper.mapping.repository, @common_rowmapper.mapping.validator]
