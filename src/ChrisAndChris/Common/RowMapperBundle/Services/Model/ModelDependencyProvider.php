@@ -4,6 +4,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
@@ -75,6 +76,14 @@ class ModelDependencyProvider {
      */
     public function getBuilder() {
         return $this->builderFactory->createBuilder();
+    }
+
+    /**
+     * @return SearchResultUtility
+     */
+    public function getSearchResultUtility()
+    {
+        return $this->container->get('common_rowmapper.search.result_utility');
     }
 
     /**
