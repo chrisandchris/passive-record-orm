@@ -25,3 +25,25 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
   common_rowmapper.snippetbag:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
+  common_rowmapper.utility.mapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
+    arguments: [@common_rowmapper.dependencyprovider]
+  common_rowmapper.utilty.cache_writer:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
+    arguments: [%kernel.cache_dir%, 'common_rowmapper']
+    tags:
+       - { name: kernel.event_listener, event: kernel.exception, method: readFromCache }
+  common_rowmapper.mapping.repository:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
+    arguments: [%kernel.cache_dir%, 'common_rowmapper']
+  common_rowmapper.search.result_utility:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
+    arguments: [@common_rowmapper.dependencyprovider]
+    calls:
+      - {setMappingRepository, [@common_rowmapper.mapping.repository]}
+  common_rowmapper.search.query_builder:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder
+    arguments: [@common_rowmapper.querybuilderfactory, @common_rowmapper.mapping.repository, @common_rowmapper.mapping.validator]
+  common_rowmapper.mapping.validator:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator
+    arguments: [@common_rowmapper.mapping.repository]
