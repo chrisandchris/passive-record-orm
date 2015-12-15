@@ -741,9 +741,22 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function combine(Builder $builder)
+    public function combine($builder)
     {
-        $this->appendMultiple($builder);
+        if ($builder instanceof Builder) {
+            $this->appendMultiple($builder);
+        } else {
+            if ($builder instanceof \Closure) {
+                $this->appendMultiple(
+                    $builder()
+                );
+            } else {
+                throw new MalformedQueryException(sprintf(
+                    'Combine expects builder or closure, "%s" given',
+                    gettype($builder)
+                ));
+            }
+        }
 
         return $this;
     }
