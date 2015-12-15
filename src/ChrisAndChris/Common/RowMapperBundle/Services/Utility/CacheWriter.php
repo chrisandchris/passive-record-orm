@@ -18,7 +18,7 @@ class CacheWriter {
     public function __construct($cacheDir, $dir) {
         $this->cacheDir = $cacheDir . '/' . $dir . '/';
         if (!file_exists($this->cacheDir)) {
-            mkdir($this->cacheDir, 0644, true);
+            mkdir($this->cacheDir, 0766, true);
         }
     }
 

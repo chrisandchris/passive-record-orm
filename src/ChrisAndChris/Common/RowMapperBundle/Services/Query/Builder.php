@@ -737,12 +737,16 @@ class Builder {
     /**
      * Combines an existing builder by appending it to the end of this builder
      *
-     * @param Builder $builder
+     * @param Builder|\Closure $builder
      * @return $this
      * @throws MalformedQueryException
      */
     public function combine($builder)
     {
+        if (!$this->allowAppend()) {
+            return $this;
+        }
+
         if ($builder instanceof Builder) {
             $this->appendMultiple($builder);
         } else {
