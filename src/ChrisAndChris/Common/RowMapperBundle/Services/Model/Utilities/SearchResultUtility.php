@@ -40,13 +40,14 @@ class SearchResultUtility extends Model {
      */
     public function getInStatement($table, $searchId) {
         // @formatter:off
-        return $this->getDependencyProvider()->getBuilder()->in()->brace()
+        return $this->getDependencyProvider()->getBuilder()->in()
             ->select()
                 ->field($this->repository->getPrimaryKeyOfTable($table))
             ->table('search_' . $table)
             ->where()
                 ->field('search_id')->equals()->value($searchId)
-            ->close();
+            ->close()
+        ->close();
         // @formatter:on
     }
 

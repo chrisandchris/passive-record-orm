@@ -77,6 +77,7 @@ class SearchQueryBuilder {
             foreach (array_keys($searchContainer->joinedTables) as $join) {
                 $this->repository->hasTable($join);
                 foreach ($this->repository->getFields($join) as $field) {
+                    $this->repository->hasColumns($join, $field);
                     $searchContainer->lookupFields[] = $join . ':' . $field;
                 }
             }
@@ -84,8 +85,7 @@ class SearchQueryBuilder {
             $this->validator->validateFields($searchContainer->rootTable, $searchContainer->lookupFields);
         }
 
-        $searchContainer->primaryKey =
-            $this->repository->getPrimaryKeyOfTable($searchContainer->rootTable);
+        $searchContainer->primaryKey = $this->repository->getPrimaryKeyOfTable($searchContainer->rootTable);
 
         return $searchContainer;
     }

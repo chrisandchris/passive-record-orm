@@ -30,8 +30,8 @@ class MappingRepository {
     }
 
     /**
-     * @param       $table
-     * @param array $columns
+     * @param string       $table   the table to check for
+     * @param array|string $columns a single column or an array of columns
      * @return void
      * @throws NoSuchColumnException
      * @throws NoSuchTableException
@@ -75,7 +75,7 @@ class MappingRepository {
     /**
      * @param     $table
      * @param int $deepness
-     * @return array
+     * @return array key is table; value is 0: source field, 1: target field
      * @throws NoSuchTableException
      */
     public function getRecursiveRelations($table, $deepness = 3) {
@@ -87,12 +87,15 @@ class MappingRepository {
 
         $relations = [];
         foreach ($this->mapping[$table]['relations'] as $relation) {
-            $relations[$relation['target'][0]] = $relation['target'][1];
+            $relations[$relation['target'][0]] = [
+                $relation['source'],
+                $relation['target'][1],
+            ];
             $circularRelation = $this->getRecursiveRelations(
                 $relation['target'][0], $deepness - 1
             );
-            foreach ($circularRelation as $k => $v) {
-                $relations[$k] = $v;
+            foreach ($circularRelation as $targetTable => $fields) {
+                $relations[$targetTable] = $fields;
             }
         }
 
