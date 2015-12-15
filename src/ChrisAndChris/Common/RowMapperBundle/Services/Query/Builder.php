@@ -734,6 +734,20 @@ class Builder {
         return $this->statement;
     }
 
+    /**
+     * Combines an existing builder by appending it to the end of this builder
+     *
+     * @param Builder $builder
+     * @return $this
+     * @throws MalformedQueryException
+     */
+    public function combine(Builder $builder)
+    {
+        $this->appendMultiple($builder);
+
+        return $this;
+    }
+
     public function each(array $items, \Closure $callable) {
         $count = 0;
         foreach ($items as $item) {
