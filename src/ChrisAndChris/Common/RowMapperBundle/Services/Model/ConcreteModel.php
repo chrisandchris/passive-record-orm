@@ -80,23 +80,15 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function setCurrentMustHaveResult($mustHaveRow = true)
+    public function rollback()
     {
-        parent::setCurrentMustHaveResult($mustHaveRow);
+        parent::_rollback();
     }
 
     /**
      * @inheritDoc
      */
-    public function _rollback()
-    {
-        return parent::_rollback();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function _inTransaction()
+    public function inTransaction()
     {
         return parent::_inTransaction();
     }
@@ -176,7 +168,7 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function _handleHasResult(SqlQuery $query)
+    public function handleHasResult(SqlQuery $query)
     {
         return parent::_handleHasResult($query);
     }
@@ -184,7 +176,7 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function _handleHas(SqlQuery $query, $forceEqual = true)
+    public function handleHas(SqlQuery $query, $forceEqual = true)
     {
         return parent::_handleHas($query, $forceEqual);
     }
@@ -192,7 +184,7 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function _startTransaction()
+    public function startTransaction()
     {
         parent::_startTransaction();
     }
@@ -200,7 +192,7 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function _commit()
+    public function commit()
     {
         parent::_commit();
     }
