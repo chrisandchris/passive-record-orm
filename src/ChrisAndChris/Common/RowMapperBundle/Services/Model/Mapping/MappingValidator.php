@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
@@ -39,21 +40,38 @@ class MappingValidator {
         }
     }
 
+    /**
+     * @param            $root
+     * @param Relation[] $joins
+     * @throws MappingException
+     * @throws NoSuchTableException
+     */
     public function validateJoins($root, array $joins) {
 
         $availableJoins = $this->mapper->getRecursiveRelations($root);
 
         $count = 0;
-        foreach ($joins as $join) {
-            if (isset($availableJoins[$join])) {
-                $count++;
+
+        foreach ($availableJoins as $join) {
+            foreach ($joins as $givenJoin) {
+                if (!($givenJoin instanceof Relation)) {
+                    throw new MappingException(sprintf(
+                        'Expected Relation object, got %s',
+                        gettype($givenJoin)
+                    ));
+                }
+                if ($givenJoin->source == $join->source && $givenJoin->target == $join->target &&
+                    $givenJoin->sourceField == $join->sourceField && $givenJoin->targetField && $join->targetField
+                ) {
+                    $count++;
+                    break;
+                }
             }
         }
 
         if ($count !== count($joins)) {
             throw new NoSuchTableException(
-                sprintf(
-                    'Not every join table available for "%s"',
+                sprintf('Not every join table available for "%s"',
                     $root
                 )
             );

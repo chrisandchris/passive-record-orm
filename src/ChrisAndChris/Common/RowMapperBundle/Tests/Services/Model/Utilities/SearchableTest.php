@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model\Utilities;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Search\FilterCondition;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator;
@@ -25,9 +26,7 @@ class SearchableTest extends TestKernel {
     public function testSearchByPattern() {
         $searchable = $this->getModel();
 
-        $search = new SearchContainer();
-        $search->term = 'term';
-        $search->rootTable = 'role_right';
+        $search = new SearchContainer('role_right', 'term');
 
         $search = $searchable->buildSearchContainer($search);
         $this->assertTrue($search instanceof SearchContainer);
@@ -35,8 +34,7 @@ class SearchableTest extends TestKernel {
         $query = $searchable->buildSearchQuery(
             $search, function () {
             return 1;
-        }
-        );
+        });
         $this->assertTrue($query instanceof SqlQuery);
     }
 
@@ -58,14 +56,8 @@ class SearchableTest extends TestKernel {
     public function testSearchByPatternWithPreviousSearch() {
         $searchable = $this->getModel();
 
-        $search = new SearchContainer();
-        $search->term = 'term';
-        $search->rootTable = 'role_right';
-        $search->searchId = 1;
-        $search->joinedTables = [];
-        $search->filterConditions = [
-            'role_id' => 5,
-        ];
+        $search = new SearchContainer('role_right', 'term', 1);
+        $search->addFilterCondition(new FilterCondition('role', 'role_id', 5));
 
         $search = $searchable->buildSearchContainer($search);
         $this->assertTrue($search instanceof SearchContainer);
@@ -81,15 +73,9 @@ class SearchableTest extends TestKernel {
     public function testSearchByPatternWithFilterConditions() {
         $searchable = $this->getModel();
 
-        $search = new SearchContainer();
-        $search->term = 'term';
-        $search->rootTable = 'role_right';
-        $search->searchId = 1;
-        $search->joinedTables = [];
-        $search->filterConditions = [
-            'role_id'   => 3,
-            'role_id_2' => ['or', 5],
-        ];
+        $search = new SearchContainer('role_right', 'term', 1);
+        $search->addFilterCondition(new FilterCondition('role', 'role_id', 5));
+        $search->addFilterCondition(new FilterCondition('role', 'role_id_2', 5));
 
         $search = $searchable->buildSearchContainer($search);
         $this->assertTrue($search instanceof SearchContainer);

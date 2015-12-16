@@ -1,6 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
@@ -51,41 +53,55 @@ class SearchQueryBuilder {
      * @throws NoPrimaryKeyFoundException
      */
     public function buildSearchContainer(SearchContainer $searchContainer) {
-        $this->repository->hasTable($searchContainer->rootTable);
+        $this->repository->hasTable($searchContainer->getRootTable());
 
+        // add primary key
+        $searchContainer->primaryKey = $this->repository->getPrimaryKeyOfTable($searchContainer->getRootTable());
+
+        // validate target table
         if ($searchContainer->targetTable === null) {
-            $searchContainer->targetTable =
-                'search_' . $searchContainer->rootTable;
+            $searchContainer->targetTable = 'search_' . $searchContainer->getRootTable();
         }
         $this->repository->hasTable($searchContainer->targetTable);
 
-        if ($searchContainer->joinedTables === null) {
-            $searchContainer->joinedTables =
-                $this->repository->getRecursiveRelations($searchContainer->rootTable);
+        // validate joins
+        if ($searchContainer->getJoinedTables() === null) {
+            $relations = $this->repository->getRecursiveRelations($searchContainer->getRootTable());
+            foreach ($relations as $join) {
+                $searchContainer->addJoin($join);
+            }
         } else {
-            $this->validator->validateJoins($searchContainer->rootTable, $searchContainer->joinedTables);
+            $this->validator->validateJoins($searchContainer->getRootTable(), $searchContainer->getJoinedTables());
         }
 
-        if ($searchContainer->searchId !== null) {
-            $searchContainer->joinedTables[$searchContainer->targetTable] =
-                'search_id';
+        // validate previous search id
+        if ($searchContainer->getSearchId() !== null) {
+            $searchContainer->addJoin(new Relation(
+                $searchContainer->getRootTable(),
+                $searchContainer->targetTable,
+                $searchContainer->primaryKey,
+                'search_id'
+            ));
         }
 
-        if ($searchContainer->lookupFields === null) {
-            $searchContainer->lookupFields =
-                $this->repository->getFields($searchContainer->rootTable);
-            foreach (array_keys($searchContainer->joinedTables) as $join) {
-                $this->repository->hasTable($join);
-                foreach ($this->repository->getFields($join) as $field) {
-                    $this->repository->hasColumns($join, $field);
-                    $searchContainer->lookupFields[] = $join . ':' . $field;
+        // validate fields
+        if ($searchContainer->getLookupFields() === null) {
+            // add root table fields
+            $fields = $this->repository->getFields($searchContainer->getRootTable());
+            foreach ($fields as $field) {
+                $searchContainer->addLookup($field);
+            }
+
+            // add fields of joined tables
+            foreach ($searchContainer->getJoinedTables() as $join) {
+                $this->repository->hasTable($join->target);
+                foreach ($this->repository->getFields($join->target) as $field) {
+                    $searchContainer->addLookup($field);
                 }
             }
         } else {
-            $this->validator->validateFields($searchContainer->rootTable, $searchContainer->lookupFields);
+            $this->validator->validateFields($searchContainer->getRootTable(), $searchContainer->getLookupFields());
         }
-
-        $searchContainer->primaryKey = $this->repository->getPrimaryKeyOfTable($searchContainer->rootTable);
 
         return $searchContainer;
     }
@@ -94,15 +110,26 @@ class SearchQueryBuilder {
      * @param SearchContainer $searchContainer
      * @param \Closure        $searchId
      * @return SqlQuery
-     * @throws MissingParameterException
      */
     public function buildSearchQuery(SearchContainer $searchContainer, \Closure $searchId) {
 
         $searchQuery = $this->buildBaseSearchQuery($searchContainer, $searchId);
 
-        $this->buildJoinedTables($searchQuery, $searchContainer->rootTable, $searchContainer->joinedTables);
-        $this->buildLookupFields($searchQuery, $searchContainer->lookupFields, $searchContainer->term);
-        $this->buildFilterConditions($searchQuery, $searchContainer);
+        $this->buildJoinedTables($searchQuery, $searchContainer->getJoinedTables());
+
+        $searchQuery->where()
+                    ->brace();
+
+        $this->buildLookupFields($searchQuery, $searchContainer->getLookupFields(), $searchContainer->getTerm());
+
+        $searchQuery->close();
+
+        if (count($searchContainer->getFilterConditions()) > 0 || $searchContainer->getSearchId() !== null) {
+            $searchQuery->connect('&')
+                        ->brace();
+            $this->buildFilterConditions($searchQuery, $searchContainer, $searchContainer->getSearchId() !== null);
+            $searchQuery->close();
+        }
 
         return $searchQuery->close()
                            ->getSqlQuery();
@@ -123,7 +150,7 @@ class SearchQueryBuilder {
             ->select()
                 ->value($searchId)->c()
                 ->field($container->primaryKey)
-            ->table($container->rootTable);
+            ->table($container->getRootTable());
         // @formatter:on
     }
 
@@ -135,65 +162,39 @@ class SearchQueryBuilder {
     }
 
     /**
-     * @param       $lookupTable
-     * @param array $joinedTables
-     * @param       $searchQuery
+     * @param Builder    $searchQuery
+     * @param Relation[] $joinedTables
      */
-    private function buildJoinedTables(Builder $searchQuery, $lookupTable, array $joinedTables) {
-        /*
-                 * How to format $joinedTables:
-                 *
-                 * 1. Simple usage
-                 *      Key is table, value is using-field
-                 * 2. Extended usage
-                 *      Key is table, value is an array with
-                 *          Values left-table-field, right-table-field
-                 *      Generates an on() instead of using()
-                 * 3. Alias usage
-                 *      Key is table formatted "alias:table-name"
-                 */
-        foreach ($joinedTables as $table => $using) {
-            $alias = $table;
-            if (strstr($table, ':')) {
-                list($alias, $table) = explode(':', $table, 2);
-            }
+    private function buildJoinedTables(Builder $searchQuery, array $joinedTables)
+    {
+        /** @var Relation $relation */
+        foreach ($joinedTables as $relation) {
+            $alias = $relation->target;
+            $table = $relation->target;
 
-            if ($alias !== null) {
-                $searchQuery->join($table, 'left')
-                            ->alias($alias);
-            } else {
-                $searchQuery->join($table, 'left');
-            }
-
-            if (is_array($using)) {
-                $searchQuery->on()
-                            ->field([$lookupTable, $using[0]])
-                            ->equals();
-                if ($alias === null) {
-                    $searchQuery->field($using);
-                } else {
-                    $searchQuery->field([$alias, $using[1]]);
-                }
-                $searchQuery->close();
-            } else {
-                $searchQuery->using($using);
-            }
+            // @formatter:off
+            $searchQuery->join($table, 'left')->alias($alias)
+                        ->on()
+                            ->field([$relation->source, $relation->sourceField])
+                            ->equals()
+                            ->field([$relation->target, $relation->targetField])
+                        ->close();
+            // @formatter:on
         }
     }
 
     /**
-     * @param array $lookupFields
-     * @param       $term
-     * @param       $searchQuery
+     * @param Builder $searchQuery
+     * @param Field[] $lookupFields
+     * @param string  $term
      */
     private function buildLookupFields(Builder $searchQuery, array $lookupFields, $term) {
-        $searchQuery->where()
-                    ->brace();
-
+        $count = count($lookupFields);
         foreach ($lookupFields as $idx => $field) {
-            $searchQuery->field($field)
-                        ->like($term . '%');
-            if ($idx < count($lookupFields) - 1) {
+            $searchQuery->field([$field->table, $field->field])
+                        ->like($term);
+
+            if ($idx < $count - 1) {
                 $searchQuery->connect('or');
             }
         }
@@ -202,59 +203,34 @@ class SearchQueryBuilder {
     /**
      * @param Builder         $searchQuery
      * @param SearchContainer $searchContainer
-     * @throws \Exception
-     * @internal param array $filterConditions
+     * @param bool            $hasSearchId
      */
-    private function buildFilterConditions(Builder $searchQuery, SearchContainer $searchContainer) {
-        /*
-         * How to format $filterConditions
-         *
-         * 1. Simple usage
-         *      Key is field, value is requested value
-         * 2. Extended usage
-         *      Key is field, Value is an array with
-         *          Values connector (and, or, ...) to previous statement
-         *          and then the requested value
-         */
-        if (count($searchContainer->filterConditions) > 0 ||
-            $searchContainer->searchId !== null
-        ) {
-            $searchQuery->close()
-                        ->connect('&')
-                        ->brace();
-            if (count($searchContainer->filterConditions) > 0 &&
-                $searchContainer->searchId !== null
-            ) {
-                $searchQuery->brace();
-            }
-
-            $count = 0;
-            $length = count($searchContainer->filterConditions);
-            foreach ($searchContainer->filterConditions as $field =>
-                     $requestedValue) {
-                $connector = '&';
-                if (is_array($requestedValue)) {
-                    $connector = $requestedValue[0];
-                    $requestedValue = $requestedValue[1];
-                }
-                if ($count++ != 0 && $count <= $length) {
-                    $searchQuery->connect($connector);
-                }
-                $searchQuery->field($field)
-                            ->equals()
-                            ->value($requestedValue);
-            }
-
-            if ($searchContainer->searchId !== null) {
-                if (count($searchContainer->filterConditions) > 0) {
-                    $searchQuery->close()
-                                ->connect('&');
-                }
-                $searchQuery->field('search_id')
-                            ->equals()
-                            ->value($searchContainer->searchId);
-            }
+    private function buildFilterConditions(Builder $searchQuery, SearchContainer $searchContainer, $hasSearchId)
+    {
+        if ($hasSearchId) {
+            $searchQuery->brace();
         }
-        $searchQuery->close();
+
+        $count = 0;
+        $length = count($searchContainer->getFilterConditions());
+
+        foreach ($searchContainer->getFilterConditions() as $condition) {
+            if ($count++ != 0 && $count <= $length) {
+                $searchQuery->connect('&');
+            }
+            $searchQuery->field([$condition->field, $condition->table])
+                        ->equals()
+                        ->value($condition->requestValue);
+        }
+
+        if ($hasSearchId) {
+            if (count($searchContainer->getFilterConditions()) > 0) {
+                $searchQuery->close()
+                            ->connect('&');
+            }
+            $searchQuery->field(['search_' . $searchContainer->getRootTable(), 'search_id'])
+                        ->equals()
+                        ->value($searchContainer->getSearchId());
+        }
     }
 }

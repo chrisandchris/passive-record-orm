@@ -21,18 +21,19 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
+ * @deprecated v2.1.0; inject ConcreteModel class instead
  */
 abstract class Model {
 
     /** @var string a id representing the current user */
     private static $userId;
     /** @var ModelDependencyProvider the dependency provider */
-    protected $DependencyProvider;
+    protected $dependencyProvider;
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
 
     function __construct(ModelDependencyProvider $dependencyProvider) {
-        $this->DependencyProvider = $dependencyProvider;
+        $this->dependencyProvider = $dependencyProvider;
     }
 
     /**
@@ -153,7 +154,7 @@ abstract class Model {
      * @return ModelDependencyProvider
      */
     protected function getDependencyProvider() {
-        return $this->DependencyProvider;
+        return $this->dependencyProvider;
     }
 
     /**
@@ -162,7 +163,8 @@ abstract class Model {
      * @param PdoStatement $stmt
      * @param SqlQuery     $query
      */
-    private function bindValues(PdoStatement $stmt, SqlQuery $query) {
+    private function bindValues(PdoStatement $stmt, SqlQuery $query)
+    {
         foreach ($query->getParameters() as $id => $value) {
             $stmt->bindValue(++$id, $value);
         }
@@ -177,7 +179,8 @@ abstract class Model {
      * @param Entity       $entity
      * @return Entity[]|bool
      */
-    private function handle(PdoStatement $statement, Entity $entity = null) {
+    private function handle(PdoStatement $statement, Entity $entity = null)
+    {
         return $this->handleGeneric(
             $statement,
             function (PdoStatement $statement) use ($entity) {
@@ -204,7 +207,8 @@ abstract class Model {
      *                                           argument
      * @return bool
      */
-    private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback) {
+    private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
+    {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
         if ($this->execute($statement)) {
@@ -226,7 +230,8 @@ abstract class Model {
      * @param bool $mustHaveRow
      * @deprecated v2.1.0, to be removed in v2.2.0, use SqlQuery::
      */
-    protected function setCurrentMustHaveResult($mustHaveRow = true) {
+    protected function setCurrentMustHaveResult($mustHaveRow = true)
+    {
         $this->currentMustHaveRow = (bool)$mustHaveRow;
     }
 
@@ -236,7 +241,8 @@ abstract class Model {
      * @param PdoStatement $statement
      * @return mixed
      */
-    private function execute(PdoStatement $statement) {
+    private function execute(PdoStatement $statement)
+    {
         $result = $statement->execute();
 
         return $result;
@@ -251,7 +257,8 @@ abstract class Model {
      * @throws ForeignKeyConstraintException
      * @throws UniqueConstraintException
      */
-    private function handleError(PdoStatement $statement) {
+    private function handleError(PdoStatement $statement)
+    {
         if ($this->getDependencyProvider()
                  ->getPdo()
                  ->inTransaction()
@@ -274,7 +281,8 @@ abstract class Model {
      *
      * @throws TransactionException if unable to rollback
      */
-    protected function _rollback() {
+    protected function _rollback()
+    {
         if (!$this->_inTransaction()) {
             return;
         }
@@ -291,7 +299,8 @@ abstract class Model {
      *
      * @return bool
      */
-    protected function _inTransaction() {
+    protected function _inTransaction()
+    {
         return $this->getDependencyProvider()
                     ->getPdo()
                     ->inTransaction();
@@ -302,8 +311,9 @@ abstract class Model {
      *
      * @return ErrorHandler
      */
-    protected function getErrorHandler() {
-        return $this->DependencyProvider->getErrorHandler();
+    protected function getErrorHandler()
+    {
+        return $this->dependencyProvider->getErrorHandler();
     }
 
     /**
@@ -311,8 +321,19 @@ abstract class Model {
      *
      * @return RowMapper
      */
-    protected function getMapper() {
-        return $this->DependencyProvider->getMapper();
+    protected function getMapper()
+    {
+        return $this->dependencyProvider->getMapper();
+    }
+
+    /**
+     * Get the dependency provider (shortcut)
+     *
+     * @return ModelDependencyProvider
+     */
+    protected function getDp()
+    {
+        return $this->dependencyProvider;
     }
 
     /** @noinspection PhpDocSignatureInspection */

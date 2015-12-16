@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
@@ -70,17 +71,17 @@ class MappingValidatorTest extends TestKernel {
 
         $validator->validateJoins(
             'role_right', [
-                'right',
-                'role',
-                'role_group',
+                new Relation('role_right', 'right', 'right_id', 'right_id'),
+                new Relation('role_right', 'role', 'role_id', 'role_id'),
+                new Relation('role', 'role_group', 'role_group_id', 'role_group_id'),
             ]
         );
 
         try {
             $validator->validateJoins(
                 'role_right', [
-                    'right',
-                    'no such table',
+                    new Relation('role_right', 'right', 'right_id', 'right_id'),
+                    new Relation('role_right', 'missing table', 'right_id', 'missing field'),
                 ]
             );
             $this->fail('Must fail due to no such table');

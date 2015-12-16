@@ -1,6 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
@@ -63,19 +65,17 @@ class MappingRepository {
      */
     public function hasTable($table) {
         if (!isset($this->mapping[$table])) {
-            throw new NoSuchTableException(
-                sprintf(
+            throw new NoSuchTableException(sprintf(
                     'No table named "%s" found',
                     $table
-                )
-            );
+            ));
         }
     }
 
     /**
      * @param     $table
      * @param int $deepness
-     * @return array key is table; value is 0: source field, 1: target field
+     * @return Relation[] key is table; value is 0: source field, 1: target field
      * @throws NoSuchTableException
      */
     public function getRecursiveRelations($table, $deepness = 3) {
@@ -87,16 +87,16 @@ class MappingRepository {
 
         $relations = [];
         foreach ($this->mapping[$table]['relations'] as $relation) {
-            $relations[$relation['target'][0]] = [
-                $relation['source'],
-                $relation['target'][1],
-            ];
-            $circularRelation = $this->getRecursiveRelations(
-                $relation['target'][0], $deepness - 1
-            );
-            foreach ($circularRelation as $targetTable => $fields) {
-                $relations[$targetTable] = $fields;
-            }
+            $entity = new Relation();
+            $entity->source = $table;
+            $entity->target = $relation['target'][0];
+            $entity->sourceField = $relation['source'];
+            $entity->targetField = $relation['target'][1];
+
+            $relations[] = $entity;
+            foreach ($this->getRecursiveRelations($entity->target, $deepness - 1) as $recursiveRelation) {
+                $relations[] = $recursiveRelation;
+            };
         }
 
         return $relations;
@@ -107,7 +107,8 @@ class MappingRepository {
      * @return \stdClass
      * @throws NoSuchTableException
      */
-    public function getTable($table) {
+    public function getRawTable($table)
+    {
         $this->hasTable($table);
 
         return $this->mapping[$table];
@@ -144,7 +145,7 @@ class MappingRepository {
 
     /**
      * @param $table
-     * @return array
+     * @return Field[]
      * @throws NoSuchTableException
      */
     public function getFields($table) {
@@ -152,7 +153,7 @@ class MappingRepository {
 
         $fields = [];
         foreach (array_keys($this->mapping[$table]['fields']) as $field) {
-            $fields[] = $field;
+            $fields[] = new Field($table, $field);
         }
 
         return $fields;

@@ -46,3 +46,6 @@ services:
   common_rowmapper.mapping.validator:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator
     arguments: [@common_rowmapper.mapping.repository]
+  common_rowmapper.model:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
+    arguments: [@common_rowmapper.dependencyprovider]

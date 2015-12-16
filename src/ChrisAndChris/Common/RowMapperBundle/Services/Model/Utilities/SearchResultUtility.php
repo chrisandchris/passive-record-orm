@@ -101,7 +101,7 @@ class SearchResultUtility extends Model {
     {
         $this->_startTransaction();
 
-        $searchId = $this->generateSearchId($container->term);
+        $searchId = $this->generateSearchId($container->getTerm());
         $query = $this->queryBuilder->buildSearchQuery($container, function () use ($searchId) {
             return $searchId;
         });

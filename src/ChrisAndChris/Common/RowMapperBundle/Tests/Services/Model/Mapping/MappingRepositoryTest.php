@@ -65,12 +65,12 @@ class MappingRepositoryTest extends TestKernel {
     public function testGetTable() {
         $mapping = $this->getRepository();
 
-        $table = $mapping->getTable('right');
+        $table = $mapping->getRawTable('right');
         $this->assertTrue(is_array($table['fields']));
         $this->assertTrue(is_array($table['relations']));
 
         try {
-            $mapping->getTable('no such table');
+            $mapping->getRawTable('no such table');
             $this->fail('Must fail due to no such table');
         } catch (NoSuchTableException $exception) {
             // ignore
