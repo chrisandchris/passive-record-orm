@@ -99,7 +99,7 @@ class SearchResultUtility extends Model {
      */
     public function runSearch(SearchContainer $container)
     {
-        $this->startTransaction();
+        $this->_startTransaction();
 
         $searchId = $this->generateSearchId($container->getTerm());
         $query = $this->queryBuilder->buildSearchQuery($container, function () use ($searchId) {
@@ -107,7 +107,7 @@ class SearchResultUtility extends Model {
         });
         $this->runSimple($query);
 
-        $this->commit();
+        $this->_commit();
 
         return $searchId;
     }

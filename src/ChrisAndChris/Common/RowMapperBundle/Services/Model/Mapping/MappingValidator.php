@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
@@ -78,20 +79,30 @@ class MappingValidator {
         }
     }
 
+    /**
+     * @param string  $sourceTable
+     * @param Field[] $fields
+     * @throws NoSuchColumnException
+     */
     public function validateFields($sourceTable, array $fields) {
         foreach ($fields as $field) {
-            $table = $sourceTable;
             try {
-                if (strstr($field, ':') !== false) {
-                    list($table, $field) = explode(':', $field);
+                if (!($field instanceof Field)) {
+                    throw new MappingException(sprintf(
+                        'Expected field, got %s',
+                        gettype($field)
+                    ));
                 }
-                $this->validateField($table, $field);
+                if (empty($field->table)) {
+                    $field->table = $sourceTable;
+                }
+                $this->validateField($field->table, $field->field);
             } catch (MappingException $exception) {
                 throw new NoSuchColumnException(
                     sprintf(
                         'In table "%s", no column "%s" found',
-                        $table,
-                        $field
+                        $field->table,
+                        $field->field
                     )
                 );
             }

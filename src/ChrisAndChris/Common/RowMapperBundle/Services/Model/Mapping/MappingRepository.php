@@ -78,7 +78,8 @@ class MappingRepository {
      * @return Relation[] key is table; value is 0: source field, 1: target field
      * @throws NoSuchTableException
      */
-    public function getRecursiveRelations($table, $deepness = 3) {
+    public function getRecursiveRelations($table, $deepness = 1)
+    {
         $this->hasTable($table);
 
         if ($deepness === 0) {
