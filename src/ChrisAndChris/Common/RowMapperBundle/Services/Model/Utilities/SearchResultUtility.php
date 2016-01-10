@@ -34,16 +34,16 @@ class SearchResultUtility extends Model {
     /**
      * Get the in statement to fetch all primary keys of an search
      *
-     * @param string $table    the table the search was performed on
-     * @param int    $searchId the unique id of the search
+     * @param int $searchId the unique id of the search
      * @return Builder
      */
-    public function getInStatement($table, $searchId) {
+    public function getInStatement($searchId)
+    {
         // @formatter:off
         return $this->getDependencyProvider()->getBuilder()->in()
             ->select()
-                ->field($this->repository->getPrimaryKeyOfTable($table))
-            ->table('search_' . $table)
+                ->field('primary_key')
+            ->table('search_result')
             ->where()
                 ->field('search_id')->equals()->value($searchId)
             ->close()
@@ -87,8 +87,7 @@ class SearchResultUtility extends Model {
         });
         $this->runSimple($query);
 
-        $resultCount = $this->getSearchResultCount($searchId);
-        $this->updateResultCount($searchId, $resultCount);
+        $this->updateResultCount($searchId, $this->countSearchResults($searchId));
 
         $this->_commit();
 
@@ -98,8 +97,9 @@ class SearchResultUtility extends Model {
     /**
      * Generates a new unique search id
      *
-     * @param $pattern
-     * @return int
+     * @param string $pattern     the lookup pattern
+     * @param string $targetTable the table that is primary searched
+     * @return int the search id
      */
     private function generateSearchId($pattern, $targetTable)
     {
@@ -119,25 +119,11 @@ class SearchResultUtility extends Model {
     }
 
     /**
-     * Get the amount of rows in a search result
+     * Update the result count cache
      *
-     * @param int $searchId the id of the search
-     * @return int the amount of rows in the search
+     * @param int $searchId    the search id to update
+     * @param int $resultCount the result count to save
      */
-    public function getSearchResultCount($searchId) {
-        // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
-                ->field('result_count')
-            ->table('search')
-            ->where()
-                ->field('search_id')->equals()->value($searchId)
-            ->close()
-            ->getSqlQuery();
-        // @formatter:on
-
-        return $this->runWithFirstKeyFirstValue($query);
-    }
-
     private function updateResultCount($searchId, $resultCount)
     {
         // @formatter:off
@@ -152,5 +138,47 @@ class SearchResultUtility extends Model {
         // @formatter:on
 
         $this->runSimple($query);
+    }
+
+    /**
+     * Counts the search results using the search_result table
+     *
+     * @param int $searchId the search id
+     * @return int
+     */
+    private function countSearchResults($searchId)
+    {
+        // @formatter:off
+        $query = $this->getDependencyProvider()->getBuilder()->select()
+            ->f('count')->any()->close()
+            ->table('search_result')
+            ->where()
+                ->field('search_id')->equals()->value($searchId)
+            ->close()
+            ->getSqlQuery();
+        // @formatter:on
+
+        return $this->runWithFirstKeyFirstValue($query);
+    }
+
+    /**
+     * Get the amount of rows in a search result
+     *
+     * @param int $searchId the id of the search
+     * @return int the amount of rows in the search
+     */
+    public function getSearchResultCount($searchId)
+    {
+        // @formatter:off
+        $query = $this->getDependencyProvider()->getBuilder()->select()
+                ->field('result_count')
+            ->table('search')
+            ->where()
+                ->field('search_id')->equals()->value($searchId)
+            ->close()
+            ->getSqlQuery();
+        // @formatter:on
+
+        return $this->runWithFirstKeyFirstValue($query);
     }
 }
