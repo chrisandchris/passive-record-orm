@@ -21,7 +21,7 @@ class SearchContainer {
     /** @var string the base table to start search with */
     private $rootTable;
     /** @var Relation[] an array of joins to execute */
-    private $joinedTables = null;
+    private $joinedTables = [];
     /** @var Field[] an array of fields to search within */
     private $lookupFields = null;
     /** @var FilterCondition[] an array of conditions which must apply to the search */

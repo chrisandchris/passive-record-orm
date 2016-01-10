@@ -142,10 +142,10 @@ class SearchQueryBuilder {
      */
     private function buildBaseSearchQuery(SearchContainer $container, \Closure $searchId) {
         // @formatter:off
-        return $this->getBuilder()->insert($container->targetTable, 'ignore')
+        return $this->getBuilder()->insert('search_result', 'ignore')
             ->brace()
                 ->field('search_id')->c()
-                ->field($container->primaryKey)
+                ->field('primary_key')
             ->close()
             ->select()
                 ->value($searchId)->c()
@@ -191,9 +191,13 @@ class SearchQueryBuilder {
     private function buildLookupFields(Builder $searchQuery, array $lookupFields, $term) {
         $count = count($lookupFields);
         foreach ($lookupFields as $idx => $field) {
-            $searchQuery->field([$field->table, $field->field])
-                        ->like($term);
-
+            if ($term === null) {
+                $searchQuery->field([$field->table, $field->field])
+                            ->isNull();
+            } else {
+                $searchQuery->field([$field->table, $field->field])
+                            ->like($term);
+            }
             if ($idx < $count - 1) {
                 $searchQuery->connect('or');
             }

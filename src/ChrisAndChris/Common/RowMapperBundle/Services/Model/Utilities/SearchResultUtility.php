@@ -72,26 +72,6 @@ class SearchResultUtility extends Model {
     }
 
     /**
-     * Get the amount of rows in a search result
-     *
-     * @param int $searchId the id of the search
-     * @return int the amount of rows in the search
-     */
-    public function getSearchResultCount($searchId) {
-        // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
-            ->f('count')->field('search_id')->close()
-            ->table('search')
-            ->where()
-                ->field('search_id')->equals()->value($searchId)
-            ->close()
-            ->getSqlQuery();
-        // @formatter:on
-
-        return $this->runWithFirstKeyFirstValue($query);
-    }
-
-    /**
      * Builds the search query and runs it
      *
      * @param SearchContainer $container
@@ -101,11 +81,14 @@ class SearchResultUtility extends Model {
     {
         $this->_startTransaction();
 
-        $searchId = $this->generateSearchId($container->getTerm());
+        $searchId = $this->generateSearchId($container->getTerm(), $container->targetTable);
         $query = $this->queryBuilder->buildSearchQuery($container, function () use ($searchId) {
             return $searchId;
         });
         $this->runSimple($query);
+
+        $resultCount = $this->getSearchResultCount($searchId);
+        $this->updateResultCount($searchId, $resultCount);
 
         $this->_commit();
 
@@ -118,19 +101,56 @@ class SearchResultUtility extends Model {
      * @param $pattern
      * @return int
      */
-    private function generateSearchId($pattern)
+    private function generateSearchId($pattern, $targetTable)
     {
         // @formatter:off
         $query = $this->getDependencyProvider()->getBuilder()->insert('search')
             ->fieldlist([
-                'search_pattern'
+                'search_pattern',
+                'target_table'
             ], true)
             ->values([
-                [$pattern]
+                [$pattern, $targetTable]
             ])
             ->getSqlQuery();
         // @formatter:off
 
         return $this->runWithLastId($query);
+    }
+
+    /**
+     * Get the amount of rows in a search result
+     *
+     * @param int $searchId the id of the search
+     * @return int the amount of rows in the search
+     */
+    public function getSearchResultCount($searchId) {
+        // @formatter:off
+        $query = $this->getDependencyProvider()->getBuilder()->select()
+                ->field('result_count')
+            ->table('search')
+            ->where()
+                ->field('search_id')->equals()->value($searchId)
+            ->close()
+            ->getSqlQuery();
+        // @formatter:on
+
+        return $this->runWithFirstKeyFirstValue($query);
+    }
+
+    private function updateResultCount($searchId, $resultCount)
+    {
+        // @formatter:off
+        $query = $this->getDependencyProvider()->getBuilder()->update('search')
+            ->updates([
+                ['result_count', $resultCount]
+            ])
+            ->where()
+                ->field('search_id')->equals()->value($searchId)
+            ->close()
+            ->getSqlQuery();
+        // @formatter:on
+
+        $this->runSimple($query);
     }
 }
