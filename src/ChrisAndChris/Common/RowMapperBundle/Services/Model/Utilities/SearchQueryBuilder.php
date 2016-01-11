@@ -60,12 +60,12 @@ class SearchQueryBuilder {
 
         // validate target table
         if ($searchContainer->targetTable === null) {
-            $searchContainer->targetTable = 'search_' . $searchContainer->getRootTable();
+            $searchContainer->targetTable = $searchContainer->getRootTable();
         }
         $this->repository->hasTable($searchContainer->targetTable);
 
         // validate joins
-        if ($searchContainer->getJoinedTables() === null) {
+        if (count($searchContainer->getJoinedTables()) == 0) {
             $relations = $this->repository->getRecursiveRelations($searchContainer->getRootTable());
             foreach ($relations as $join) {
                 $searchContainer->addJoin($join);
@@ -232,7 +232,7 @@ class SearchQueryBuilder {
                 $searchQuery->close()
                             ->connect('&');
             }
-            $searchQuery->field(['search_' . $searchContainer->getRootTable(), 'search_id'])
+            $searchQuery->field(['search_result', 'search_id'])
                         ->equals()
                         ->value($searchContainer->getSearchId());
         }
