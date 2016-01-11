@@ -65,21 +65,18 @@ class PdoLayer extends \PDO
      */
     public function getDsn($system, $host, $port, $database, $username, $password)
     {
+        if (false !== ($env = $this->getEnvStatus())) {
+            $database = $env;
+        }
         switch ($system) {
             case 'mysql' :
-                if (false !== ($env = $this->getEnvStatus())) {
-                    $database = $database . '_' . $env;
-                }
-
                 return $this->getMysqlDsn($host, $port, $database);
             case 'sqlite' :
-
+                if (false !== $env) {
+                    $host = $env . '.sqlite';
+                }
                 return $this->getSqliteDsn($host);
             case 'pgsql' :
-                if (false !== $env = $this->getEnvStatus()) {
-                    $database = $database . '_' . $env;
-                }
-
                 return $this->getPgDsn($host, $port, $database, $username, $password);
             default :
                 return null;
