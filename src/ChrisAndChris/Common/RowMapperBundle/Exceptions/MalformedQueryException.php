@@ -11,6 +11,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class MalformedQueryException extends \Exception {
+class MalformedQueryException extends RowMapperException
+{
 
 }

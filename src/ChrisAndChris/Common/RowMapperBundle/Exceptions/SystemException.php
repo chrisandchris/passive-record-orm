@@ -9,6 +9,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class SystemException extends \Exception {
+class SystemException extends RowMapperException
+{
 
 }

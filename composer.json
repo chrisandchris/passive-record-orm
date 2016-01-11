@@ -22,7 +22,8 @@
     "symfony/symfony": "2.3.*|2.7.*"
   },
   "suggests": {
-    "phpseclib/phpseclib": "^2.0"
+    "phpseclib/phpseclib": "^2.0",
+    "liuggio/fastest": "^1.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^4.7",

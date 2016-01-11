@@ -19,11 +19,17 @@ class PdoLayerTest extends TestKernel {
         // $PdoLayer = $this->container->get('common_rowmapper.pdoLayer');
 
         // connect to a local sqlite-DB
-        $PdoLayer = new PdoLayer('sqlite', 'sqlite.db');
+        $layer = $this->getLayer();
+
         $this->assertEquals(
             'ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement',
-            $PdoLayer->getAttribute(\PDO::ATTR_STATEMENT_CLASS)[0]
+            $layer->getAttribute(\PDO::ATTR_STATEMENT_CLASS)[0]
         );
+    }
+
+    public function getLayer()
+    {
+        return new PdoLayer('sqlite', 'sqlite.db');;
     }
 
     function testConstructFail() {
@@ -36,13 +42,15 @@ class PdoLayerTest extends TestKernel {
     }
 
     function testDefaultDsn() {
-        $this->assertEquals(null, PdoLayer::getDsn('unknown', 'zero', 0, 'zero'));
+        $layer = $this->getLayer();
+        $this->assertEquals(null, $layer->getDsn('unknown', 'zero', 0, 'zero', null, null));
     }
 
     function testGetPdoSystem() {
-        $this->assertEquals('sqlite', PdoLayer::getPdoSystem('pdo_sqlite'));
-        $this->assertEquals('mysql', PdoLayer::getPdoSystem('pdo_mysql'));
-        $this->assertEquals('mysql', PdoLayer::getPdoSystem('mysqli'));
-        $this->assertEquals('mysql', PdoLayer::getPdoSystem('noSuchSystemAvailable'));
+        $layer = $this->getLayer();
+        $this->assertEquals('sqlite', $layer->getPdoSystem('sqlite'));
+        $this->assertEquals('mysql', $layer->getPdoSystem('pdo_mysql'));
+        $this->assertEquals('mysql', $layer->getPdoSystem('mysqli'));
+        $this->assertEquals('mysql', $layer->getPdoSystem('noSuchSystemAvailable'));
     }
 }
