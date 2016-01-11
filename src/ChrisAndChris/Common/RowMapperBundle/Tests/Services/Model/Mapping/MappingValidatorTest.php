@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
@@ -95,19 +96,19 @@ class MappingValidatorTest extends TestKernel {
 
         $validator->validateFields(
             'role_right', [
-            'role_id',
-            'right_id',
-            'role:role_id',
-            'role_group:role_group_id',
-        ]
+                new Field(null, 'role_id'),
+                new Field(null, 'right_id'),
+                new Field('role', 'role_id'),
+                new Field('role_group', 'role_group_id'),
+            ]
         );
 
         try {
             $validator->validateFields(
                 'role_right', [
-                'role_id',
-                'no such field',
-            ]
+                    new Field(null, 'role_id'),
+                    new Field(null, 'no such field'),
+                ]
             );
             $this->fail('Must fail due to no such field');
         } catch (NoSuchColumnException $exception) {
@@ -117,9 +118,9 @@ class MappingValidatorTest extends TestKernel {
         try {
             $validator->validateFields(
                 'role_right', [
-                'role_id',
-                'table:no such field',
-            ]
+                    new Field(null, 'role_id'),
+                    new Field('table', 'no such field'),
+                ]
             );
             $this->fail('Must fail due to no such field');
         } catch (NoSuchColumnException $exception) {

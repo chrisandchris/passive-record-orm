@@ -49,7 +49,7 @@ class MappingValidator {
      */
     public function validateJoins($root, array $joins) {
 
-        $availableJoins = $this->mapper->getRecursiveRelations($root);
+        $availableJoins = $this->mapper->getRecursiveRelations($root, 100);
 
         $count = 0;
 
@@ -101,8 +101,8 @@ class MappingValidator {
                 throw new NoSuchColumnException(
                     sprintf(
                         'In table "%s", no column "%s" found',
-                        $field->table,
-                        $field->field
+                        (isset($field->table) ? $field->table : '(null)'),
+                        (isset($field->field) ? $field->field : '(null)')
                     )
                 );
             }
