@@ -33,8 +33,7 @@ class MappingValidatorTest extends TestKernel {
      * @return MappingValidator
      */
     private function getValidator() {
-        $repo = new MappingRepository(__DIR__, 'common_rowmapper');
-        $repo->setMapping(file_get_contents(__DIR__ . '/demo_mapping.json'));
+        $repo = new MappingRepository(__DIR__, '.', 'demo_mapping.json');
 
         return new MappingValidator($repo);
     }
@@ -67,24 +66,24 @@ class MappingValidatorTest extends TestKernel {
         }
     }
 
-    public function testValidateJoins() {
+    public function testRelations()
+    {
         $validator = $this->getValidator();
 
-        $validator->validateJoins(
-            'role_right', [
-                new Relation('role_right', 'right', 'right_id', 'right_id'),
-                new Relation('role_right', 'role', 'role_id', 'role_id'),
-                new Relation('role', 'role_group', 'role_group_id', 'role_group_id'),
-            ]
-        );
+        $validator->validateJoins('role_right', [
+            new Relation('role_right', 'right', 'right_id', 'right_id'),
+        ]);
+
+        $validator->validateJoins('role_right', [
+            new Relation('role_right', 'right', 'right_id', 'right_id'),
+            new Relation('role_right', 'role', 'role_id', 'role_id'),
+        ]);
 
         try {
-            $validator->validateJoins(
-                'role_right', [
-                    new Relation('role_right', 'right', 'right_id', 'right_id'),
-                    new Relation('role_right', 'missing table', 'right_id', 'missing field'),
-                ]
-            );
+            $validator->validateJoins('role_right', [
+                new Relation('role_right', 'right', 'right_id', 'right_id'),
+                new Relation('role_right', 'missing table', 'right_id', 'right_id'),
+            ]);
             $this->fail('Must fail due to no such table');
         } catch (NoSuchTableException $exception) {
             // ignore

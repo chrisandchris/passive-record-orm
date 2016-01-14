@@ -30,6 +30,8 @@ class SearchQueryBuilder {
     private $repository;
     /** @var BuilderFactory */
     private $builderFactory;
+    /** @var array */
+    private $tableIndexes = [];
 
     /**
      * @param BuilderFactory    $builderFactory
@@ -53,6 +55,7 @@ class SearchQueryBuilder {
      * @throws NoPrimaryKeyFoundException
      */
     public function buildSearchContainer(SearchContainer $searchContainer) {
+        $this->tableIndexes = [];
         $this->repository->hasTable($searchContainer->getRootTable());
 
         // add primary key
@@ -95,7 +98,7 @@ class SearchQueryBuilder {
             // add fields of joined tables
             foreach ($searchContainer->getJoinedTables() as $join) {
                 $this->repository->hasTable($join->target);
-                foreach ($this->repository->getFields($join->target) as $field) {
+                foreach ($this->repository->getFields($join->target, $join->alias) as $field) {
                     $searchContainer->addLookup($field);
                 }
             }
@@ -169,15 +172,12 @@ class SearchQueryBuilder {
     {
         /** @var Relation $relation */
         foreach ($joinedTables as $relation) {
-            $alias = $relation->target;
-            $table = $relation->target;
-
             // @formatter:off
-            $searchQuery->join($table, 'left')->alias($alias)
+            $searchQuery->join($relation->target, 'left')->alias($relation->alias)
                         ->on()
                             ->field([$relation->source, $relation->sourceField])
                             ->equals()
-                            ->field([$relation->target, $relation->targetField])
+                            ->field([$relation->alias, $relation->targetField])
                         ->close();
             // @formatter:on
         }

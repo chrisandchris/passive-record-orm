@@ -247,20 +247,6 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('LIMIT 1', $builder);
     }
 
-    public function testJoin() {
-        $builder = $this->getBuilder();
-        $builder->join('table1');
-        $this->equals('INNER JOIN `table1`', $builder);
-
-        $builder = $this->getBuilder();
-        $builder->join('table1', 'left');
-        $this->equals('LEFT JOIN `table1`', $builder);
-
-        $builder = $this->getBuilder();
-        $builder->join('table1', 'right');
-        $this->equals('RIGHT JOIN `table1`', $builder);
-    }
-
     public function testUsing() {
         $builder = $this->getBuilder();
         $builder->using('field1');

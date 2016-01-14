@@ -8,7 +8,7 @@
          bootstrap="vendor/autoload.php"
          stopOnError="true"
          stopOnFailure="true"
-         stopOnIncomplete="false"
+         stopOnIncomplete="true"
          timeoutForSmallTests="60"
          timeoutForMediumTests="90"
          timeoutForLargeTests="150"

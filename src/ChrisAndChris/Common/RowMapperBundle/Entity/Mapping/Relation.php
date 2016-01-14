@@ -14,7 +14,6 @@ use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 class Relation implements Entity
 {
 
-
     /** @var string */
     public $source;
     /** @var string */
@@ -23,18 +22,22 @@ class Relation implements Entity
     public $sourceField;
     /** @var string */
     public $targetField;
+    /** @var string */
+    public $alias;
 
     /**
-     * @param string $target
-     * @param string $targetField
-     * @param string $source
-     * @param string $sourceField
+     * @param string $source      the source table
+     * @param string $target      the target table (joined table)
+     * @param string $sourceField the source column name
+     * @param string $targetField the target column name
+     * @param string $alias       the table alias
      */
-    public function __construct($source = null, $target = null, $sourceField = null, $targetField = null)
+    public function __construct($source = null, $target = null, $sourceField = null, $targetField = null, $alias = null)
     {
         $this->target = $target;
         $this->targetField = $targetField;
         $this->source = $source;
         $this->sourceField = $sourceField;
+        $this->alias = $alias;
     }
 }

@@ -42,44 +42,6 @@ class MappingValidator {
     }
 
     /**
-     * @param            $root
-     * @param Relation[] $joins
-     * @throws MappingException
-     * @throws NoSuchTableException
-     */
-    public function validateJoins($root, array $joins) {
-
-        $availableJoins = $this->mapper->getRecursiveRelations($root, 100);
-
-        $count = 0;
-
-        foreach ($availableJoins as $join) {
-            foreach ($joins as $givenJoin) {
-                if (!($givenJoin instanceof Relation)) {
-                    throw new MappingException(sprintf(
-                        'Expected Relation object, got %s',
-                        gettype($givenJoin)
-                    ));
-                }
-                if ($givenJoin->source == $join->source && $givenJoin->target == $join->target &&
-                    $givenJoin->sourceField == $join->sourceField && $givenJoin->targetField && $join->targetField
-                ) {
-                    $count++;
-                    break;
-                }
-            }
-        }
-
-        if ($count !== count($joins)) {
-            throw new NoSuchTableException(
-                sprintf('Not every join table available for "%s"',
-                    $root
-                )
-            );
-        }
-    }
-
-    /**
      * @param string  $sourceTable
      * @param Field[] $fields
      * @throws NoSuchColumnException
@@ -111,5 +73,31 @@ class MappingValidator {
 
     private function validateField($table, $field) {
         $this->mapper->hasColumns($table, $field);
+    }
+
+    /**
+     * @param            $rootTable
+     * @param Relation[] $joinedTables
+     * @throws NoSuchTableException
+     */
+    public function validateJoins($rootTable, array $joinedTables)
+    {
+        $relations = $this->mapper->getRelations($rootTable);
+        $count = 0;
+        foreach ($joinedTables as $join) {
+            foreach ($relations as $relation) {
+                if ($relation->target == $join->target) {
+                    $count++;
+                    break;
+                }
+            }
+        }
+
+        if (count($joinedTables) !== $count) {
+            throw new NoSuchTableException(sprintf(
+                'There are invalid joins (at least %d)',
+                $count
+            ));
+        }
     }
 }

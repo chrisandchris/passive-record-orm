@@ -42,12 +42,7 @@ class SearchableTest extends TestKernel {
      * @return SearchQueryBuilder
      */
     private function getModel() {
-        $repo = new MappingRepository(__DIR__, 'common_rowmapper');
-        $repo->setMapping(
-            file_get_contents(
-                __DIR__ . '/../Mapping/demo_mapping.json'
-            )
-        );
+        $repo = new MappingRepository(__DIR__, '../Mapping', 'demo_mapping.json');
         $validator = new MappingValidator($repo);
 
         return new SearchQueryBuilder(new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag()), $repo, $validator);

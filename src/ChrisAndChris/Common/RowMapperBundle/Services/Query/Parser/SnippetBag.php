@@ -201,10 +201,17 @@ class SnippetBag implements BagInterface {
                     throw new MalformedQueryException('Unknown join type');
                 }
 
+                $alias = $params['table'];
+                if (isset($params['alias']) && strlen($params['alias']) > 0) {
+                    $alias = $params['alias'];
+                }
+
                 return [
                     'code'   => strtoupper($params['type'])
                         . ' JOIN `'
                         . $params['table']
+                        . '` as `'
+                        . $alias
                         . '`',
                     'params' => null,
                 ];

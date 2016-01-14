@@ -32,7 +32,7 @@ class MappingRepositoryTest extends TestKernel {
     }
 
     public function getRepository() {
-        $mapping = new MappingRepository(__DIR__, 'common_rowmapper');
+        $mapping = new MappingRepository(__DIR__, '.', 'demo_mapping.json');
         $mapping->setMapping(__DIR__ . '/demo_mapping.json');
 
         return $mapping;
