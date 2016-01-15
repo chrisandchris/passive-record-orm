@@ -203,7 +203,7 @@ class SnippetBag implements BagInterface {
 
                 $alias = null;
                 if (isset($params['alias']) && strlen($params['alias']) > 0) {
-                    $alias = '` as `' . $params['alias'] . '`';
+                    $alias = ' as `' . $params['alias'] . '`';
                 }
 
                 return [
