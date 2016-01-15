@@ -152,7 +152,7 @@ class SearchQueryBuilder {
             ->close()
             ->select()
                 ->value($searchId)->c()
-                ->field($container->primaryKey)
+                ->field([$container->getRootTable(), $container->primaryKey])
             ->table($container->getRootTable());
         // @formatter:on
     }
