@@ -479,14 +479,14 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
     {
         $builder = $this->getBuilder();
         $builder->join('table1');
-        $this->equals('INNER JOIN `table1` as `table1`', $builder);
+        $this->equals('INNER JOIN `table1`', $builder);
 
         $builder = $this->getBuilder();
         $builder->join('table', 'inner', 't1');
         $this->equals('INNER JOIN `table` as `t1`', $builder);
 
         $builder->join('table', 'inner');
-        $this->equals('INNER JOIN `table` as `table`', $builder);
+        $this->equals('INNER JOIN `table`', $builder);
 
         $builder->join('table', 'left', 'tx');
         $this->equals('LEFT JOIN `table` as `tx`', $builder);
