@@ -8,3 +8,5 @@ php:
 script: phpunit -c phpunit.xml
 before_script:
   - composer install
+services:
+  - mysql
