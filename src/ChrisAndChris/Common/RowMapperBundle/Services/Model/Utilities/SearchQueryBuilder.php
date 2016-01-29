@@ -81,9 +81,9 @@ class SearchQueryBuilder {
         if ($searchContainer->getSearchId() !== null) {
             $searchContainer->addJoin(new Relation(
                 $searchContainer->getRootTable(),
-                $searchContainer->targetTable,
+                'search_result',
                 $searchContainer->primaryKey,
-                'search_id'
+                'primary_key'
             ));
         }
 
@@ -104,6 +104,15 @@ class SearchQueryBuilder {
             }
         } else {
             $this->validator->validateFields($searchContainer->getRootTable(), $searchContainer->getLookupFields());
+            foreach ($searchContainer->getLookupFields() as $lookupField) {
+                foreach ($searchContainer->getJoinedTables() as $joinedTable) {
+                    if ($lookupField->table == $joinedTable->target &&
+                        $lookupField->table !== $searchContainer->getRootTable()
+                    ) {
+                        $lookupField->table = $joinedTable->alias;
+                    }
+                }
+            }
         }
 
         return $searchContainer;

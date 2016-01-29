@@ -1,10 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests;
 
-require_once __DIR__ . '/../../../../../app/AppKernel.php';
-
-use AppKernel;
-use Symfony\Bundle\FrameworkBundle\Tests\TestCase;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-abstract class TestKernel extends TestCase
+abstract class TestKernel extends WebTestCase
 {
 
     /**
@@ -36,7 +33,7 @@ abstract class TestKernel extends TestCase
      */
     public function setUp()
     {
-        $this->appKernel = new AppKernel('test', true);
+        $this->appKernel = static::createKernel();
         $this->appKernel->boot();
 
         $this->container = $this->appKernel->getContainer();
