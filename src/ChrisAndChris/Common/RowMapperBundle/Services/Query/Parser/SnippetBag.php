@@ -253,8 +253,8 @@ class SnippetBag implements BagInterface {
                 }
 
                 return [
-                    'code'   => '`' . $params['field'] . '` ' .
-                        strtoupper($params['direction']),
+                    'code'   => $this->implodeIdentifier($params['field'])
+                        . ' ' . strtoupper($params['direction']),
                     'params' => null,
                 ];
             },
