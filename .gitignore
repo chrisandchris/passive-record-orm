@@ -1,4 +1,3 @@
-/web/bundles/
 !app/cache/.gitkeep
 !app/logs/.gitkeep
 /build/
@@ -13,6 +12,7 @@ src/ChrisAndChris/Common/RowMapperBundle/Resources/doc/*
 src/ChrisAndChris/Common/RowMapperBundle/Resources/views/*
 src/ChrisAndChris/Common/RowMapperBundle/Resources/config/routing.yml
 src/ChrisAndChris/Common/RowMapperBundle/Resources/config/parameters.yml
+/report
 *.db
 *.sql
 *.log

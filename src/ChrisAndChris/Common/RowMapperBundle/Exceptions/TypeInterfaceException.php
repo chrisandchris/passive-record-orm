@@ -11,6 +11,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Exceptions;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class TypeInterfaceException extends \Exception {
+class TypeInterfaceException extends RowMapperException
+{
 
 }

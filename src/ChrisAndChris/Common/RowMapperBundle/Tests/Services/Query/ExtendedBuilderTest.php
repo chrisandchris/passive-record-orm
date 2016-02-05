@@ -3,17 +3,22 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\SecurityBreachException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Wrappers\PhpSeclibAesWrapper;
+use phpseclib\Crypt\AES;
 
 /**
  * Does more complex tests
  *
  * @name ExtendedBuilderTest
- * @version   1
- * @since     v2.0.2
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2
+ * @lastChange v2.1.0
+ * @since      v2.0.2
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class ExtendedBuilderTest extends AbstractBuilderTest {
 
@@ -211,5 +216,279 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
 
         $builder->table('table');
         $this->equals('FROM `table`', $builder);
+    }
+
+    public function testValuesStatement() {
+        $builder = $this->getBuilder();
+        $fieldValues = [
+            [
+                'Jordan',
+                'John',
+                'Alameda',
+                'San Jose',
+            ],
+        ];
+
+        $builder->values($fieldValues);
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('VALUES (   ? , ? , ? , ?  )', $query);
+
+        $builder = $this->getBuilder();
+
+        $fieldValues = [
+            [
+                'Jordan',
+                'John',
+                'Alameda',
+                'San Jose',
+            ],
+            [
+                'Simon',
+                'Peter',
+                'Alameda',
+                'San Jose',
+            ],
+        ];
+
+        $builder->values($fieldValues);
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('VALUES (   ? , ? , ? , ?  )  , (   ? , ? , ? , ?  )', $query);
+    }
+
+    public function testValuesInvalidInput() {
+        $builder = $this->getBuilder();
+        $fieldValues = [
+            null,
+        ];
+
+        try {
+            $builder->values($fieldValues);
+            $this->fail('Must fail due to invalid input [no array]');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $fieldValues = [
+            [
+
+            ],
+        ];
+
+        try {
+            $builder->values($fieldValues);
+            $this->fail('Must fail due to invalid input [array to small]');
+        } catch (MalformedQueryException $e) {
+        }
+    }
+
+    public function testAppendMultiple() {
+        $builder = $this->getBuilder();
+        $array = [0];
+        $builder->each(
+            $array,
+            function () {
+                $builder = $this->getBuilder();
+                $builder->field('field')
+                        ->field('1');
+
+                return $builder;
+            }
+        );
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('`field` `1`', $query);
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        $builder->each(
+            $array,
+            function () {
+                return [
+                    [
+                        'type'   => 'field',
+                        'params' => [
+                            'identifier' => 'field1',
+                        ],
+                    ],
+                    [
+                        'type'   => 'field',
+                        'params' => [
+                            'identifier' => 'field2',
+                        ],
+                    ],
+                ];
+            }
+        );
+        $query = $builder->getSqlQuery()
+                         ->getQuery();
+        $this->assertEquals('`field1` `field2`', $query);
+    }
+
+    public function testAppendMultipleWrongInput() {
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return [
+                        [
+                            'type' => 'field',
+                        ],
+                        [
+                            'type'   => 'field',
+                            'params' => [
+                                'identifier' => 'field2',
+                            ],
+                        ],
+                    ];
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return [
+                        [
+                            'type' => 'field',
+                        ],
+                    ];
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+
+        $builder = $this->getBuilder();
+        $array = [0];
+        try {
+            $builder->each(
+                $array,
+                function () {
+                    return null;
+                }
+            );
+            $this->fail('Must fail due to invalid input');
+        } catch (MalformedQueryException $e) {
+        }
+    }
+
+    public function testEncryptedBuilder() {
+        $builder = $this->getBuilder();
+
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
+
+        $query = $builder->useEncryptionService($executor)
+                         ->encryptedValue('Mr. Jones')
+                         ->getSqlQuery();
+
+        $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
+    }
+
+    public function testEncryptedBuilderWithClosure() {
+        $builder = $this->getBuilder();
+
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
+
+        $query = $builder->useEncryptionService($executor)
+                         ->encryptedValue(
+                             function () {
+                                 return 'Mr. Jones';
+                             }
+                         )
+                         ->getSqlQuery();
+
+        $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
+    }
+
+    public function testSecurityBreach() {
+        $builder = $this->getBuilder();
+
+        try {
+            $builder->encryptedValue('Mr. Jones');
+            $this->fail('Must throw SecurityBreachException');
+        } catch (SecurityBreachException $exception) {
+            // ignore
+        }
+    }
+
+    public function testUpdates() {
+        $builder = $this->getBuilder();
+
+        $builder->updates(
+            [
+                ['name', 'Mr. Jones'],
+            ]
+        );
+        $queryObject = $builder->getSqlQuery();
+        $query = $queryObject->getQuery();
+        $params = $queryObject->getParameters();
+
+        $this->assertEquals('`name` = ?', $query);
+        $this->assertEquals($params[0], 'Mr. Jones');
+
+        $builder->updates(
+            [
+                ['name', 'Mr. Jones'],
+                ['street', 'Alameda'],
+            ]
+        );
+        $queryObject = $builder->getSqlQuery();
+        $query = $queryObject->getQuery();
+        $params = $queryObject->getParameters();
+
+        $this->assertEquals('`name` = ? , `street` = ?', $query);
+        $this->assertEquals($params[0], 'Mr. Jones');
+        $this->assertEquals($params[1], 'Alameda');
+
+        $builder = $this->getBuilder();
+        try {
+            $builder->updates(
+                [
+
+                ]
+            );
+            $this->fail('Must throw MalformedQueryException');
+        } catch (MalformedQueryException $exception) {
+            // ignore
+        }
+
+        $builder = $this->getBuilder();
+        try {
+            $builder->updates(
+                [
+                    [1, 2, 3],
+                ]
+            );
+            $this->fail('Must throw MalformedQueryException');
+        } catch (MalformedQueryException $exception) {
+            // ignore
+        }
+    }
+
+    public function testJoin()
+    {
+        $builder = $this->getBuilder();
+        $builder->join('table1');
+        $this->equals('INNER JOIN `table1`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->join('table', 'inner', 't1');
+        $this->equals('INNER JOIN `table` as `t1`', $builder);
+
+        $builder->join('table', 'inner');
+        $this->equals('INNER JOIN `table`', $builder);
+
+        $builder->join('table', 'left', 'tx');
+        $this->equals('LEFT JOIN `table` as `tx`', $builder);
     }
 }

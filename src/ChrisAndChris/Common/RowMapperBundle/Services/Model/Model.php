@@ -8,34 +8,37 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintExceptio
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TransactionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Logger\LoggerInterface;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
- * @version   2.0.1
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    2.1.0
+ * @lastChange v2.1.0
+ * @since      v1.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
+ * @deprecated v2.1.0; inject ConcreteModel class instead; not to be removed soon (not earlier than 3.0.0!)
  */
 abstract class Model {
 
     /** @var string a id representing the current user */
     private static $userId;
     /** @var ModelDependencyProvider the dependency provider */
-    protected $DependencyProvider;
+    protected $dependencyProvider;
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
 
-    function __construct(ModelDependencyProvider $DependencyProvider) {
-        $this->DependencyProvider = $DependencyProvider;
+    function __construct(ModelDependencyProvider $dependencyProvider) {
+        $this->dependencyProvider = $dependencyProvider;
     }
 
     /**
      * @return string
+     * @deprecated v2.1.0, to be removed in v2.2.0
      */
     public static function getRunningUser() {
         return self::$userId;
@@ -45,6 +48,7 @@ abstract class Model {
      * Set the id of the current user for logging purposes
      *
      * @param $userId
+     * @deprecated v2.1.0, to be removed in v2.2.0
      */
     public function setRunningUser($userId) {
         self::$userId = $userId;
@@ -94,45 +98,40 @@ abstract class Model {
                 $options[$option] = null;
             }
         }
-        foreach ($options as $name => $value) {
+        foreach (array_keys($options) as $name) {
             if (!in_array($name, $availableOptions)) {
-                throw new InvalidOptionException("Option '" . $name .
-                    "' is unknown to this method.");
+                throw new InvalidOptionException(
+                    "Option '" . $name .
+                    "' is unknown to this method."
+                );
             }
         }
     }
 
-    /**
-     * Get the dependency provider
-     *
-     * @return ModelDependencyProvider
-     */
-    protected function getDependencyProvider() {
-        return $this->DependencyProvider;
-    }
-
+    /** @noinspection PhpDocSignatureInspection */
     /**
      * Runs a query
      *
-     * @param SqlQuery $Query
-     * @param Entity   $Entity
-     * @return array|bool
+     * @param SqlQuery $query
+     * @param Entity   $entity
+     * @return $entity[]
      */
-    protected function run(SqlQuery $Query, Entity $Entity) {
-        $stmt = $this->prepare($Query);
+    protected function run(SqlQuery $query, Entity $entity) {
+        $stmt = $this->prepare($query);
 
-        return $this->handle($stmt, $Entity);
+        return $this->handle($stmt, $entity);
     }
 
     /**
      * Prepares a statement including value binding
      *
-     * @param SqlQuery $Query
+     * @param SqlQuery $query
      * @return PdoStatement
      */
-    protected function prepare(SqlQuery $Query) {
-        $stmt = $this->createStatement($Query->getQuery());
-        $this->bindValues($stmt, $Query);
+    protected function prepare(SqlQuery $query) {
+        $stmt = $this->createStatement($query->getQuery());
+        $this->bindValues($stmt, $query);
+        $stmt->requiresResult($query->isResultRequired());
 
         return $stmt;
     }
@@ -143,29 +142,30 @@ abstract class Model {
      * @param $sql
      * @return PdoStatement
      */
-    protected function createStatement($sql) {
-        return $this->getPDO()
+    private function createStatement($sql) {
+        return $this->getDependencyProvider()
+                    ->getPdo()
                     ->prepare($sql);
     }
 
     /**
-     * Get the PDO class
+     * Get the dependency provider
      *
-     * @return \PDO
-     * @deprecated v2.0.1, will be removed in v2.1.0
+     * @return ModelDependencyProvider
      */
-    protected function getPDO() {
-        return $this->DependencyProvider->getPdo();
+    protected function getDependencyProvider() {
+        return $this->dependencyProvider;
     }
 
     /**
      * Binds values of the query to the statement
      *
      * @param PdoStatement $stmt
-     * @param SqlQuery     $Query
+     * @param SqlQuery     $query
      */
-    protected function bindValues(PdoStatement $stmt, SqlQuery $Query) {
-        foreach ($Query->getParameters() as $id => $value) {
+    private function bindValues(PdoStatement $stmt, SqlQuery $query)
+    {
+        foreach ($query->getParameters() as $id => $value) {
             $stmt->bindValue(++$id, $value);
         }
     }
@@ -175,15 +175,17 @@ abstract class Model {
      * handling<br /> If no entity is given returns true on success, false
      * otherwise
      *
-     * @param PdoStatement $Statement
-     * @param Entity       $Entity
+     * @param PdoStatement $statement
+     * @param Entity       $entity
      * @return Entity[]|bool
      */
-    protected function handle(PdoStatement $Statement, Entity $Entity = null) {
-        return $this->handleGeneric($Statement,
-            function (PdoStatement $Statement) use ($Entity) {
-                if ($Entity === null) {
-                    if ((int)$Statement->errorCode() == 0) {
+    private function handle(PdoStatement $statement, Entity $entity = null)
+    {
+        return $this->handleGeneric(
+            $statement,
+            function (PdoStatement $statement) use ($entity) {
+                if ($entity === null) {
+                    if ((int)$statement->errorCode() == 0) {
                         return true;
                     }
 
@@ -191,40 +193,45 @@ abstract class Model {
                 }
 
                 return $this->getMapper()
-                            ->mapFromResult($Statement, $Entity);
-            });
+                            ->mapFromResult($statement, $entity);
+            }
+        );
     }
 
     /**
      * Generic handle method
      *
-     * @param PdoStatement $Statement
-     * @param callable     $MappingCallback a callback taking the statement as
-     *                                      first and only argument
+     * @param PdoStatement $statement
+     * @param \Closure     $mappingCallback      a callback taking the
+     *                                           statement as first and only
+     *                                           argument
      * @return bool
      */
-    protected function handleGeneric(PdoStatement $Statement, \Closure $MappingCallback) {
+    private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
+    {
         $mustHaveRow = $this->currentMustHaveRow;
         $this->setCurrentMustHaveResult(false);
-        if ($this->execute($Statement)) {
-            if ($Statement->rowCount() === 0 &&
-                ($mustHaveRow || $Statement->isMustHaveResult())
+        if ($this->execute($statement)) {
+            if ($statement->rowCount() === 0 &&
+                ($mustHaveRow || $statement->isResultRequired())
             ) {
                 throw new NotFoundHttpException("No row found with query");
             }
 
-            return $MappingCallback($Statement);
+            return $mappingCallback($statement);
         }
 
-        return $this->handleError($Statement);
+        return $this->handleError($statement);
     }
 
     /**
      * Set to true if current statement must have at least one row returning
      *
      * @param bool $mustHaveRow
+     * @deprecated v2.1.0, to be removed in v2.2.0, use SqlQuery::
      */
-    protected function setCurrentMustHaveResult($mustHaveRow = true) {
+    protected function setCurrentMustHaveResult($mustHaveRow = true)
+    {
         $this->currentMustHaveRow = (bool)$mustHaveRow;
     }
 
@@ -234,23 +241,11 @@ abstract class Model {
      * @param PdoStatement $statement
      * @return mixed
      */
-    protected function execute(PdoStatement $statement) {
-        $start = microtime(true);
+    private function execute(PdoStatement $statement)
+    {
         $result = $statement->execute();
-        $time = microtime(true) - $start;
-        $this->getLogger()
-             ->writeToLog($statement, self::$userId, $time);
 
         return $result;
-    }
-
-    /**
-     * Get the logger
-     *
-     * @return LoggerInterface
-     */
-    protected function getLogger() {
-        return $this->DependencyProvider->getLogger();
     }
 
     /**
@@ -262,8 +257,10 @@ abstract class Model {
      * @throws ForeignKeyConstraintException
      * @throws UniqueConstraintException
      */
-    protected function handleError(PdoStatement $statement) {
-        if ($this->getPDO()
+    private function handleError(PdoStatement $statement)
+    {
+        if ($this->getDependencyProvider()
+                 ->getPdo()
                  ->inTransaction()
         ) {
             // automatic rollback the transaction if an error occurs
@@ -271,8 +268,10 @@ abstract class Model {
         }
 
         return $this->getErrorHandler()
-                    ->handle($statement->errorInfo()[1],
-                        $statement->errorInfo()[2]);
+                    ->handle(
+                        $statement->errorInfo()[1],
+                        $statement->errorInfo()[2]
+                    );
     }
 
     /**
@@ -280,20 +279,31 @@ abstract class Model {
      *
      * Throws an exception if no transaction is running
      *
-     * @throws TransactionException
+     * @throws TransactionException if unable to rollback
      */
-    protected function _rollback() {
-        if ($this->getPDO()
-                 ->inTransaction()
-        ) {
-            if (!$this->getPDO()
-                      ->rollBack()
-            ) {
-                throw new TransactionException("Unable to rollback");
-            }
-        } else {
-            throw new TransactionException("No transaction running");
+    protected function _rollback()
+    {
+        if (!$this->_inTransaction()) {
+            return;
         }
+        if (!$this->getDependencyProvider()
+                  ->getPdo()
+                  ->rollBack()
+        ) {
+            throw new TransactionException("Unable to rollback");
+        }
+    }
+
+    /**
+     * Returns whether a transaction is running or not
+     *
+     * @return bool
+     */
+    protected function _inTransaction()
+    {
+        return $this->getDependencyProvider()
+                    ->getPdo()
+                    ->inTransaction();
     }
 
     /**
@@ -301,8 +311,9 @@ abstract class Model {
      *
      * @return ErrorHandler
      */
-    protected function getErrorHandler() {
-        return $this->DependencyProvider->getErrorHandler();
+    protected function getErrorHandler()
+    {
+        return $this->dependencyProvider->getErrorHandler();
     }
 
     /**
@@ -310,161 +321,205 @@ abstract class Model {
      *
      * @return RowMapper
      */
-    protected function getMapper() {
-        return $this->DependencyProvider->getMapper();
+    protected function getMapper()
+    {
+        return $this->dependencyProvider->getMapper();
+    }
+
+    /**
+     * Get the dependency provider (shortcut)
+     *
+     * @return ModelDependencyProvider
+     */
+    protected function getDp()
+    {
+        return $this->dependencyProvider;
+    }
+
+    /** @noinspection PhpDocSignatureInspection */
+
+    /**
+     * Run a query with custom return
+     *
+     * @todo   needs testing
+     *
+     * @param SqlQuery       $query
+     * @param mixed|\Closure $onSuccess on success
+     * @param mixed|\Closure $onFailure on failure
+     * @param null|\Closure  $onError   on exception, if null exception is
+     *                                  thrown
+     * @return $onSuccess|$onFailure|$onError
+     * @throws \Exception
+     */
+    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null) {
+        try {
+            if ($this->runSimple($query)) {
+                if ($onSuccess instanceof \Closure) {
+                    return $onSuccess();
+                }
+
+                return $onSuccess;
+            } else {
+                if ($onFailure instanceof \Closure) {
+                    return $onFailure();
+                }
+
+                return $onFailure;
+            }
+        } catch (\Exception $exception) {
+            if ($onError === null) {
+                throw $exception;
+            } else {
+                if ($onError instanceof \Closure) {
+                    return $onError();
+                }
+            }
+
+            return $onError;
+        }
     }
 
     /**
      * Runs a simple query, just returning true on success
      *
-     * @param SqlQuery $Query
-     * @return bool|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity[]
+     * @param SqlQuery $query
+     * @return bool
      */
-    protected function runSimple(SqlQuery $Query) {
-        return $this->handle($this->prepare($Query), null);
+    protected function runSimple(SqlQuery $query) {
+        return $this->handle($this->prepare($query), null);
     }
 
     /**
      * Runs a simple query, returning the last insert id on success
      *
-     * @param SqlQuery $Query
-     * @return bool|int
+     * @param SqlQuery $query
+     * @return int
      */
-    protected function runWithLastId(SqlQuery $Query) {
-        return $this->handleWithLastInsertId($this->prepare($Query));
+    protected function runWithLastId(SqlQuery $query) {
+        return $this->handleWithLastInsertId($this->prepare($query));
     }
 
     /**
      * Handles a statement and returns the last insert id on success
      *
-     * @param PdoStatement $Statement
-     * @return bool|int
+     * @param PdoStatement $statement
+     * @return int
      */
-    protected function handleWithLastInsertId(PdoStatement $Statement) {
-        return $this->handleGeneric($Statement,
-            function (\PDOStatement $Statement) {
-                return $this->getPDO()
+    private function handleWithLastInsertId(PdoStatement $statement) {
+        return $this->handleGeneric(
+            $statement,
+            function () {
+                return $this->getDependencyProvider()
+                            ->getPdo()
                             ->lastInsertId();
-            });
-    }
-
-    /**
-     * Handles an array query
-     *
-     * @param SqlQuery $Query
-     * @param Entity   $Entity
-     * @param callable $Closure
-     * @return array|bool
-     */
-    protected function runArray(SqlQuery $Query, Entity $Entity, \Closure $Closure) {
-        $stmt = $this->prepare($Query);
-
-        return $this->handleArray($stmt, $Entity, $Closure);
-    }
-
-    /**
-     * Handles a statement including mapping to array and error handling
-     *
-     * @param PdoStatement $Statement
-     * @param Entity       $Entity
-     * @param callable     $Closure
-     * @return array|bool
-     * @throws \Symfony\Component\Debug\Exception\FatalErrorException
-     */
-    protected function handleArray(PdoStatement $Statement, Entity $Entity, \Closure $Closure) {
-        return $this->handleGeneric($Statement,
-            function (PdoStatement $Statement) use ($Entity, $Closure) {
-                return $this->getMapper()
-                            ->mapToArray($Statement, $Entity, $Closure);
-            });
-    }
-
-    /**
-     * Handles a key value query
-     *
-     * @param SqlQuery $Query
-     * @return bool
-     */
-    protected function runKeyValue(SqlQuery $Query) {
-        $stmt = $this->prepare($Query);
-
-        return $this->handleKeyValue($stmt);
-    }
-
-    /**
-     * Maps the statement to a key => value array<br />
-     * <br />
-     * Use SQL-Field 'key' for array key, 'value' for array value
-     *
-     * @param PdoStatement $Statement
-     * @return bool
-     */
-    protected function handleKeyValue(PdoStatement $Statement) {
-        return $this->handleGeneric($Statement,
-            function (PdoStatement $Statement) {
-                return $this->getMapper()
-                            ->mapToArray($Statement, new KeyValueEntity(),
-                                function (KeyValueEntity $Entity) {
-                                    return [
-                                        'key'   => $Entity->key,
-                                        'value' => $Entity->value
-                                    ];
-                                });
-            });
+            }
+        );
     }
 
     /**
      * Call query and get first column of first row
      *
-     * @param $Query
-     * @return bool
+     * @param SqlQuery $query
+     * @return mixed
      */
-    protected function runWithFirstKeyFirstValue($Query) {
-        $stmt = $this->prepare($Query);
+    protected function runWithFirstKeyFirstValue(SqlQuery $query) {
+        $stmt = $this->prepare($query);
 
-        return $this->handleGeneric($stmt, function (PdoStatement $Statement) {
-            return $Statement->fetch(\PDO::FETCH_NUM)[0];
-        });
+        return $this->handleGeneric(
+            $stmt, function (PdoStatement $statement) {
+            return $statement->fetch(\PDO::FETCH_NUM)[0];
+        }
+        );
     }
 
     /**
-     * Returns the first column of the first row or a NotFoundHttpException if
-     * no row available
+     * Handles an array query
      *
-     * @param PdoStatement $Statement
-     * @return bool
+     * @param SqlQuery $query
+     * @param Entity   $entity
+     * @param \Closure $closure
+     * @return array
      */
-    protected function handleWithFirstRowFirstColumn(PdoStatement $Statement) {
-        $Statement->setMustHaveResult();
+    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure) {
+        return $this->handleGeneric(
+            $this->prepare($query),
+            function (PdoStatement $statement) use ($entity, $closure) {
+                return $this->getMapper()
+                            ->mapToArray($statement, $entity, $closure);
+            }
+        );
+    }
 
-        return $this->handleGeneric($Statement,
-            function (PdoStatement $Statement) {
-                return $Statement->fetch(\PDO::FETCH_NUM)[0];
-            });
+    /**
+     * Runs the query and maps it to an associative array
+     *
+     * @param SqlQuery $query
+     * @return array
+     */
+    protected function runAssoc(SqlQuery $query) {
+        return $this->handleGeneric(
+            $this->prepare($query),
+            function (\PDOStatement $statement) {
+                return $this->getMapper()
+                            ->mapFromResult($statement);
+            }
+        );
+    }
+
+    /**
+     * Handles a key value query
+     *
+     * @param SqlQuery $query
+     * @return array
+     */
+    protected function runKeyValue(SqlQuery $query) {
+        $stmt = $this->prepare($query);
+
+        return $this->handleGeneric(
+            $stmt,
+            function (PdoStatement $statement) {
+                return $this->getMapper()
+                            ->mapToArray(
+                                $statement, new KeyValueEntity(),
+                                function (KeyValueEntity $entity) {
+                                    static $count = 0;
+                                    if (empty($entity->key)) {
+                                        $entity->key = $count++;
+                                    }
+
+                                    return [
+                                        'key'   => $entity->key,
+                                        'value' => $entity->value,
+                                    ];
+                                }
+                            );
+            }
+        );
     }
 
     /**
      * Validates whether the given statement has a row count greater than zero
      *
-     * @param SqlQuery $Query
+     * @param SqlQuery $query
      * @return bool whether there is at least one result row or not
      */
-    protected function _handleHasResult(SqlQuery $Query) {
-        return $this->_handleHas($Query, false);
+    protected function _handleHasResult(SqlQuery $query) {
+        return $this->_handleHas($query, false);
     }
 
     /**
      * Runs the query and returns whether the row count is equal to one or not
      *
-     * @param SqlQuery $Query      the query
+     * @param SqlQuery $query      the query
      * @param bool     $forceEqual if set to true, only a row count of one and
      *                             only one returns true
      * @return bool whether there is a row or not
      */
-    protected function _handleHas(SqlQuery $Query, $forceEqual = true) {
-        $stmt = $this->prepare($Query);
+    protected function _handleHas(SqlQuery $query, $forceEqual = true) {
+        $stmt = $this->prepare($query);
 
-        return $this->handleGeneric($stmt,
+        return $this->handleGeneric(
+            $stmt,
             function (PdoStatement $Statement) use ($forceEqual) {
                 if ($Statement->rowCount() == 1 && $forceEqual) {
                     return true;
@@ -475,7 +530,8 @@ abstract class Model {
                 }
 
                 return false;
-            });
+            }
+        );
     }
 
     /**
@@ -484,10 +540,12 @@ abstract class Model {
      * @throws TransactionException
      */
     protected function _startTransaction() {
-        if (!$this->getPDO()
+        if (!$this->getDependencyProvider()
+                  ->getPdo()
                   ->inTransaction()
         ) {
-            if (!$this->getPDO()
+            if (!$this->getDependencyProvider()
+                      ->getPdo()
                       ->beginTransaction()
             ) {
                 throw new TransactionException("Unable to start transaction");
@@ -503,10 +561,12 @@ abstract class Model {
      * @throws TransactionException
      */
     protected function _commit() {
-        if ($this->getPDO()
+        if ($this->getDependencyProvider()
+                 ->getPdo()
                  ->inTransaction()
         ) {
-            if (!$this->getPDO()
+            if (!$this->getDependencyProvider()
+                      ->getPdo()
                       ->commit()
             ) {
                 throw new TransactionException("Unable to commit");

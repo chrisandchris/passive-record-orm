@@ -1,0 +1,118 @@
+{
+  "right": {
+    "fields": {
+      "right_id": {
+        "type": "int",
+        "key": "primary",
+        "extra": "increment"
+      },
+      "right_path": {
+        "type": "varchar",
+        "key": null,
+        "extra": null
+      },
+      "right_description": {
+        "type": "varchar",
+        "key": null,
+        "extra": null
+      }
+    },
+    "relations": []
+  },
+  "role": {
+    "fields": {
+      "role_id": {
+        "type": "int",
+        "key": "primary",
+        "extra": "increment"
+      },
+      "role_group_id": {
+        "type": "int",
+        "key": null,
+        "extra": null
+      },
+      "role_short": {
+        "type": "varchar",
+        "key": null,
+        "extra": null
+      },
+      "role_name": {
+        "type": "varchar",
+        "key": null,
+        "extra": null
+      }
+    },
+    "relations": [
+      {
+        "source": "role_group_id",
+        "target": [
+          "role_group",
+          "role_group_id"
+        ]
+      }
+    ]
+  },
+  "role_group": {
+    "fields": {
+      "role_group_id": {
+        "type": "int",
+        "key": "primary",
+        "extra": "increment"
+      }
+    },
+    "relations": []
+  },
+  "role_right": {
+    "fields": {
+      "role_id": {
+        "type": "int",
+        "key": "primary",
+        "extra": null
+      },
+      "right_id": {
+        "type": "int",
+        "key": "primary",
+        "extra": null
+      },
+      "role_right_allow": {
+        "type": "tinyint",
+        "key": null,
+        "extra": null
+      }
+    },
+    "relations": [
+      {
+        "source": "right_id",
+        "target": [
+          "right",
+          "right_id"
+        ]
+      },
+      {
+        "source": "role_id",
+        "target": [
+          "role",
+          "role_id"
+        ]
+      }
+    ]
+  },
+  "search_role_right": {
+    "fields": [],
+    "relations": []
+  },
+  "search_result": {
+    "fields": {
+      "search": {
+        "type": "int",
+        "key": "primary",
+        "extra": null
+      },
+      "primary:kez": {
+        "type": "int",
+        "key": null,
+        "extra": null
+      }
+    }
+  }
+}

@@ -2,17 +2,20 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Logger\LoggerInterface;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name ModelDependencyProvider
- * @version    2.0.0
+ * @version    2.1.0
+ * @lastChange v2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -22,31 +25,27 @@ class ModelDependencyProvider {
 
     /** @var PdoLayer the pdo class */
     private $pdo;
-    /** @var RowMapper the row mapper */
-    private $mapper;
+    /** @var RowMapper the row mapper factory */
+    private $mapperFactory;
     /** @var ErrorHandler */
     private $errorHandler;
-    /** @var LoggerInterface the logger used to log statements */
-    private $logger;
-    /** @var Builder the query builder */
-    private $builder;
     /** @var ContainerInterface the container */
     private $container;
+    /** @var BuilderFactory the builder factory */
+    private $builderFactory;
 
     function __construct(
-        PdoLayer $pdo,
-        RowMapper $mapper,
+        \PDO $pdo,
+        RowMapperFactory $mapperFactory,
         ErrorHandler $errorHandler,
-        LoggerInterface $logger,
-        Builder $builder,
+        BuilderFactory $builderFactory,
         ContainerInterface $container = null,
         EventDispatcherInterface $eventDispatcher = null) {
 
         $this->pdo = $pdo;
-        $this->mapper = $mapper;
+        $this->mapperFactory = $mapperFactory;
         $this->errorHandler = $errorHandler;
-        $this->logger = $logger;
-        $this->builder = $builder;
+        $this->builderFactory = $builderFactory;
         $this->container = $container;
         $this->eventDispatcher = $eventDispatcher;
     }
@@ -62,7 +61,7 @@ class ModelDependencyProvider {
      * @return RowMapper
      */
     public function getMapper() {
-        return $this->mapper;
+        return $this->mapperFactory->getMapper();
     }
 
     /**
@@ -73,17 +72,18 @@ class ModelDependencyProvider {
     }
 
     /**
-     * @return LoggerInterface
-     */
-    public function getLogger() {
-        return $this->logger;
-    }
-
-    /**
      * @return Builder
      */
     public function getBuilder() {
-        return $this->builder;
+        return $this->builderFactory->createBuilder();
+    }
+
+    /**
+     * @return SearchResultUtility
+     */
+    public function getSearchResultUtility()
+    {
+        return $this->container->get('common_rowmapper.search.result_utility');
     }
 
     /**

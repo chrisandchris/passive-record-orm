@@ -1,24 +1,55 @@
 services:
-  common_rowmapper.dependencyProvider:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
-      arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowMapper, @common_rowmapper.errorHandler, @common_rowmapper.pdoLogger, @common_rowmapper.queryBuilder, @service_container, @event_dispatcher]
-  common_rowmapper.pdoLayer:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
-      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
-  common_rowmapper.pdoLogger:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Logger\PdoLogger
-      arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
-  common_rowmapper.rowMapper:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper
-  common_rowmapper.errorHandler:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
-  common_rowmapper.queryBuilder:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
-      arguments: [@common_rowmapper.defaultParser, @common_rowmapper.typeBag]
-  common_rowmapper.defaultParser:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
-      arguments: [@common_rowmapper.snippetBag]
-  common_rowmapper.typeBag:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
-  common_rowmapper.snippetBag:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
+  common_rowmapper.dependencyprovider:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
+    arguments: [@common_rowmapper.pdoLayer, @common_rowmapper.rowmapperfactory, @common_rowmapper.errorHandler, @common_rowmapper.querybuilderfactory, @service_container, @event_dispatcher]
+  common_rowmapper.pdolayer:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
+    arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
+  common_rowmapper.rowmapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper
+  common_rowmapper.rowmapperfactory:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory
+    arguments: [@event_dispatcher]
+  common_rowmapper.errorhandler:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler
+  common_rowmapper.querybuilder:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder
+    factory: [ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory, createBuilder]
+  common_rowmapper.querybuilderfactory:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory
+    arguments: [@common_rowmapper.defaultparser, @common_rowmapper.typebag]
+  common_rowmapper.defaultparser:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
+    arguments: [@common_rowmapper.snippetBag]
+  common_rowmapper.typebag:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
+  common_rowmapper.snippetbag:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
+  common_rowmapper.utility.mapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
+    arguments: [@common_rowmapper.dependencyprovider]
+  common_rowmapper.utilty.cache_writer:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
+    arguments: [%kernel.cache_dir%, 'common_rowmapper']
+  common_rowmapper.mapping.repository:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
+    arguments: [%kernel.cache_dir%, 'common_rowmapper', 'mapping.json', @common_rowmapper.command.database_mapper]
+  common_rowmapper.command.database_mapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
+    calls:
+        - [setContainer, [@service_container]]
+  common_rowmapper.search.result_utility:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
+    arguments: [@common_rowmapper.dependencyprovider]
+    calls:
+        - [setMappingRepository, ['@common_rowmapper.mapping.repository']]
+        - [setQueryBuilder, ['@common_rowmapper.search.query_builder']]
+  common_rowmapper.search.query_builder:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder
+    arguments: [@common_rowmapper.querybuilderfactory, @common_rowmapper.mapping.repository, @common_rowmapper.mapping.validator]
+  common_rowmapper.mapping.validator:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator
+    arguments: [@common_rowmapper.mapping.repository]
+  common_rowmapper.model:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
+    arguments: [@common_rowmapper.dependencyprovider]

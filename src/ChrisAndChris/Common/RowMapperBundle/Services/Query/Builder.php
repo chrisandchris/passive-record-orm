@@ -3,19 +3,21 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\SecurityBreachException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\SystemException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionExecutorInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
-use Doctrine\Common\Cache\Cache;
 
 /**
  * @name Builder
- * @version   1.0.3
- * @since     v2.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.1.0
+ * @lastChange v2.1.0
+ * @since      v2.0.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class Builder {
 
@@ -23,17 +25,16 @@ class Builder {
     private $statement = [];
     /** @var ParserInterface */
     private $parser;
-    /** @var Cache Doctrine cache interface */
-    private $cache;
     /** @var array an array, which handles the if/else-statements */
     private $stopPropagation = [];
     /** @var bool indicator, if the current query uses closures */
     private $usedClosures = false;
     /** @var TypeBag */
     private $typeBag;
+    /** @var EncryptionExecutorInterface the encryption service used */
+    private $encryptionExecutor;
 
-    function __construct(ParserInterface $parser, TypeBag $parameterBag, Cache $cache = null) {
-        $this->cache = $cache;
+    function __construct(ParserInterface $parser, TypeBag $parameterBag) {
         $this->parser = $parser;
         $this->typeBag = $parameterBag;
     }
@@ -115,8 +116,100 @@ class Builder {
         return max(array_keys($this->stopPropagation));
     }
 
+    public function alias($alias) {
+        $this->append('alias', ['alias' => $alias]);
+
+        return $this;
+    }
+
+    public function any() {
+        $this->append('any');
+
+        return $this;
+    }
+
     public function update($table) {
         $this->append('update', ['table' => $table]);
+
+        return $this;
+    }
+
+    /**
+     * Simplifies updating of columns
+     *
+     * @param array $updates the updates to append
+     * @return $this
+     * @throws MalformedQueryException
+     */
+    public function updates(array $updates) {
+        if (count($updates) < 1) {
+            throw new MalformedQueryException(
+                sprintf('Must update at least one field, %s given', count($updates))
+            );
+        }
+        $insertCounter = 0;
+        foreach ($updates as $update) {
+            if (!is_array($updates)) {
+                throw new MalformedQueryException(
+                    sprintf('Value of $values must be array, %s given', gettype($update))
+                );
+            }
+            if (count($update) != 2) {
+                throw new MalformedQueryException(
+                    sprintf('Update value must have 2 indexes, %d given', count($update))
+                );
+            }
+            $keys = array_keys($update);
+            $this->field($update[$keys[0]])
+                 ->equals()
+                 ->value($update[$keys[1]]);
+
+            if (++$insertCounter < count($updates)) {
+                $this->c();
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Adds a new raw value to the statement<br />
+     * The value gets encoded as parameter<br />
+     * If you give a closure, the return value of the closure is used
+     *
+     * @param mixed|\Closure $value
+     * @return $this
+     */
+    public function value($value) {
+        $this->append('value', ['value' => $value]);
+
+        return $this;
+    }
+
+    public function equals() {
+        $this->append('equals');
+
+        return $this;
+    }
+
+    /**
+     * Select a field<br />
+     * Array usage of $identifier is deprecated, use only with double-colon<br
+     * />
+     * <br />
+     * database:table:field parses to database.table.field
+     *
+     * @param string $identifier path of field or field name
+     * @return $this
+     */
+    public function field($identifier) {
+        $this->append('field', ['identifier' => $identifier]);
+
+        return $this;
+    }
+
+    public function c() {
+        $this->append('comma');
 
         return $this;
     }
@@ -148,23 +241,36 @@ class Builder {
      * </ul>
      * You have to separate table and field names by double-colon (":")
      *
-     * @param array $fields
+     * @param array $fields            the fields to add
+     * @param bool  $encloseWithBraces if set to true, enclose with braces
      * @return $this
      */
-    public function fieldlist(array $fields) {
+    public function fieldlist(array $fields, $encloseWithBraces = false) {
+        if ($encloseWithBraces) {
+            $this->brace();
+        }
         $this->append('fieldlist', ['fields' => $fields]);
+        if ($encloseWithBraces) {
+            $this->close();
+        }
+
+        return $this;
+    }
+
+    public function brace() {
+        $this->append('brace');
+
+        return $this;
+    }
+
+    public function close() {
+        $this->append('close');
 
         return $this;
     }
 
     public function where() {
         $this->append('where');
-
-        return $this;
-    }
-
-    public function alias($alias) {
-        $this->append('alias', ['alias' => $alias]);
 
         return $this;
     }
@@ -176,28 +282,6 @@ class Builder {
      */
     public function end() {
         return $this->close();
-    }
-
-    public function close() {
-        $this->append('close');
-
-        return $this;
-    }
-
-    /**
-     * Select a field<br />
-     * Array usage of $identifier is deprecated, use only with double-colon<br
-     * />
-     * <br />
-     * database:table:field parses to database.table.field
-     *
-     * @param string $identifier path of field or field name
-     * @return $this
-     */
-    public function field($identifier) {
-        $this->append('field', ['identifier' => $identifier]);
-
-        return $this;
     }
 
     /**
@@ -214,18 +298,6 @@ class Builder {
         return $this;
     }
 
-    public function any() {
-        $this->append('any');
-
-        return $this;
-    }
-
-    public function equals() {
-        $this->append('equals');
-
-        return $this;
-    }
-
     public function compare($comparison) {
         $this->append('comparison', ['comparison' => $comparison]);
 
@@ -233,30 +305,83 @@ class Builder {
     }
 
     /**
-     * Adds a new raw value to the statement<br />
-     * The value gets encoded as parameter<br />
-     * If you give a closure, the return value of the closure is used
-     *
-     * @param mixed|\Closure $value
-     * @return $this
-     */
-    public function value($value) {
-        $this->append('value', ['value' => $value]);
-
-        return $this;
-    }
-
-    /**
      * Adds a new VALUES()-Statement
      *
+     * @param array|null $values the values to append
      * @return $this
+     * @throws MalformedQueryException
      */
-    public function values() {
+    public function values(array $values = null) {
+        if (count($values) > 0) {
+            $this->append('values');
+
+            $insertCounter = 0;
+            foreach ($values as $insert) {
+                if (!is_array($insert) || count($insert) < 1) {
+                    throw new MalformedQueryException(
+                        sprintf('Value of $values must be array, %s given', gettype($insert))
+                    );
+                }
+                $this->brace();
+                $fieldCounter = 0;
+                foreach ($insert as $value) {
+                    $this->value($value);
+
+                    if (++$fieldCounter < count($insert)) {
+                        $this->c();
+                    }
+                }
+                $this->close();
+
+                if (++$insertCounter < count($values)) {
+                    $this->c();
+                }
+            }
+
+            return $this;
+        }
         $this->append('values');
 
         return $this;
     }
 
+    /**
+     * Add a new raw value to the statement<br>
+     * The value gets encrypted if an encryption service is set
+     *
+     * @param mixed|\Closure $value
+     * @return $this
+     * @throws SecurityBreachException if no encryption service is set
+     */
+    public function encryptedValue($value) {
+        $this->append('value', ['value' => $this->encrypt($value)]);
+
+        return $this;
+    }
+
+    /**
+     * Encrypts the given input
+     *
+     * @param mixed|\Closure $value the value to encrypt
+     * @return string the encrypted value
+     * @throws SecurityBreachException if no executor is set
+     */
+    private function encrypt($value) {
+        if ($this->encryptionExecutor === null) {
+            throw new SecurityBreachException('No encryption executor is set');
+        }
+        if ($value instanceof \Closure) {
+            $value = $value();
+        }
+
+        return $this->encryptionExecutor->encrypt($value);
+    }
+
+    /**
+     * Append a NULL
+     *
+     * @return $this
+     */
     public function null() {
         $this->append('null');
 
@@ -278,6 +403,13 @@ class Builder {
         return $this;
     }
 
+    /**
+     * Add comparison to "IS NULL" if $isNull is true<br />
+     * or to "IS NOT NULL" if $isNull is false
+     *
+     * @param bool $isNull
+     * @return $this
+     */
     public function isNull($isNull = true) {
         if ($isNull) {
             $this->append('isnull', ['isnull' => true]);
@@ -288,18 +420,24 @@ class Builder {
         return $this;
     }
 
-    public function brace() {
-        $this->append('brace');
-
-        return $this;
-    }
-
+    /**
+     * Limit the length of the result set
+     *
+     * @param int $limit the maximal amount of rows
+     * @return $this
+     */
     public function limit($limit = 1) {
         $this->append('limit', ['limit' => $limit]);
 
         return $this;
     }
 
+    /**
+     * Set an offset for the query
+     *
+     * @param int $offset the offset
+     * @return $this
+     */
     public function offset($offset = 0) {
         $this->append('offset', ['offset' => $offset]);
 
@@ -316,6 +454,14 @@ class Builder {
         );
 
         return $this;
+    }
+
+    public function union($mode = '') {
+        $this->append(
+            'union', [
+                'mode' => $mode,
+            ]
+        );
     }
 
     public function using($field) {
@@ -492,23 +638,17 @@ class Builder {
             case 'and' :
             case '&' :
             case '&&' :
-            $this->append('and');
+                $this->append('and');
 
                 return $this;
             case 'or' :
             case '|' :
             case '||' :
-            $this->append('or');
+                $this->append('or');
 
                 return $this;
         }
         throw new \Exception("unknown connection type: " . $relation);
-    }
-
-    public function c() {
-        $this->append('comma');
-
-        return $this;
     }
 
     /**
@@ -542,6 +682,50 @@ class Builder {
     }
 
     /**
+     * Append the result of $callable() as long as $validator() equals to
+     * true<br>
+     * <br>
+     * $callable() may return a list of types as array or an instance of the
+     * Builder class
+     *
+     * @param \Closure $validator the validator to use
+     * @param \Closure $callable  the callable to execute on each turn
+     * @throws MalformedQueryException
+     */
+    public function asLong(\Closure $validator, \Closure $callable) {
+        while ($validator() === true) {
+            $this->appendMultiple($callable());
+        }
+    }
+
+    /**
+     * Append multiple types using the internal ::append() method
+     *
+     * @param array|Builder $types     the types to append
+     * @throws MalformedQueryException if the parameters are in a not support
+     *                                 format
+     * @throws MissingParameterException if parameters of types are missing
+     * @throws TypeNotFoundException if a type is not found
+     */
+    private function appendMultiple($types) {
+        if ($types instanceof Builder) {
+            $types = $types->getStatement();
+        } else {
+            if (!is_array($types)) {
+                throw new MalformedQueryException(
+                    'When adding multiple types, you must give an array or an instance of Builder'
+                );
+            }
+        }
+        foreach ($types as $type) {
+            if (!isset($type['type']) || !isseT($type['params'])) {
+                throw new MalformedQueryException('Type not fully configured, missing type name or params, have');
+            }
+            $this->append($type['type'], $type['params']);
+        }
+    }
+
+    /**
      * Get the query array
      *
      * @return array
@@ -551,6 +735,49 @@ class Builder {
     }
 
     /**
+     * Combines an existing builder by appending it to the end of this builder
+     *
+     * @param Builder|\Closure $builder
+     * @return $this
+     * @throws MalformedQueryException
+     */
+    public function combine($builder)
+    {
+        if (!$this->allowAppend()) {
+            return $this;
+        }
+
+        if ($builder instanceof Builder) {
+            $this->appendMultiple($builder);
+        } else {
+            if ($builder instanceof \Closure) {
+                $this->appendMultiple(
+                    $builder()
+                );
+            } else {
+                throw new MalformedQueryException(sprintf(
+                    'Combine expects builder or closure, "%s" given',
+                    gettype($builder)
+                ));
+            }
+        }
+
+        return $this;
+    }
+
+    public function each(array $items, \Closure $callable) {
+        $count = 0;
+        foreach ($items as $item) {
+            $count++;
+            $this->appendMultiple($callable($item, $count < count($items)));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get the SqlQuery object
+     *
      * @param ParserInterface $parser
      * @return SqlQuery
      * @throws MalformedQueryException if the query is (probably) malformed
@@ -565,16 +792,6 @@ class Builder {
             throw new MalformedQueryException('Probable bug: not every if ended with ::_end()');
         }
 
-        // try to use cache
-        $data = false;
-        if ($this->isCacheAvailable()) {
-            $data = $this->validateCache($this->statement);
-        }
-        if (isset($data['statement']) && isset($data['query'])) {
-            $this->statement = $data['statement'];
-            $query = $data['query'];
-        }
-
         if ($parser === null) {
             $parser = $this->parser;
         }
@@ -586,60 +803,9 @@ class Builder {
                 $parser->getParameters()
             );
         }
-
-        if ($this->isCacheAvailable()) {
-            $this->cacheItem(
-                $this->getHash($this->statement), $this->statement,
-                $query
-            );
-        }
         $this->clear();
 
         return $query;
-    }
-
-    /**
-     * Validates whether cache is available
-     *
-     * @return bool
-     */
-    private function isCacheAvailable() {
-        if ($this->usedClosures) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private function validateCache(array $statement) {
-        if (!is_object($this->cache)) {
-            return false;
-        }
-        $hash = $this->getHash($statement);
-        if ($this->cache->contains($hash)) {
-            $data = $this->cache->fetch($hash);
-
-            return unserialize($data);
-        }
-
-        return false;
-    }
-
-    private function getHash(array $statement) {
-        return md5(serialize($statement));
-    }
-
-    private function cacheItem($hash, array $statement, SqlQuery $Query) {
-        if (is_object($this->cache)) {
-            $this->cache->save(
-                $hash, serialize(
-                [
-                    'statement' => $statement,
-                    'query'     => $Query,
-                ]
-            ), 3600
-            );
-        }
     }
 
     /**
@@ -649,5 +815,17 @@ class Builder {
         $this->stopPropagation = [];
         $this->statement = [];
         $this->usedClosures = false;
+    }
+
+    /**
+     * Use this encryption service if encryption is required for a field
+     *
+     * @param EncryptionExecutorInterface $executorService
+     * @return $this
+     */
+    public function useEncryptionService(EncryptionExecutorInterface $executorService) {
+        $this->encryptionExecutor = $executorService;
+
+        return $this;
     }
 }

@@ -1,64 +1,63 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Pdo;
+namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\RowMapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Services\DefaultEncryptionService;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Wrappers\PhpSeclibAesWrapper;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 use PDO;
+use phpseclib\Crypt\AES;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name RowMapperTest
- * @version   1
+ * @version   1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
 class RowMapperTest extends TestKernel {
 
-    public function getRowMapper() {
-        return new RowMapper();
-    }
-
     public function testMapFromResult() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $rows =
-            $Mapper->mapFromResult($this->getStatementMockup(), new DummyEntity());
+            $mapper->mapFromResult($this->getStatementMockup(), new DummyEntity());
 
-        /** @var DummyEntity $Row */
-        $Row = $rows[0];
-        $this->assertEquals(1, $Row->getId());
-        $this->assertEquals('Name 1', $Row->getName());
+        /** @var DummyEntity $entity */
+        $entity = $rows[0];
+        $this->assertEquals(1, $entity->getId());
+        $this->assertEquals('Name 1', $entity->getName());
 
-        $Row = $rows[1];
-        $this->assertEquals(2, $Row->getId());
-        $this->assertEquals('Name 2', $Row->getName());
+        $entity = $rows[1];
+        $this->assertEquals(2, $entity->getId());
+        $this->assertEquals('Name 2', $entity->getName());
     }
 
-    public function getStatementMockup() {
+    public function getStatementMockup($mode = 'regular') {
         PdoStatementDummy::$id = 0;
 
-        return new PdoStatementDummy();
+        return new PdoStatementDummy($mode);
     }
 
     public function testMapFromResultLimit() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 100;
         $rows =
-            $Mapper->mapFromResult($this->getStatementMockup(), new DummyEntity(), 10);
+            $mapper->mapFromResult($this->getStatementMockup(), new DummyEntity(), 10);
 
         $this->assertEquals(10, count($rows));
     }
 
     public function testEntity() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 1;
         try {
-            $rows =
-                $Mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
+            $mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
             $this->fail('Must fail due to no such property');
         } catch (DatabaseException $E) {
             // ignore
@@ -66,20 +65,19 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testSingle() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $row =
-            $Mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
+            $mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
 
         $this->assertTrue(is_object($row));
     }
 
     public function testNotFoundSingle() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 0;
         try {
-            $row =
-                $Mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
+            $mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
             $this->fail('Must throw not found exception due to empty result');
         } catch (NotFoundHttpException $e) {
             // ignore it
@@ -87,9 +85,9 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapToArray() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
-        $array = $Mapper->mapToArray(
+        $array = $mapper->mapToArray(
             $this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
             return [
                 'key'   => $entity->getId(),
@@ -119,9 +117,9 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapToArrayImplicitKey() {
-        $Mapper = new RowMapper();
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
-        $array = $Mapper->mapToArray(
+        $array = $mapper->mapToArray(
             $this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
             return [
                 'value' => $entity->getName(),
@@ -135,25 +133,64 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testBuildMethodName() {
-        $Mapper = new RowMapper();
-        $this->assertEquals('setName', $Mapper->buildMethodName('name'));
-        $this->assertEquals('setSomeName', $Mapper->buildMethodName('some_name'));
-        $this->assertEquals('setSomeName', $Mapper->buildMethodName('someName'));
-        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('some_other_name'));
-        $this->assertEquals('setSomeOtherName', $Mapper->buildMethodName('someOtherName'));
+        $mapper = new RowMapper();
+        $this->assertEquals('setName', $mapper->buildMethodName('name'));
+        $this->assertEquals('setSomeName', $mapper->buildMethodName('some_name'));
+        $this->assertEquals('setSomeName', $mapper->buildMethodName('someName'));
+        $this->assertEquals('setSomeOtherName', $mapper->buildMethodName('some_other_name'));
+        $this->assertEquals('setSomeOtherName', $mapper->buildMethodName('someOtherName'));
+    }
+
+    public function testEncryptedEntity() {
+        $mapper = $this->getRowMapper();
+
+        $encryptionService = new DefaultEncryptionService();
+        $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
+        $executor->useKey('root', 'abc-def-def-efg-ahb');
+
+        $encryptionService->useForField('name', $executor);
+        $encryptionService->makeResponsible(new EncryptedDummyEntity());
+        $mapper->addEncryptionAbility($encryptionService);
+
+        $statement = $this->getStatementMockup('encrypted');
+        $statement::$maxId = 1;
+        $entities =
+            $mapper->mapFromResult($statement, new EncryptedDummyEntity());
+        $this->assertEquals(1, count($entities));
+    }
+
+    public function getRowMapper() {
+        return new RowMapper();
     }
 }
 
 class PdoStatementDummy extends \PDOStatement {
 
-    public static $id = 0;
+    public static $mode  = 'regular';
+    public static $id    = 0;
     public static $maxId = 5;
+
+    /**
+     * PdoStatementDummy constructor.
+     */
+    public function __construct($mode = 'regular') {
+        self::$mode = $mode;
+    }
 
     public function fetch($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
         if (self::$id >= self::$maxId) {
             return false;
         }
         self::$id++;
+
+        if (self::$mode == 'encrypted') {
+            return [
+                'id'   => self::$id,
+                'name' => 'def5020043c2db90977e073bb3733481a6d8a42e9c9c5d66e7963a9d'
+                    . 'c4f4cc48b61547e3fe8c2ffadb5060b46ed0f6ad9b1d2837ab'
+                    . '858b9e855ac8d747a58450172faf65513c039f06241efaa',
+            ];
+        }
 
         return [
             'id'   => self::$id,
@@ -164,8 +201,8 @@ class PdoStatementDummy extends \PDOStatement {
 
 class DummyEntity implements Entity {
 
-    private $id;
-    private $name;
+    public $id;
+    public $name;
 
     /**
      * @return mixed
@@ -194,6 +231,11 @@ class DummyEntity implements Entity {
     public function setName($name) {
         $this->name = $name;
     }
+}
+
+class EncryptedDummyEntity extends DummyEntity {
+
+    public $name;
 }
 
 class WrongDummyEntity implements Entity {

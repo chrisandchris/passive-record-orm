@@ -5,12 +5,12 @@ use Symfony\Component\EventDispatcher\Event;
 
 /**
  * @name DatabaseEvent
- * @version   1.0.0
- * @since     v2.0.1
- * @package   RowMapperBundle
- * @author    Christian Klauenbösch <christian@klit.ch>
- * @copyright Klauenbösch IT Services
- * @link      http://www.klit.ch
+ * @version    1.0.0
+ * @lastChange v2.0.1
+ * @since      v2.0.1
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class DatabaseEvent extends Event {
 

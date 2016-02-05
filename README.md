@@ -1,20 +1,24 @@
 # symfony-rowmapper
-This bundle is a row mapper designed to use in symfony2 projects.
+
+[![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper)
+
+Despite it's name, it's not simply a row mapper. And it's not simply for Symfony.
+This project is a *QueryBuilder* and a *Mapper for SQL Result Sets*,
+both combined but still very separated, so you can use them independent.
+
+This doc gives a short overview of all the possibilities this package provides.
+We are moving the contents continuously to the `doc/` directory, so look more detailed
+information up there.
 
 ## Was it does
 * Opens and handles MySQL-Connection
 * Provides a simple interface for building prepared statements and querying the database
 * Provides a simple interface for mapping the results to classes
-* Caches the queries if required to save parsing time
-
-## What is not documented
-* How the query cache works
-* How the internals work
 
 ## Internals
 The basic internal principal is the following:
+
 * There are Types (simple key-value classes) which represent a part of a statement
-* They get appended to the query, this query could get cached
 * The query gets parsed using a Parser and the same-named snippets (they contain sql)
 * The query is returned
 
@@ -98,7 +102,9 @@ class DemoModel extends ChrisAndChris\Common\RowMapperBundle\Services\Model\Mode
 
 ### The field() method
 You could use an array for separating database, table, field:
-```field(['database', 'table', 'field'])```
+```
+field(['database', 'table', 'field'])`
+```
 
 If you fetch single fields, you must append a comma by yourself:
 ```php
@@ -206,10 +212,13 @@ You are allowed to nest ifs, and you are allowed to push a closure as parameter 
 ### Some other methods
 * f() - for functions
 * where() - build wheres
-* any() - a god-blessed star (evil SELECT *)
+* any() - a god-blessed star (evil `SELECT *`)
 * value() - a parameter
-* null() - a sql NULL
-* isNull() - compares to null using IS NULL
+* null() - a sql `NULL`
+* isNull() - compares to null using `IS NULL`
 * join() - join tables
 * using() - using clause for joined tables
 * on() -  on clause for joined tables
+* union() - create `UNION` statements
+* asLong() - creating while loop
+* each() - creating each loop

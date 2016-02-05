@@ -141,7 +141,7 @@ class SnippetBag implements BagInterface {
                     'params' => null,
                 ];
             },
-            'in' => function (array $params) {
+            'in'         => function (array $params) {
                 if (is_array($params['in'])) {
                     $code = '';
                     $count = count($params['in']);
@@ -201,11 +201,17 @@ class SnippetBag implements BagInterface {
                     throw new MalformedQueryException('Unknown join type');
                 }
 
+                $alias = null;
+                if (isset($params['alias']) && strlen($params['alias']) > 0) {
+                    $alias = ' as `' . $params['alias'] . '`';
+                }
+
                 return [
                     'code'   => strtoupper($params['type'])
                         . ' JOIN `'
                         . $params['table']
-                        . '`',
+                        . '`'
+                        . $alias,
                     'params' => null,
                 ];
             },
@@ -247,8 +253,8 @@ class SnippetBag implements BagInterface {
                 }
 
                 return [
-                    'code'   => '`' . $params['field'] . '` ' .
-                        strtoupper($params['direction']),
+                    'code'   => $this->implodeIdentifier($params['field'])
+                        . ' ' . strtoupper($params['direction']),
                     'params' => null,
                 ];
             },
@@ -284,6 +290,18 @@ class SnippetBag implements BagInterface {
                     'code'   => 'FROM `' . $table . '` ' . $alias,
                     'params' => null,
                 ];
+            },
+            'union'      => function (array $params) {
+                $mode = strtolower($params['mode']);
+                if ($mode == 'all') {
+                    return 'UNION ALL';
+                } else {
+                    if ($mode == 'distinct') {
+                        return 'UNION DISTINCT';
+                    }
+                }
+
+                return 'UNION';
             },
             'update'     => function (array $params) {
                 return [

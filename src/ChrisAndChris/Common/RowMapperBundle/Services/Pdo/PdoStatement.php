@@ -16,22 +16,23 @@ class PdoStatement extends \PDOStatement {
 
     /** @var array the list of set parameters */
     private $params = [];
-    private $mustHaveResult = false;
+    /** @var bool true if a result is required */
+    private $requiresResult = false;
 
     /**
      * @return boolean
      */
-    public function isMustHaveResult() {
-        return $this->mustHaveResult;
+    public function isResultRequired() {
+        return $this->requiresResult;
     }
 
     /**
      * Set to true if this statement must have a rowCount greater than zero
      *
-     * @param boolean $mustHaveResult
+     * @param boolean $requiresResult
      */
-    public function setMustHaveResult($mustHaveResult = true) {
-        $this->mustHaveResult = (bool)$mustHaveResult;
+    public function requiresResult($requiresResult = true) {
+        $this->requiresResult = (bool)$requiresResult;
     }
 
     /**
