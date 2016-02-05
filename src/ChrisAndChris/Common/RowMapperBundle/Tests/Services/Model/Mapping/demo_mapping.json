@@ -100,5 +100,19 @@
   "search_role_right": {
     "fields": [],
     "relations": []
+  },
+  "search_result": {
+    "fields": {
+      "search": {
+        "type": "int",
+        "key": "primary",
+        "extra": null
+      },
+      "primary:kez": {
+        "type": "int",
+        "key": null,
+        "extra": null
+      }
+    }
   }
 }

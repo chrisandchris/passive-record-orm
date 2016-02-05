@@ -1,12 +1,15 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
+use ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingInitFailedException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * @name MappingHandler
@@ -20,22 +23,35 @@ class MappingRepository {
 
     /** @var \stdClass */
     private $mapping;
+    /** @var DatabaseMapperCommand */
+    private $databaseMapper;
 
-    public function __construct($cacheDir, $dir, $filename = 'mapping.json')
+    public function __construct($cacheDir, $dir, $filename = 'mapping.json', DatabaseMapperCommand $command = null)
     {
+        $this->databaseMapper = $command;
         $this->setMapping($cacheDir . '/' . $dir . '/' . basename($filename));
     }
 
-    public function setMapping($mapping) {
+    public function setMapping($mapping, $forceException = false)
+    {
         if (is_file($mapping)) {
             $mapping = file_get_contents($mapping);
         } else {
+            if ($this->databaseMapper instanceof DatabaseMapperCommand && !$forceException) {
+                $this->runMapper();
+                $this->setMapping($mapping, true);
+            }
             throw new MappingInitFailedException(sprintf(
                 'No file found at path "%s"',
                 $mapping
             ));
         }
         $this->mapping = json_decode($mapping, true);
+    }
+
+    private function runMapper()
+    {
+        $this->databaseMapper->run(new ArrayInput([]), new NullOutput());
     }
 
     /**
@@ -73,8 +89,8 @@ class MappingRepository {
     public function hasTable($table) {
         if (!isset($this->mapping[$table])) {
             throw new NoSuchTableException(sprintf(
-                    'No table named "%s" found',
-                    $table
+                'No table named "%s" found',
+                $table
             ));
         }
     }

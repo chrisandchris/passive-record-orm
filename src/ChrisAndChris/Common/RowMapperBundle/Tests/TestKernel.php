@@ -1,117 +1,57 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-
 /**
- * Kernel used for any unit test, extend always for any test you write
- *
  * @name TestKernel
- * @version   3
+ * @version   4
  * @since     v1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-abstract class TestKernel extends WebTestCase
+abstract class TestKernel extends \PHPUnit_Framework_TestCase
 {
-
-    /**
-     * @var \AppKernel
-     */
-    protected $appKernel;
-    /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    /**
-     * This method is run before each test<br>
-     * Please avoid overriding this class, it provides the schema initialization and creates the
-     * AppKernel and the client
-     */
-    public function setUp()
-    {
-        $this->appKernel = static::createKernel();
-        $this->appKernel->boot();
-
-        $this->container = $this->appKernel->getContainer();
-
-        parent::setUp();
-        $this->setUpClass();
-        $this->beforeEachTest();
-    }
-
-    /**
-     * Set up the test kernel class<br>
-     * Do not override, please use beforeEachTest()
-     */
-    protected function setUpClass()
-    {
-        if (ini_get('max_execution_time') != -1) {
-            ini_set('max_execution_time', '-1');
-        }
-        ini_set('display_errors', 'stderr');
-        error_reporting(E_ALL);
-    }
-
-    /**
-     * Override this method to provide functionality before each test
-     */
-    protected function beforeEachTest()
-    {
-        // do nothing
-    }
-
-    /**
-     * This method is run after each test
-     */
-    public function tearDown()
-    {
-        if (is_object($this->appKernel)) {
-            $this->appKernel->shutdown();
-        }
-        parent::tearDown();
-    }
 
     /**
      * Compare given properties of two objects
      *
-     * @param object $A
-     * @param object $B
+     * @param object $left
+     * @param object $right
      * @param array  $properties
      */
-    protected function compareProperties($A, $B, array $properties)
+    protected function compareProperties($left, $right, array $properties)
     {
-        if (!is_object($A) || !is_object($B)) {
+        if (!is_object($left) || !is_object($right)) {
             $this->fail('You must give me two objects');
         }
-        $ClassA = new \ReflectionClass($A);
-        $ClassB = new \ReflectionClass($B);
+        $leftClass = new \ReflectionClass($left);
+        $rightClass = new \ReflectionClass($right);
 
-        if (!($A instanceof $B)) {
+        if (!($left instanceof $right)) {
             $this->fail('A and B must have same type');
         }
         foreach ($properties as $property) {
             try {
-                $PropertyA = $ClassA->getProperty($property);
-                $PropertyA->setAccessible(true);
-                $PropertyB = $ClassB->getProperty($property);
-                $PropertyB->setAccessible(true);
+                $leftProperty = $leftClass->getProperty($property);
+                $leftProperty->setAccessible(true);
+                $rightProperty = $rightClass->getProperty($property);
+                $rightProperty->setAccessible(true);
 
-                if (is_scalar($PropertyA->getValue($A)) && is_scalar($PropertyB->getValue($B))) {
-                    $message = "Property '" . $property . "' not equal ('" . $PropertyA->getValue($A) . "' vs '"
-                        . $PropertyB->getValue($B) . "')";
+                if (is_scalar($leftProperty->getValue($left)) && is_scalar($rightProperty->getValue($right))) {
+                    $message = sprintf('Property "%s" not equal ("%s" vs "%s")',
+                        $property,
+                        $leftProperty->getValue($left),
+                        $rightProperty->getValue($right)
+                    );
                 } else {
                     $message = null;
                 }
                 $this->assertEquals(
-                    $PropertyA->getValue($A),
-                    $PropertyB->getValue($B),
+                    $leftProperty->getValue($left),
+                    $rightProperty->getValue($right),
                     $message);
-            } catch (\ReflectionException $E) {
-                $this->fail($E->getMessage());
+            } catch (\ReflectionException $exception) {
+                $this->fail($exception->getMessage());
             }
         }
     }
