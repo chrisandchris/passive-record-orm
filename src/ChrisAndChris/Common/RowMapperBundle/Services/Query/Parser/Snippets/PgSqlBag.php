@@ -1,8 +1,11 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @name PgSqlBag
@@ -12,7 +15,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class PgSqlBag
+class PgSqlBag implements BagInterface, EventSubscriberInterface
 {
 
     /** @var array */
@@ -341,13 +344,13 @@ class PgSqlBag
     {
         // $identifier = 'database:table:field
         if (!is_array($identifier) && strstr($identifier, ':') !== false) {
-            return '' . implode('.', explode(':', $identifier)) . '';
+            return implode('.', explode(':', $identifier));
         } else {
             if (is_array($identifier)) {
-                return '' . implode('.', $identifier) . '';
+                return implode('.', $identifier);
             } else {
                 if (is_string($identifier)) {
-                    return '' . $identifier . '';
+                    return $identifier;
                 }
             }
         }
@@ -358,11 +361,16 @@ class PgSqlBag
     /**
      * @inheritDoc
      */
-    function getCompatibleSystem()
+    public static function getSubscribedEvents()
     {
         return [
-            'mysql',
+            ['onCollectorEvent', 10],
         ];
+    }
+
+    public function onCollectorEvent(SnippetBagEvent $event)
+    {
+        $event->add($this, ['pgsql']);
     }
 
     /**

@@ -58,10 +58,12 @@ class PdoLayer extends \PDO
     /**
      * Create a dsn
      *
-     * @param string $system   the system to connect to (sqlite|mysql)
+     * @param string $system   the system to connect to (sqlite|mysql|pgsql)
      * @param string $host     the host
      * @param string $port     the port
      * @param string $database the database name
+     * @param string $username
+     * @param string $password
      * @return null|string
      */
     public function getDsn($system, $host, $port, $database, $username, $password)

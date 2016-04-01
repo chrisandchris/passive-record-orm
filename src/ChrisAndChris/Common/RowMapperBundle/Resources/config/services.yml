@@ -26,11 +26,11 @@ services:
   common_rowmapper.snippetbag.mysql:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag
     tags:
-      - { events: kernel.event_subscriber }
+      - { name: kernel.event_subscriber }
   common_rowmapper.snippetbag.pgsql:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
-      tags:
-        - { events: kernel.event_subscriber }
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
+    tags:
+      - { name: kernel.event_subscriber }
   common_rowmapper.utility.mapper:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
     arguments: [@common_rowmapper.dependencyprovider]
