@@ -1,29 +1,35 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser;
+namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @name SnippetBag
- * @version   1.0.0
- * @since     v2.0.2
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.1.0
+ * @since      v2.0.2
+ * @lastChange v2.2.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
-class SnippetBag implements BagInterface {
+class MySqlBag implements BagInterface, EventSubscriberInterface
+{
 
     /** @var array */
     private $snippets = [];
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->init();
     }
 
-    private function init() {
+    private function init()
+    {
         $this->snippets = [
             'select'     => function () {
                 return [
@@ -336,7 +342,8 @@ class SnippetBag implements BagInterface {
         ];
     }
 
-    private function implodeIdentifier($identifier) {
+    private function implodeIdentifier($identifier)
+    {
         // $identifier = 'database:table:field
         if (!is_array($identifier) && strstr($identifier, ':') !== false) {
             return '`' . implode('`.`', explode(':', $identifier)) . '`';
@@ -354,12 +361,28 @@ class SnippetBag implements BagInterface {
     }
 
     /**
+     * @inheritDoc
+     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            ['onCollectorEvent', 10],
+        ];
+    }
+
+    public function onCollectorEvent(SnippetBagEvent $event)
+    {
+        $event->add($this, ['mysql']);
+    }
+
+    /**
      * @param string   $name
      * @param \Closure $parser
      * @return void
      * @throws InvalidOptionException if no closure is given
      */
-    public function set($name, $parser) {
+    public function set($name, $parser)
+    {
         if ($parser instanceof \Closure) {
             throw new InvalidOptionException(
                 'You must give closure as parser for snippet "' . $name . '"'
@@ -371,7 +394,8 @@ class SnippetBag implements BagInterface {
     /**
      * @inheritdoc
      */
-    public function get($name) {
+    public function get($name)
+    {
         if (!isset($this->snippets[$name])) {
             throw new TypeNotFoundException(
                 'No snippet named "' . $name . '" known'
@@ -384,14 +408,16 @@ class SnippetBag implements BagInterface {
     /**
      * @inheritDoc
      */
-    function getAll() {
+    function getAll()
+    {
         return $this->snippets;
     }
 
     /**
      * @inheritDoc
      */
-    function has($name) {
+    function has($name)
+    {
         return isset($this->snippets[$name]);
     }
 }

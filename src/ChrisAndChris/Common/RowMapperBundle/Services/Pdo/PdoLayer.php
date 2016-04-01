@@ -46,6 +46,7 @@ class PdoLayer extends \PDO
             case 'pgsql' :
             case 'pg' :
             case 'postgres' :
+            case 'pdo_pgsql' :
                 return 'pgsql';
             case 'pdo_mysql' :
             case 'mysqli' :

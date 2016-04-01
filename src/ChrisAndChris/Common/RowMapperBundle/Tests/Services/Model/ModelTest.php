@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
@@ -9,10 +10,11 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name ModelTest
@@ -41,11 +43,21 @@ class ModelTest extends TestKernel {
      * @return Model
      */
     private function getModel() {
+        /** @var EventDispatcherInterface $ed */
+        $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')
+                   ->disableOriginalConstructor()
+                   ->getMock();
+        $event = new SnippetBagEvent();
+        $event->add(new MySqlBag(), ['mysql']);
+        $ed->method('dispatch')
+           ->willReturn($event);
+        $parser = new DefaultParser($ed, 'mysql');
+        
         $provider = new ModelDependencyProvider(
             new PdoLayer('sqlite', 'sqlite.db'),
             new RowMapperFactory(new EventDispatcher()),
             new ErrorHandler(),
-            new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag())
+            new BuilderFactory($parser, new TypeBag())
         );
 
         $model = new EmptyModel($provider);
