@@ -1,6 +1,7 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
@@ -366,7 +367,7 @@ class MySqlBag implements BagInterface, EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            ['onCollectorEvent', 10],
+            RowMapperEvents::SNIPPET_COLLECTOR => ['onCollectorEvent', 10],
         ];
     }
 
