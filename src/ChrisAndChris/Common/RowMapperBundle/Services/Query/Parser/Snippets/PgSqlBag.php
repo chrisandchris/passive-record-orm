@@ -213,7 +213,7 @@ class PgSqlBag implements SnippetBagInterface
                 return [
                     'code'   => strtoupper($params['type'])
                         . ' JOIN '
-                        . $params['table']
+                        . $this->implodeIdentifier($params['table'])
                         . ''
                         . $alias,
                     'params' => null,
@@ -314,8 +314,18 @@ class PgSqlBag implements SnippetBagInterface
                 ];
             },
             'using'      => function (array $params) {
+                if (is_array($params['field'])) {
+                    $using = [];
+                    foreach ($params['field'] as $field) {
+                        $using[] = $this->implodeIdentifier($field);
+                    }
+                    $using = implode(', ', $using);
+                } else {
+                    $using = $params['field'];
+                }
+
                 return [
-                    'code'   => 'USING(' . $params['field'] . ')',
+                    'code'   => 'USING(' . $using . ')',
                     'params' => null,
                 ];
             },

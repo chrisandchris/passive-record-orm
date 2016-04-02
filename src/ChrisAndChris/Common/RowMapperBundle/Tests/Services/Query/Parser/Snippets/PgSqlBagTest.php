@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser\Snippets;
 
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag;
-use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name PgSqlBagTest
@@ -13,7 +12,7 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class PgBagTest extends TestKernel
+class PgBagTest extends GeneralBagTest
 {
 
     public function testEventSubscriber()

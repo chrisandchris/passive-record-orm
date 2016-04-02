@@ -51,9 +51,8 @@ class MySqlMapper implements MapperInterface
      */
     public function onCollectorEvent(MapperEvent $event)
     {
-        $event->add($event, 'mysql');
+        $event->add($this, ['mysql']);
     }
-
 
     public function getFields($schema, $table) {
         if (isset($this->fields[$schema]) &&

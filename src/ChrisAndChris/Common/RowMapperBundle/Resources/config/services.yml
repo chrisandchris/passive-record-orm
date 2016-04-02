@@ -31,9 +31,16 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
     tags:
       - { name: kernel.event_subscriber }
-  common_rowmapper.utility.mapper:
+  common_rowmapper.utility.mapper.mysql:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\MySqlMapper
     arguments: [@common_rowmapper.model]
+    tags:
+          - { name: kernel.event_subscriber }
+  common_rowmapper.utility.mapper.pgsql:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\PgSqlMapper
+      arguments: [@common_rowmapper.model]
+      tags:
+            - { name: kernel.event_subscriber }
   common_rowmapper.utilty.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: [%kernel.cache_dir%, 'common_rowmapper']

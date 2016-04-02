@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser\Snippets;
 
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
-use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name MySqlBagTest
@@ -13,7 +12,7 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class MySqlBagTest extends TestKernel
+class MySqlBagTest extends GeneralBagTest
 {
 
     public function testEventSubscriber()
@@ -27,5 +26,30 @@ class MySqlBagTest extends TestKernel
             $this->assertTrue(is_array($methods));
             $this->assertTrue(method_exists($bag, $methods[0]));
         }
+    }
+
+    public function testBags()
+    {
+        parent::testBags();
+    }
+
+    public function getBagsToTest()
+    {
+        return [
+            new MySqlBag(),
+        ];
+    }
+
+    public function getTests()
+    {
+        return [
+            [  // does not support arrays for using clause
+               'using',
+               [
+                   'field' => ['schema', 'table'],
+               ],
+               '\ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException',
+            ],
+        ];
     }
 }

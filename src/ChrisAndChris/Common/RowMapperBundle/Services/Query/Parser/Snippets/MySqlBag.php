@@ -214,9 +214,8 @@ class MySqlBag implements SnippetBagInterface
 
                 return [
                     'code'   => strtoupper($params['type'])
-                        . ' JOIN `'
-                        . $params['table']
-                        . '`'
+                        . ' JOIN '
+                        . $this->implodeIdentifier($params['table'])
                         . $alias,
                     'params' => null,
                 ];
@@ -316,6 +315,12 @@ class MySqlBag implements SnippetBagInterface
                 ];
             },
             'using'      => function (array $params) {
+                if (is_array($params['field'])) {
+                    throw new InvalidOptionException(
+                        'Field list for using() clause cannot be array when using MySQL'
+                    );
+                }
+
                 return [
                     'code'   => 'USING(`' . $params['field'] . '`)',
                     'params' => null,

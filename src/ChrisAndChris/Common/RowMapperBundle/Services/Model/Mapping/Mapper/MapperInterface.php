@@ -18,10 +18,24 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 interface MapperInterface extends EventSubscriberInterface
 {
 
+    /**
+     * @param $schema
+     * @param $table
+     * @return array
+     */
     public function getFields($schema, $table);
 
+    /**
+     * @param $schema
+     * @return array
+     */
     public function getTables($schema);
 
+    /**
+     * @param $schema
+     * @param $table
+     * @return array
+     */
     public function getRelations($schema, $table);
 
     /**
