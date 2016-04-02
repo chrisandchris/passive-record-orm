@@ -2,6 +2,8 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
 
 /**
+ * Interface implemented by snippet and type bags
+ *
  * @name BagInterface
  * @version    1.1.0
  * @since      v2.0.2

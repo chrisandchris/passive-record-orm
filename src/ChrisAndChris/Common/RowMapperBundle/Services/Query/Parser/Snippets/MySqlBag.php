@@ -6,11 +6,10 @@ use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * @name SnippetBag
+ * @name MySqlBag
  * @version    1.1.0
  * @since      v2.0.2
  * @lastChange v2.2.0
@@ -18,7 +17,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class MySqlBag implements BagInterface, EventSubscriberInterface
+class MySqlBag implements SnippetBagInterface
 {
 
     /** @var array */

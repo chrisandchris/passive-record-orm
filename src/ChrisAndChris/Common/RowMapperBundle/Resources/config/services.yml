@@ -32,8 +32,8 @@ services:
     tags:
       - { name: kernel.event_subscriber }
   common_rowmapper.utility.mapper:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
-    arguments: [@common_rowmapper.dependencyprovider]
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\MySqlMapper
+    arguments: [@common_rowmapper.model]
   common_rowmapper.utilty.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: [%kernel.cache_dir%, 'common_rowmapper']

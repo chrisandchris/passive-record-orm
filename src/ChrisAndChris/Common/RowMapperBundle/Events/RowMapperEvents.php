@@ -16,4 +16,9 @@ final class RowMapperEvents
      * Fired to collect snippet bags
      */
     const SNIPPET_COLLECTOR = 'common.rowmapper.collect_snippets';
+
+    /**
+     * Fired to collect mappers
+     */
+    const MAPPER_COLLECTOR = 'common.rowmapper.collect_mapper';
 }

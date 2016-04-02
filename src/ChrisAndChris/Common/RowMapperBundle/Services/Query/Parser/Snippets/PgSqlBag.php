@@ -5,7 +5,6 @@ use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -16,7 +15,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class PgSqlBag implements BagInterface, EventSubscriberInterface
+class PgSqlBag implements SnippetBagInterface
 {
 
     /** @var array */
@@ -94,7 +93,7 @@ class PgSqlBag implements BagInterface, EventSubscriberInterface
             },
             'delete'     => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM ' . $params['table'] . '',
+                    'code'   => 'DELETE FROM ' . $params['table'],
                     'params' => null,
                 ];
             },
