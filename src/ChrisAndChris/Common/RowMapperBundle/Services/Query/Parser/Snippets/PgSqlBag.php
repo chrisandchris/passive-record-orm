@@ -4,16 +4,17 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @name PgSqlBag
- * @version   1.0.0
- * @since     v2.2.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.0.0
+ * @since      v2.2.0
+ * @lastChange v2.2.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
 class PgSqlBag implements SnippetBagInterface
 {
@@ -354,13 +355,13 @@ class PgSqlBag implements SnippetBagInterface
     {
         // $identifier = 'database:table:field
         if (!is_array($identifier) && strstr($identifier, ':') !== false) {
-            return implode('.', explode(':', $identifier));
+            return '"' . implode('"."', explode(':', $identifier)) . '"';
         } else {
             if (is_array($identifier)) {
-                return implode('.', $identifier);
+                return '"' . implode('"."', $identifier) . '"';
             } else {
                 if (is_string($identifier)) {
-                    return $identifier;
+                    return '"' . $identifier . '"';
                 }
             }
         }

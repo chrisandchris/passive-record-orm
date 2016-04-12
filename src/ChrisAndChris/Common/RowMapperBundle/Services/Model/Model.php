@@ -130,6 +130,17 @@ abstract class Model {
      */
     protected function prepare(SqlQuery $query) {
         $stmt = $this->createStatement($query->getQuery());
+        foreach ($query->getParameters() as $id => $parameter) {
+            $bindType = \PDO::PARAM_STR;
+            if ($parameter === true || $parameter === false) {
+                $bindType = \PDO::PARAM_BOOL;
+            } elseif ($parameter === null) {
+                $bindType = \PDO::PARAM_NULL;
+            } elseif (is_numeric($parameter)) {
+                $bindType = \PDO::PARAM_INT;
+            }
+            $stmt->bindValue(++$id, $parameter, $bindType);
+        }
         $this->bindValues($stmt, $query);
         $stmt->requiresResult($query->isResultRequired());
 
@@ -393,25 +404,36 @@ abstract class Model {
      * Runs a simple query, returning the last insert id on success
      *
      * @param SqlQuery $query
+     * @param string   $sequence the sequence to return the last insert id for
      * @return int
      */
-    protected function runWithLastId(SqlQuery $query) {
-        return $this->handleWithLastInsertId($this->prepare($query));
+    protected function runWithLastId(SqlQuery $query, $sequence = null)
+    {
+        return $this->handleWithLastInsertId($this->prepare($query), $sequence);
     }
 
     /**
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $statement
+     * @param string       $sequence the sequence to return the last insert id for
      * @return int
      */
-    private function handleWithLastInsertId(PdoStatement $statement) {
+    private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
+    {
         return $this->handleGeneric(
             $statement,
-            function () {
+            function () use ($sequence) {
+
+                if (strstr($sequence, ':')) {
+                    $sequence = explode(':', $sequence);
+                    array_push($sequence, '_seq');
+                    $sequence = implode('_', $sequence);
+                }
+
                 return $this->getDependencyProvider()
                             ->getPdo()
-                            ->lastInsertId();
+                            ->lastInsertId($sequence);
             }
         );
     }
