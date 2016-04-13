@@ -3,6 +3,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\KeyValueEntity;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
@@ -11,7 +12,6 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
@@ -141,7 +141,6 @@ abstract class Model {
             }
             $stmt->bindValue(++$id, $parameter, $bindType);
         }
-        $this->bindValues($stmt, $query);
         $stmt->requiresResult($query->isResultRequired());
 
         return $stmt;
@@ -166,19 +165,6 @@ abstract class Model {
      */
     protected function getDependencyProvider() {
         return $this->dependencyProvider;
-    }
-
-    /**
-     * Binds values of the query to the statement
-     *
-     * @param PdoStatement $stmt
-     * @param SqlQuery     $query
-     */
-    private function bindValues(PdoStatement $stmt, SqlQuery $query)
-    {
-        foreach ($query->getParameters() as $id => $value) {
-            $stmt->bindValue(++$id, $value);
-        }
     }
 
     /**
@@ -217,6 +203,7 @@ abstract class Model {
      *                                           statement as first and only
      *                                           argument
      * @return bool
+     * @throws NoSuchRowFoundException
      */
     private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
     {
@@ -226,7 +213,7 @@ abstract class Model {
             if ($statement->rowCount() === 0 &&
                 ($mustHaveRow || $statement->isResultRequired())
             ) {
-                throw new NotFoundHttpException("No row found with query");
+                throw new NoSuchRowFoundException("No row found with query");
             }
 
             return $mappingCallback($statement);
@@ -427,7 +414,7 @@ abstract class Model {
 
                 if (strstr($sequence, ':')) {
                     $sequence = explode(':', $sequence);
-                    array_push($sequence, '_seq');
+                    array_push($sequence, 'seq');
                     $sequence = implode('_', $sequence);
                 }
 
