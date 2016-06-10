@@ -12,7 +12,6 @@
          timeoutForSmallTests="60"
          timeoutForMediumTests="90"
          timeoutForLargeTests="150"
-         checkForUnintentionallyCoveredCode="true"
         >
     <!-- disabled coverage due to error in travis hhvm
     <logging>

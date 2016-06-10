@@ -13,13 +13,14 @@ use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * @name MappingHandler
- * @version    1.0.0
+ * @version    1.0.1
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class MappingRepository {
+class MappingRepository
+{
 
     /** @var \stdClass */
     private $mapping;
@@ -61,7 +62,8 @@ class MappingRepository {
      * @throws NoSuchColumnException
      * @throws NoSuchTableException
      */
-    public function hasColumns($table, $columns) {
+    public function hasColumns($table, $columns)
+    {
         $this->hasTable($table);
 
         if (!is_array($columns)) {
@@ -86,7 +88,8 @@ class MappingRepository {
      * @return void
      * @throws NoSuchTableException
      */
-    public function hasTable($table) {
+    public function hasTable($table)
+    {
         if (!isset($this->mapping[$table])) {
             throw new NoSuchTableException(sprintf(
                 'No table named "%s" found',
@@ -103,12 +106,39 @@ class MappingRepository {
     }
 
     /**
-     * @param     $table
-     * @param int $deepness
-     * @return Relation[] key is table; value is 0: source field, 1: target field
-     * @throws NoSuchTableException
+     * @param      $table
+     * @param int  $deepness
+     * @param bool $withAliases
+     * @return Relation[] an array of relations
      */
     public function getRecursiveRelations($table, $deepness = 1, $withAliases = true)
+    {
+        $relations = $this->buildRecursiveRelations($table, $deepness, $withAliases);
+
+        foreach ($this->mapping as $mappedTable => $mapping) {
+            if (!isset($mapping['relations'])) {
+                break;
+            }
+            foreach ($mapping['relations'] as $relation) {
+                if ($relation['target'][0] == $table) {
+                    if ($this->getTableIndex($mappedTable, false)) {
+                        break;
+                    }
+                    $entity = new Relation();
+                    $entity->source = $table;
+                    $entity->target = $mappedTable;
+                    $entity->alias = $this->getTableAlias($entity);
+                    $entity->sourceField = $relation['target'][1];
+                    $entity->targetField = $relation['source'];
+                    $relations[] = $entity;
+                }
+            }
+        }
+
+        return $relations;
+    }
+
+    private function buildRecursiveRelations($table, $deepness, $withAliases)
     {
         if ($deepness === 0) {
             return [];
@@ -119,7 +149,7 @@ class MappingRepository {
         } else {
             $alias = $table;
         }
-
+        /** @var string $table */
         $relations = [];
         foreach ($this->mapping[$table]['relations'] as $relation) {
             $entity = new Relation();
@@ -128,20 +158,18 @@ class MappingRepository {
             $entity->sourceField = $relation['source'];
             $entity->targetField = $relation['target'][1];
             if ($withAliases) {
-                $entity->alias = implode(null, [
-                    $entity->target,
-                    '_alias_',
-                    $this->getTableIndex($entity->target),
-                ]);
+                $entity->alias = $this->getTableAlias($entity);
             } else {
                 $entity->alias = $entity->target;
             }
 
             $relations[] = $entity;
-            foreach ($this->getRecursiveRelations([
-                $entity->target,
-                $entity->alias,
-            ], $deepness - 1) as $recursiveRelation) {
+            foreach ($this->buildRecursiveRelations(
+                [
+                    $entity->target,
+                    $entity->alias,
+                ], $deepness - 1, $withAliases
+            ) as $recursiveRelation) {
                 $relations[] = $recursiveRelation;
             };
         }
@@ -149,7 +177,22 @@ class MappingRepository {
         return $relations;
     }
 
-    private function getTableIndex($table)
+    /**
+     * @param Relation $relation
+     * @return string
+     */
+    private function getTableAlias(Relation $relation)
+    {
+        return implode(
+            null, [
+                $relation->target,
+                '_alias_',
+                $this->getTableIndex($relation->target),
+            ]
+        );
+    }
+
+    private function getTableIndex($table, $increase = true)
     {
         static $tableIndexes = [];
 
@@ -157,6 +200,10 @@ class MappingRepository {
             $tableIndexes[$table] = 0;
 
             return $this->getTableIndex($table);
+        }
+
+        if (!$increase) {
+            return $tableIndexes[$table];
         }
 
         return $tableIndexes[$table]++;
@@ -180,7 +227,8 @@ class MappingRepository {
      * @throws NoPrimaryKeyFoundException
      * @throws NoSuchTableException
      */
-    public function getPrimaryKeyOfTable($table) {
+    public function getPrimaryKeyOfTable($table)
+    {
         $this->hasTable($table);
 
         foreach ($this->getRawFields($table) as $field => $option) {
@@ -197,7 +245,8 @@ class MappingRepository {
         );
     }
 
-    private function getRawFields($table) {
+    private function getRawFields($table)
+    {
         $this->hasTable($table);
 
         return $this->mapping[$table]['fields'];
@@ -205,7 +254,8 @@ class MappingRepository {
 
     /**
      * @param        $table
-     * @param string $alias if not null, use this value as alias for the table name
+     * @param string $alias if not null, use this value as alias for the table
+     *                      name
      * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field[]
      * @throws NoSuchTableException
      */

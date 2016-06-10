@@ -12,7 +12,6 @@
          timeoutForSmallTests="60"
          timeoutForMediumTests="90"
          timeoutForLargeTests="150"
-         checkForUnintentionallyCoveredCode="true"
         >
     <logging>
         <log type="coverage-html" target="report" lowUpperBound="35"
