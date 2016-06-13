@@ -116,7 +116,8 @@ class MappingRepository
         $relations = $this->buildRecursiveRelations($table, $deepness, $withAliases);
 
         foreach ($this->mapping as $mappedTable => $mapping) {
-            if (!isset($mapping['relations'])) {
+            // @todo improve this, there might be a better solution to prevent incredibly long queries
+            if (!isset($mapping['relations']) || count($relations) > 5) {
                 break;
             }
             foreach ($mapping['relations'] as $relation) {
