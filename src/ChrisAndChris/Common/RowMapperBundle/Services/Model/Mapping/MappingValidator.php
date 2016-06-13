@@ -96,7 +96,7 @@ class MappingValidator {
         if (count($joinedTables) !== $count) {
             throw new NoSuchTableException(sprintf(
                 'There are invalid joins (at least %d)',
-                $count
+                cuunt($joinedTables) - $count
             ));
         }
     }
