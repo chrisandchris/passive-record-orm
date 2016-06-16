@@ -158,9 +158,9 @@ class RowMapper
             }
         };
 
-        $count = 0;
+        $count = count(get_object_vars($entity));
         foreach ($row as $field => $value) {
-            $count += $entityFiller($entity, $field, $value);
+            $count -= $entityFiller($entity, $field, $value);
         }
 
         if ($entity instanceof PopulateEntity) {
@@ -168,13 +168,13 @@ class RowMapper
                 MappingEvents::POST_MAPPING_ROW_POPULATION,
                 new PopulationEvent($entity, $entityFiller)
             );
-            $count += $event->getWrittenFieldCount();
+            $count -= $event->getWrittenFieldCount();
         }
 
-        if ($entity instanceof StrictEntity && count($row) != $count) {
+        if ($entity instanceof StrictEntity && $count != 0) {
             throw new InsufficientPopulationException(
                 sprintf(
-                    'Requires entity "%s" to get populated for %d fields, but did only %d',
+                    'Tried entity "%s" to populate for %d fields, and left %d not populated',
                     get_class($entity),
                     count($row),
                     $count
