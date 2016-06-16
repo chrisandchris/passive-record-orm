@@ -109,14 +109,16 @@ class MappingRepository
      * @param      $table
      * @param int  $deepness
      * @param bool $withAliases
-     * @return Relation[] an array of relations
+     * @param bool $allRelations if set to false, only 8 relations are returned (performace issues...)
+     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation[] an array of relations
      */
-    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true)
+    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true, $allRelations = false)
     {
         $relations = $this->buildRecursiveRelations($table, $deepness, $withAliases);
 
         foreach ($this->mapping as $mappedTable => $mapping) {
-            if (!isset($mapping['relations'])) {
+            // @todo improve this, there might be a better solution to prevent incredibly long queries
+            if (!isset($mapping['relations']) || (count($relations) > 8) && !$allRelations) {
                 break;
             }
             foreach ($mapping['relations'] as $relation) {
@@ -273,5 +275,32 @@ class MappingRepository
         }
 
         return $fields;
+    }
+
+    /**
+     * @param string $rootTable
+     * @param Relation[] $joinedTables
+     */
+    public function completeJoins($rootTable, $joinedTables) {
+        $relations = $this->getRecursiveRelations($rootTable, 1, true, true);
+        $count = 0;
+        foreach ($joinedTables as $join) {
+            foreach ($relations as $relation) {
+                if ($relation->target == $join->target) {
+                    if ($join->source == null) {
+                        $join->source = $rootTable;
+                    }
+                    if ($join->sourceField == null) {
+                        $join->sourceField=$relation->sourceField;
+                    }
+                    if ($join->targetField == null) {
+                        $join->targetField=$relation->targetField;
+                    }
+                    $join->alias = $this->getTableAlias($relation);
+                    $count++;
+                    break;
+                }
+            }
+        }
     }
 }
