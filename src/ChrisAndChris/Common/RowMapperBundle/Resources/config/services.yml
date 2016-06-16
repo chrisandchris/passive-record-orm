@@ -37,8 +37,6 @@ services:
     arguments: [%kernel.cache_dir%, 'common_rowmapper', 'mapping.json', @common_rowmapper.command.database_mapper]
   common_rowmapper.command.database_mapper:
     class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
-    calls:
-        - [setContainer, [@service_container]]
   common_rowmapper.search.result_utility:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
     arguments: [@common_rowmapper.dependencyprovider]
