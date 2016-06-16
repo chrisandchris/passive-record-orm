@@ -28,8 +28,6 @@ class PopulationEvent extends Event
      * @var int
      */
     private $fieldCount;
-    /** @var [] */
-    private $context;
 
     /**
      * PopulationEvent constructor.
@@ -67,31 +65,5 @@ class PopulationEvent extends Event
     public function getWrittenFieldCount()
     {
         return $this->fieldCount;
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     */
-    public function addContext($key, $value)
-    {
-        $this->context[$key] = $value;
-    }
-
-    /**
-     * @param $key
-     * @return mixed
-     * @throws MissingContextException
-     */
-    public function getContext($key)
-    {
-        if (isset($this->context[$key])) {
-            return $this->context[$key];
-        }
-
-        throw new MissingContextException(sprintf(
-            'Required context value for %s, but no such key ever set',
-            $key
-        ));
     }
 }
