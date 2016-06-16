@@ -5,8 +5,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name RowMapperFactory
- * @version    1.0.0
- * @lastChange v2.1.0
+ * @version    1.0.1
+ * @lastChange v2.1.1
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris

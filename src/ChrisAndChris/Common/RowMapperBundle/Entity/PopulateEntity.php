@@ -11,7 +11,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Entity;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class PopulateEntity
+interface PopulateEntity
 {
 
 }
