@@ -8,15 +8,18 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 
 /**
  * @name ErrorHandler
- * @version   1.0.0
- * @since     v2.0.0
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.0.0
+ * @since      v2.0.0
+ * @lastChange v2.2.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
-class ErrorHandler {
+class ErrorHandler
+{
 
     private $databaseExceptions = [
+        'HY000',    // general error
         'HY093',    // pdo not enough values bound
         1064,       // syntax error
         1054        // unknown column
@@ -31,7 +34,7 @@ class ErrorHandler {
         1216,
         1217,
         1451,
-        1452
+        1452,
     ];
 
     /**
@@ -45,16 +48,26 @@ class ErrorHandler {
      * @throws UniqueConstraintException thrown if this is an unique constraint error
      * @throws GeneralDatabaseException thrown otherwise
      */
-    public function handle($errorNum, $errorText) {
+    public function handle($errorNum, $errorText)
+    {
         if (in_array($errorNum, $this->databaseExceptions)) {
-            throw new DatabaseException($errorText);
+            throw new DatabaseException($this->getErrorText($errorText, $errorNum));
         }
         if (in_array($errorNum, $this->uniqueConstraintExceptions)) {
-            throw new UniqueConstraintException($errorText);
+            throw new UniqueConstraintException($this->getErrorText($errorText, $errorNum));
         }
         if (in_array($errorNum, $this->foreignKeyConstraintExceptions)) {
-            throw new ForeignKeyConstraintException($errorText);
+            throw new ForeignKeyConstraintException($this->getErrorText($errorText, $errorNum));
         }
-        throw new GeneralDatabaseException($errorText);
+        throw new GeneralDatabaseException($this->getErrorText($errorText, $errorNum));
+    }
+
+    private function getErrorText($errorText, $errorNum)
+    {
+        return sprintf(
+            'Error "%s" with code "%s"',
+            $errorText,
+            $errorNum
+        );
     }
 }

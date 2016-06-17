@@ -3,6 +3,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\KeyValueEntity;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
@@ -11,7 +12,6 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
@@ -139,7 +139,17 @@ abstract class Model
     protected function prepare(SqlQuery $query)
     {
         $stmt = $this->createStatement($query->getQuery());
-        $this->bindValues($stmt, $query);
+        foreach ($query->getParameters() as $id => $parameter) {
+            $bindType = \PDO::PARAM_STR;
+            if ($parameter === true || $parameter === false) {
+                $bindType = \PDO::PARAM_BOOL;
+            } elseif ($parameter === null) {
+                $bindType = \PDO::PARAM_NULL;
+            } elseif (is_numeric($parameter)) {
+                $bindType = \PDO::PARAM_INT;
+            }
+            $stmt->bindValue(++$id, $parameter, $bindType);
+        }
         $stmt->requiresResult($query->isResultRequired());
 
         return $stmt;
@@ -166,19 +176,6 @@ abstract class Model
     protected function getDependencyProvider()
     {
         return $this->dependencyProvider;
-    }
-
-    /**
-     * Binds values of the query to the statement
-     *
-     * @param PdoStatement $stmt
-     * @param SqlQuery     $query
-     */
-    private function bindValues(PdoStatement $stmt, SqlQuery $query)
-    {
-        foreach ($query->getParameters() as $id => $value) {
-            $stmt->bindValue(++$id, $value);
-        }
     }
 
     /**
@@ -217,6 +214,7 @@ abstract class Model
      *                                           statement as first and only
      *                                           argument
      * @return bool
+     * @throws NoSuchRowFoundException
      */
     private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
     {
@@ -226,7 +224,7 @@ abstract class Model
             if ($statement->rowCount() === 0 &&
                 ($mustHaveRow || $statement->isResultRequired())
             ) {
-                throw new NotFoundHttpException("No row found with query");
+                throw new NoSuchRowFoundException("No row found with query");
             }
 
             return $mappingCallback($statement);
@@ -406,27 +404,36 @@ abstract class Model
      * Runs a simple query, returning the last insert id on success
      *
      * @param SqlQuery $query
+     * @param string   $sequence the sequence to return the last insert id for
      * @return int
      */
-    protected function runWithLastId(SqlQuery $query)
+    protected function runWithLastId(SqlQuery $query, $sequence = null)
     {
-        return $this->handleWithLastInsertId($this->prepare($query));
+        return $this->handleWithLastInsertId($this->prepare($query), $sequence);
     }
 
     /**
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $statement
+     * @param string       $sequence the sequence to return the last insert id for
      * @return int
      */
-    private function handleWithLastInsertId(PdoStatement $statement)
+    private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
     {
         return $this->handleGeneric(
             $statement,
-            function () {
+            function () use ($sequence) {
+
+                if (strstr($sequence, ':')) {
+                    $sequence = explode(':', $sequence);
+                    array_push($sequence, 'seq');
+                    $sequence = implode('_', $sequence);
+                }
+
                 return $this->getDependencyProvider()
                             ->getPdo()
-                            ->lastInsertId();
+                            ->lastInsertId($sequence);
             }
         );
     }

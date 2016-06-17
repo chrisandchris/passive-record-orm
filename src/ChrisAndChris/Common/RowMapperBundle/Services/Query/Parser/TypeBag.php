@@ -7,22 +7,26 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
 
 /**
  * @name ParameterBag
- * @version   1.0.0
- * @since     v2.0.2
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @version    1.1.0
+ * @since      v2.0.2
+ * @lastChange v2.2.0
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
-class TypeBag implements BagInterface {
+class TypeBag implements BagInterface
+{
 
     /** @var array */
     private $types;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->init();
     }
 
-    private function init() {
+    private function init()
+    {
         $this->types = [
             'alias'      => [
                 'params'   => [
@@ -236,7 +240,8 @@ class TypeBag implements BagInterface {
      * @return void
      * @throws InvalidOptionException if array is invalid
      */
-    function set($name, $value) {
+    function set($name, $value)
+    {
         if (!isset($value['params']) && !is_array(($value['params']))) {
             throw new InvalidOptionException(
                 'You must set index params as array for "' . $name . '"'
@@ -250,7 +255,8 @@ class TypeBag implements BagInterface {
      * @return array
      * @throws MissingParameterException
      */
-    public function get($name) {
+    public function get($name)
+    {
         if (!isset($this->types[$name])) {
             throw new MissingParameterException('No such type known');
         }
@@ -261,14 +267,16 @@ class TypeBag implements BagInterface {
     /**
      * @inheritDoc
      */
-    function getAll() {
+    function getAll()
+    {
         return $this->types;
     }
 
     /**
      * @inheritDoc
      */
-    function has($name) {
+    function has($name)
+    {
         return isset($this->types[$name]);
     }
 

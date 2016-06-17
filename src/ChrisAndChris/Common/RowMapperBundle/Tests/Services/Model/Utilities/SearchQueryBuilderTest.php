@@ -2,14 +2,16 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model\Utilities;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name SearchQueryBuilderTest
@@ -40,9 +42,19 @@ class SearchQueryBuilderTest extends TestKernel
 
     private function getQueryBuilder($mapping = 'demo_mapping.json')
     {
+        /** @var EventDispatcherInterface $ed */
+        $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')
+                   ->disableOriginalConstructor()
+                   ->getMock();
+        $event = new SnippetBagEvent();
+        $event->add(new MySqlBag(), ['mysql']);
+        $ed->method('dispatch')
+           ->willReturn($event);
+        $parser = new DefaultParser($ed, 'mysql');
+        
         $repository = new MappingRepository(__DIR__ . '/../Mapping', '.', $mapping);
         $builder = new SearchQueryBuilder(
-            new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag()),
+            new BuilderFactory($parser, new TypeBag()),
             $repository,
             new MappingValidator($repository)
         );
