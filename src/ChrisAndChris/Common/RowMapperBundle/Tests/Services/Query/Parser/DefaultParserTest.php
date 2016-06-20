@@ -1,14 +1,11 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query\Parser;
 
-use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name DefaultParserTest
@@ -35,18 +32,7 @@ class DefaultParserTest extends TestKernel {
     }
 
     private function getParser() {
-        /** @var EventDispatcherInterface $ed */
-        $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')
-                   ->disableOriginalConstructor()
-                   ->getMock();
-
-        $event = new SnippetBagEvent();
-        $event->add(new MySqlBag(), ['mysql']);
-
-        $ed->method('dispatch')
-           ->willReturn($event);
-
-        return new DefaultParser($ed, 'mysql');
+        return new DefaultParser(new SnippetBag());
     }
 
     public function testOpenBraces() {

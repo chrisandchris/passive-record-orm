@@ -21,27 +21,14 @@ services:
     arguments: [@common_rowmapper.defaultparser, @common_rowmapper.typebag]
   common_rowmapper.defaultparser:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
-    arguments: [@event_dispatcher, %database_driver%]
+    arguments: [@common_rowmapper.snippetBag]
   common_rowmapper.typebag:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
-  common_rowmapper.snippetbag.mysql:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag
-    tags:
-      - { name: kernel.event_subscriber }
-  common_rowmapper.snippetbag.pgsql:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
-    tags:
-      - { name: kernel.event_subscriber }
-  common_rowmapper.utility.mapper.mysql:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\MySqlMapper
-    arguments: [@common_rowmapper.model]
-    tags:
-          - { name: kernel.event_subscriber }
-  common_rowmapper.utility.mapper.pgsql:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\PgSqlMapper
-      arguments: [@common_rowmapper.model]
-      tags:
-            - { name: kernel.event_subscriber }
+  common_rowmapper.snippetbag:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
+  common_rowmapper.utility.mapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
+    arguments: [@common_rowmapper.dependencyprovider]
   common_rowmapper.utilty.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: [%kernel.cache_dir%, 'common_rowmapper']

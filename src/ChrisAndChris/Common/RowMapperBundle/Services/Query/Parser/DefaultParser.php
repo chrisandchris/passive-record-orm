@@ -1,12 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser;
 
-use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
-use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name DefaultParser
@@ -42,22 +38,18 @@ class DefaultParser implements ParserInterface {
      * @var array
      */
     private $parameters = [];
-    /** @var MySqlBag */
+    /** @var SnippetBag */
     private $snippetBag;
-    /** @var EventDispatcherInterface */
-    private $eventDispatcher;
-    /** @var string */
-    private $subsystem;
 
     /**
      * Initialize class
      *
-     * @param EventDispatcherInterface $eventDispatcher
+     * @param TypeBag    $parameterBag
+     * @param SnippetBag $snippetBag
      */
-    function __construct(EventDispatcherInterface $eventDispatcher, $subsystem)
+    function __construct(SnippetBag $snippetBag)
     {
-        $this->eventDispatcher = $eventDispatcher;
-        $this->subsystem = $subsystem;
+        $this->snippetBag = $snippetBag;
     }
 
     /**
@@ -127,36 +119,7 @@ class DefaultParser implements ParserInterface {
      * @return \Closure
      */
     private function getSnippet($type) {
-        if ($this->snippetBag === null) {
-            $event = $this->eventDispatcher->dispatch(RowMapperEvents::SNIPPET_COLLECTOR, new SnippetBagEvent());
-            $this->snippetBag = $event->getBag(
-                $this->detectSubsystem($this->subsystem)
-            );
-        }
-
         return $this->snippetBag->get($type);
-    }
-
-    /**
-     * Detects the current subsystem or returns false
-     *
-     * @param $subsystem
-     * @return bool|mixed
-     */
-    private function detectSubsystem($subsystem)
-    {
-        $tests = [
-            'mysql',
-            'pgsql',
-            'sqlite',
-        ];
-        foreach ($tests as $test) {
-            if (strstr($subsystem, $test) !== false) {
-                return $test;
-            }
-        }
-
-        return false;
     }
 
     /**

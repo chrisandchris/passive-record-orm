@@ -1,8 +1,6 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Command;
 
-use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
-use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\MapperEvent;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -36,20 +34,8 @@ class DatabaseMapperCommand extends ContainerAwareCommand {
         $this->input = $input;
         $this->output = $output;
 
-        // @todo extract mapper as event subscriber, collect all of them
-        // @todo select correct subsystem, run mapper with subsystem
-
-        $event = $this->getContainer()
-                      ->get('event_dispatcher')
-                      ->dispatch(RowMapperEvents::MAPPER_COLLECTOR, new MapperEvent());
-
-        $subsystem = $this->getSubsystem(
-            $this->getContainer()
-                 ->getParameter('database_driver')
-        );
-
-        $mapper = $event->getMapper($subsystem);
-        
+        $mapper = $this->getContainer()
+                       ->get('common_rowmapper.utility.mapper');
         $schema = $this->getContainer()
                        ->getParameter('database_name');
 
@@ -63,22 +49,6 @@ class DatabaseMapperCommand extends ContainerAwareCommand {
 
         $result = $this->merge($tables, $fields, $relations);
         $this->writeCache($result);
-    }
-
-    private function getSubsystem($subsystem)
-    {
-        $tests = [
-            'mysql',
-            'pgsql',
-            'sqlite',
-        ];
-        foreach ($tests as $test) {
-            if (strstr($subsystem, $test) !== false) {
-                return $test;
-            }
-        }
-
-        return false;
     }
 
     private function merge(array $tables, array $fields, array $relations) {

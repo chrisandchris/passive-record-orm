@@ -15,7 +15,6 @@ use Symfony\Component\Console\Output\NullOutput;
  * @name MappingHandler
  * @version    1.0.1
  * @since      v2.1.0
- * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
@@ -41,8 +40,7 @@ class MappingRepository
         } else {
             if ($this->databaseMapper instanceof DatabaseMapperCommand && !$forceException) {
                 $this->runMapper();
-
-                return $this->setMapping($mapping, true);
+                $this->setMapping($mapping, true);
             }
             throw new MappingInitFailedException(sprintf(
                 'No file found at path "%s"',
@@ -50,8 +48,6 @@ class MappingRepository
             ));
         }
         $this->mapping = json_decode($mapping, true);
-
-        return true;
     }
 
     private function runMapper()
