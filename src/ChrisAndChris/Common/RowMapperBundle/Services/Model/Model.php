@@ -152,7 +152,8 @@ abstract class Model {
      * @param $sql
      * @return PdoStatement
      */
-    private function createStatement($sql) {
+    private function createStatement($sql)
+    {
         return $this->getDependencyProvider()
                     ->getPdo()
                     ->prepare($sql);
@@ -163,7 +164,8 @@ abstract class Model {
      *
      * @return ModelDependencyProvider
      */
-    protected function getDependencyProvider() {
+    protected function getDependencyProvider()
+    {
         return $this->dependencyProvider;
     }
 
@@ -349,7 +351,8 @@ abstract class Model {
      * @return $onSuccess|$onFailure|$onError
      * @throws \Exception
      */
-    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null) {
+    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
+    {
         try {
             if ($this->runSimple($query)) {
                 if ($onSuccess instanceof \Closure) {
@@ -383,7 +386,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return bool
      */
-    protected function runSimple(SqlQuery $query) {
+    protected function runSimple(SqlQuery $query)
+    {
         return $this->handle($this->prepare($query), null);
     }
 
@@ -431,11 +435,19 @@ abstract class Model {
      * @param SqlQuery $query
      * @return mixed
      */
-    protected function runWithFirstKeyFirstValue(SqlQuery $query) {
+    protected function runWithFirstKeyFirstValue(SqlQuery $query)
+    {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
             $stmt, function (PdoStatement $statement) {
+            if ($statement->rowCount() > 1) {
+                throw new DatabaseException(sprintf(
+                    'Expected only a single result record, but got %d',
+                    $statement->rowCount()
+                ));
+            }
+
             return $statement->fetch(\PDO::FETCH_NUM)[0];
         }
         );
@@ -449,7 +461,8 @@ abstract class Model {
      * @param \Closure $closure
      * @return array
      */
-    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure) {
+    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure)
+    {
         return $this->handleGeneric(
             $this->prepare($query),
             function (PdoStatement $statement) use ($entity, $closure) {
@@ -465,7 +478,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return array
      */
-    protected function runAssoc(SqlQuery $query) {
+    protected function runAssoc(SqlQuery $query)
+    {
         return $this->handleGeneric(
             $this->prepare($query),
             function (\PDOStatement $statement) {

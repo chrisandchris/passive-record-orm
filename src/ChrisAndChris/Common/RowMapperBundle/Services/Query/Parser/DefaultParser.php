@@ -29,7 +29,7 @@ class DefaultParser implements ParserInterface {
      *
      * @var string
      */
-    private $query = '';
+    private $query = [];
     /**
      * An array of open braces
      *
@@ -98,6 +98,9 @@ class DefaultParser implements ParserInterface {
      */
     public function execute() {
         $this->clear();
+        if (is_string($this->query)) {
+            $this->query = [];
+        }
         foreach ($this->statement as $type) {
             $snippet = $this->getSnippet($type['type']);
             $this->query[] = $this->parseCode($type, $snippet);
@@ -113,7 +116,7 @@ class DefaultParser implements ParserInterface {
      */
     private function clear() {
         $this->parameters = [];
-        $this->query = '';
+        $this->query = [];
         $this->braces = [];
     }
 
@@ -285,7 +288,7 @@ class DefaultParser implements ParserInterface {
                 'key' => $matches[2],
             ];
             // empty query
-            $this->query = '';
+            $this->query = [];
             // empty code
             $code = '';
 

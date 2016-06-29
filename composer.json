@@ -2,7 +2,7 @@
   "name": "chrisandchris/symfony-rowmapper",
   "license": "GPL-2.0",
   "type": "project",
-  "description": "A RowMapper and QueryBuilder, makes querying databases easier and better than orm",
+  "description": "A RowMapper and QueryBuilder (PgSQL and MySQL), makes querying databases easier and better than orm",
   "keywords": [
     "rowmapper",
     "database",
@@ -10,7 +10,10 @@
     "symfony",
     "query",
     "querybuilder",
-    "builder"
+    "builder",
+    "mysql",
+    "postgres",
+    "pgsql"
   ],
   "autoload": {
     "psr-0": {
@@ -26,7 +29,7 @@
     "liuggio/fastest": "^1.1"
   },
   "require-dev": {
-    "phpunit/phpunit": "^5.1",
+    "phpunit/phpunit": "^5.3",
     "symfony/monolog-bundle": "^2.3",
     "sensio/distribution-bundle": "^2.3",
     "sensio/framework-extra-bundle": "^2.3",
