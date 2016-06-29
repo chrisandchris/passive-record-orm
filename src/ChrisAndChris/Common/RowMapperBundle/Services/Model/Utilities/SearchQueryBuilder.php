@@ -74,7 +74,10 @@ class SearchQueryBuilder {
                 $searchContainer->addJoin($join);
             }
         } else {
-            $this->validator->validateJoins($searchContainer->getRootTable(), $searchContainer->getJoinedTables());
+            $this->repository->completeJoins(
+                $searchContainer->getRootTable(),
+                $searchContainer->getJoinedTables()
+            );
         }
 
         // validate previous search id

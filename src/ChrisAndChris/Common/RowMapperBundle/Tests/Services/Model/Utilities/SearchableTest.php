@@ -3,17 +3,15 @@ namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model\Utilities;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\FilterCondition;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
-use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name SearchableTest
@@ -46,17 +44,9 @@ class SearchableTest extends TestKernel {
     private function getModel() {
         $repo = new MappingRepository(__DIR__, '../Mapping', 'demo_mapping.json');
         $validator = new MappingValidator($repo);
-        /** @var EventDispatcherInterface $ed */
-        $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')
-                   ->disableOriginalConstructor()
-                   ->getMock();
-        $event = new SnippetBagEvent();
-        $event->add(new MySqlBag(), ['mysql']);
-        $ed->method('dispatch')
-           ->willReturn($event);
-        $parser = new DefaultParser($ed, 'mysql');
 
-        return new SearchQueryBuilder(new BuilderFactory($parser, new TypeBag()), $repo, $validator);
+        return new SearchQueryBuilder(new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag()), $repo,
+            $validator);
     }
 
     public function testSearchByPatternWithPreviousSearch() {

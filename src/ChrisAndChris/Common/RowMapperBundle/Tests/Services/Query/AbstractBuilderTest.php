@@ -1,13 +1,11 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
-use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name AbstractBuilderTest
@@ -18,18 +16,9 @@ abstract class AbstractBuilderTest extends TestKernel {
 
     protected function getBuilder() {
         $typeBag = new TypeBag();
+        $snippetBag = new SnippetBag();
 
-        /** @var EventDispatcherInterface $ed */
-        $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')
-                   ->disableOriginalConstructor()
-                   ->getMock();
-        $event = new SnippetBagEvent();
-        $event->add(new MySqlBag(), ['mysql']);
-        $ed->method('dispatch')
-           ->willReturn($event);
-        $parser = new DefaultParser($ed, 'mysql');
-
-        return new Builder($parser, $typeBag);
+        return new Builder(new DefaultParser($snippetBag), $typeBag);
     }
 
     protected function equals($expected, Builder $Builder) {

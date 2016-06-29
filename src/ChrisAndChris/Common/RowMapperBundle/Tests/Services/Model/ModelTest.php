@@ -2,18 +2,25 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
+use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * @name ModelTest
- * @version    2
- * @since      v1.0.0
- * @lastChange v2.2.0
- * @package    RowMapperBundle
- * @author     ChrisAndChris
- * @link       https://github.com/chrisandchris
+ * @version   1.0.0
+ * @since     v1.0.0
+ * @package   RowMapperBundle
+ * @author    ChrisAndChris
+ * @link      https://github.com/chrisandchris
  */
 class ModelTest extends TestKernel
 {
@@ -37,10 +44,12 @@ class ModelTest extends TestKernel
      */
     private function getModel()
     {
-        /** @var ModelDependencyProvider $provider */
-        $provider = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
-                         ->disableOriginalConstructor()
-                         ->getMock();
+        $provider = new ModelDependencyProvider(
+            new PdoLayer('sqlite', 'sqlite.db'),
+            new RowMapperFactory(new EventDispatcher()),
+            new ErrorHandler(),
+            new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag())
+        );
 
         $model = new EmptyModel($provider);
 
@@ -65,16 +74,16 @@ class ModelTest extends TestKernel
 
     public function testSetRunningUser()
     {
-        $model = $this->getModel();
-        $model->setRunningUser('alpha');
+        $Model = $this->getModel();
+        $Model->setRunningUser('alpha');
 
-        $model = $this->getModel();
-        $this->assertEquals('alpha', $model->getRunningUser());
+        $Model = $this->getModel();
+        $this->assertEquals('alpha', $Model->getRunningUser());
     }
 
     public function testPrepareOptions()
     {
-        $model = $this->getModel();
+        $Model = $this->getModel();
 
         $options = [
             [
@@ -90,11 +99,11 @@ class ModelTest extends TestKernel
             [
                 'offset' => 50,
                 'limit'  => 1000,
-            ],
+            ]
         ];
         foreach ($options as $option) {
             try {
-                $model->prepareOptions(
+                $Model->prepareOptions(
                     [
                         'offset',
                         'limit',
@@ -122,11 +131,11 @@ class ModelTest extends TestKernel
             [
                 'offset'   => 50,
                 'limmmmit' => 1000,
-            ],
+            ]
         ];
         foreach ($options as $option) {
             try {
-                $model->prepareOptions(
+                $Model->prepareOptions(
                     [
                         'offset',
                         'limit',

@@ -46,7 +46,6 @@ class PdoLayer extends \PDO
             case 'pgsql' :
             case 'pg' :
             case 'postgres' :
-            case 'pdo_pgsql' :
                 return 'pgsql';
             case 'pdo_mysql' :
             case 'mysqli' :
@@ -58,12 +57,10 @@ class PdoLayer extends \PDO
     /**
      * Create a dsn
      *
-     * @param string $system   the system to connect to (sqlite|mysql|pgsql)
+     * @param string $system   the system to connect to (sqlite|mysql)
      * @param string $host     the host
      * @param string $port     the port
      * @param string $database the database name
-     * @param string $username
-     * @param string $password
      * @return null|string
      */
     public function getDsn($system, $host, $port, $database, $username, $password)
