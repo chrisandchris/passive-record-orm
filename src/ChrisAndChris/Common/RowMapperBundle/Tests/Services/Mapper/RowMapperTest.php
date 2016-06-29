@@ -23,9 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class RowMapperTest extends TestKernel {
 
     public function testMapFromResult() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $rows =
             $mapper->mapFromResult($this->getStatementMockup(), new DummyEntity());
@@ -40,15 +38,6 @@ class RowMapperTest extends TestKernel {
         $this->assertEquals('Name 2', $entity->getName());
     }
 
-    private function getEventDispatcherMock()
-    {
-        $mock = $this->getMockBuilder('\Symfony\Component\EventDispatcher\EventDispatcher')
-                     ->disableOriginalConstructor()
-                     ->getMock();
-
-        return $mock;
-    }
-
     public function getStatementMockup($mode = 'regular') {
         PdoStatementDummy::$id = 0;
 
@@ -56,9 +45,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapFromResultLimit() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 100;
         $rows =
             $mapper->mapFromResult($this->getStatementMockup(), new DummyEntity(), 10);
@@ -67,22 +54,18 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testEntity() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 1;
         try {
             $mapper->mapFromResult($this->getStatementMockup(), new WrongDummyEntity());
             $this->fail('Must fail due to no such property');
-        } catch (DatabaseException $exception) {
+        } catch (DatabaseException $E) {
             // ignore
         }
     }
 
     public function testSingle() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $row =
             $mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
@@ -91,9 +74,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testNotFoundSingle() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 0;
         try {
             $mapper->mapSingleFromResult($this->getStatementMockup(), new DummyEntity());
@@ -104,9 +85,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapToArray() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $array = $mapper->mapToArray(
             $this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
@@ -123,9 +102,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapToArrayErrors() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         try {
             $mapper->mapToArray(
@@ -140,9 +117,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testMapToArrayImplicitKey() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         PdoStatementDummy::$maxId = 2;
         $array = $mapper->mapToArray(
             $this->getStatementMockup(), new DummyEntity(), function (DummyEntity $entity) {
@@ -158,9 +133,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function testBuildMethodName() {
-        $mapper = new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        $mapper = new RowMapper();
         $this->assertEquals('setName', $mapper->buildMethodName('name'));
         $this->assertEquals('setSomeName', $mapper->buildMethodName('some_name'));
         $this->assertEquals('setSomeName', $mapper->buildMethodName('someName'));
@@ -187,9 +160,7 @@ class RowMapperTest extends TestKernel {
     }
 
     public function getRowMapper() {
-        return new RowMapper(
-            $this->getEventDispatcherMock()
-        );
+        return new RowMapper();
     }
 }
 

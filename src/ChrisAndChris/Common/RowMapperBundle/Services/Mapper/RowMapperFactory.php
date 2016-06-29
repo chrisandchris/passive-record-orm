@@ -5,8 +5,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name RowMapperFactory
- * @version    1.0.1
- * @lastChange v2.1.1
+ * @version    1.0.0
+ * @lastChange v2.1.0
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -30,9 +30,7 @@ class RowMapperFactory {
      * @return RowMapper
      */
     public function getMapper() {
-        $mapper = new RowMapper(
-            $this->eventDispatcher
-        );
+        $mapper = new RowMapper();
         /** @var NewMapperEvent $event */
         $event =
             $this->eventDispatcher->dispatch('rowMapperBundle.createNewMapper', new NewMapperEvent());

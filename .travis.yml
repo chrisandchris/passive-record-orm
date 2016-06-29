@@ -6,6 +6,8 @@ php:
   - nightly
 script: phpunit -c phpunit.xml
 before_script:
+  - composer self-update
+  - composer update
   - composer install
 services:
   - mysql

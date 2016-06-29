@@ -3,15 +3,9 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\EmptyEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
-use ChrisAndChris\Common\RowMapperBundle\Entity\PopulateEntity;
-use ChrisAndChris\Common\RowMapperBundle\Entity\StrictEntity;
-use ChrisAndChris\Common\RowMapperBundle\Events\Mapping\PopulationEvent;
-use ChrisAndChris\Common\RowMapperBundle\Events\MappingEvents;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\InsufficientPopulationException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionServiceInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -23,35 +17,17 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class RowMapper
-{
+class RowMapper {
 
-    /**
-     * @var EncryptionServiceInterface[]
-     */
+    /** @var EncryptionServiceInterface[] */
     private $encryptionServices = [];
-    /**
-     * @var EventDispatcherInterface
-     */
-    private $eventDispatcher;
-
-    /**
-     * RowMapper constructor.
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     */
-    public function __construct(EventDispatcherInterface $eventDispatcher)
-    {
-        $this->eventDispatcher = $eventDispatcher;
-    }
 
     /**
      * Add a new encryption ability
      *
      * @param EncryptionServiceInterface $encryptionService
      */
-    public function addEncryptionAbility(EncryptionServiceInterface $encryptionService)
-    {
+    public function addEncryptionAbility(EncryptionServiceInterface $encryptionService) {
         $this->encryptionServices[] = $encryptionService;
     }
 
@@ -60,11 +36,9 @@ class RowMapper
      *
      * @param \PDOStatement $statement the statement to map
      * @param Entity        $entity    the entity to map into
-     * @return Entity
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public function mapSingleFromResult(\PDOStatement $statement, Entity $entity)
-    {
+    public function mapSingleFromResult(\PDOStatement $statement, Entity $entity) {
         $list = $this->mapFromResult($statement, $entity, 1);
         if (count($list) == 0) {
             throw new NotFoundHttpException;
@@ -79,10 +53,9 @@ class RowMapper
      * @param \PDOStatement $statement the statement to map
      * @param Entity        $entity    the entity to use
      * @param int           $limit     max amount of rows to map
-     * @return Entity[] list of mapped rows
+     * @return array list of mapped rows
      */
-    public function mapFromResult(\PDOStatement $statement, Entity $entity = null, $limit = null)
-    {
+    public function mapFromResult(\PDOStatement $statement, Entity $entity = null, $limit = null) {
         $return = [];
         $count = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
@@ -97,6 +70,7 @@ class RowMapper
         return $return;
     }
 
+    /** @noinspection PhpDocSignatureInspection */
     /**
      * Map a single row by calling setter if possible or
      * accessing the properties directly if no setter available<br />
@@ -114,8 +88,7 @@ class RowMapper
      * @throws DatabaseException if there is no such property
      * @throws InvalidOptionException if a EmptyEntity instance is given
      */
-    public function mapRow(array $row, Entity $entity = null)
-    {
+    public function mapRow(array $row, Entity $entity = null) {
         if ($entity instanceof EmptyEntity) {
             throw new InvalidOptionException(
                 'You are not allowed to map rows to an EmptyEntity instance'
@@ -124,63 +97,32 @@ class RowMapper
         if (!isset($entity)) {
             $entity = new EmptyEntity();
         }
-        $this->populateFields($row, $entity);
-
-        $entity = $this->checkForDecryption($entity);
-
-        return $entity;
-    }
-
-    /**
-     * @param array  $row
-     * @param Entity $entity
-     * @throws DatabaseException
-     * @throws InsufficientPopulationException if strict entity is not fully populated
-     */
-    private function populateFields(array $row, Entity $entity)
-    {
-        $entityFiller = function (Entity &$entity, $field, $value) {
+        foreach ($row as $field => $value) {
             $methodName = $this->buildMethodName($field);
             if (method_exists($entity, $methodName)) {
                 $entity->$methodName($value);
-
-                return 1;
             } else {
                 if (property_exists($entity, $field) ||
                     $entity instanceof EmptyEntity
                 ) {
                     $entity->$field = $value;
-
-                    return 1;
                 } else {
                     throw new DatabaseException(sprintf('No property %s found for Entity', $field));
                 }
             }
-        };
-
-        $count = count(get_object_vars($entity));
-        foreach ($row as $field => $value) {
-            $count -= $entityFiller($entity, $field, $value);
         }
 
-        if ($entity instanceof PopulateEntity) {
-            $event = $this->eventDispatcher->dispatch(
-                MappingEvents::POST_MAPPING_ROW_POPULATION,
-                new PopulationEvent($entity, $entityFiller)
-            );
-            $count -= $event->getWrittenFieldCount();
+        $entity = $this->runDecryption($entity);
+
+        if ($entity instanceof EmptyEntity) {
+            $fields = [];
+            foreach (get_object_vars($entity) as $property => $value) {
+                $fields[$property] = $value;
+            }
+            $entity = $fields;
         }
 
-        if ($entity instanceof StrictEntity && $count != 0) {
-            throw new InsufficientPopulationException(
-                sprintf(
-                    'Tried entity "%s" to populate for %d fields, and left %d not populated',
-                    get_class($entity),
-                    count($row),
-                    $count
-                )
-            );
-        }
+        return $entity;
     }
 
     /**
@@ -189,8 +131,7 @@ class RowMapper
      * @param $key
      * @return string
      */
-    public function buildMethodName($key)
-    {
+    public function buildMethodName($key) {
         $partials = explode('_', $key);
         foreach ($partials as $idx => $part) {
             $partials[$idx] = ucfirst($part);
@@ -200,34 +141,12 @@ class RowMapper
     }
 
     /**
-     * @param Entity $entity
-     * @return array|EmptyEntity|Entity
-     */
-    private function checkForDecryption(Entity $entity)
-    {
-        $entity = $this->runDecryption($entity);
-
-        if ($entity instanceof EmptyEntity) {
-            $fields = [];
-            foreach (get_object_vars($entity) as $property => $value) {
-                $fields[$property] = $value;
-            }
-            $entity = $fields;
-
-            return $entity;
-        }
-
-        return $entity;
-    }
-
-    /**
      * Run the decryption process
      *
      * @param Entity $entity
      * @return Entity
      */
-    private function runDecryption(Entity $entity)
-    {
+    private function runDecryption(Entity $entity) {
         foreach ($this->encryptionServices as $encryptionService) {
             if ($encryptionService->isResponsible($entity)) {
                 return $encryptionService->decrypt($entity);
@@ -252,8 +171,7 @@ class RowMapper
      * @return array
      * @throws InvalidOptionException if invalid input is given
      */
-    public function mapToArray($statement, Entity $entity, \Closure $callable)
-    {
+    public function mapToArray($statement, Entity $entity, \Closure $callable) {
         $array = $this->mapFromResult($statement, $entity);
         $return = [];
         foreach ($array as $row) {

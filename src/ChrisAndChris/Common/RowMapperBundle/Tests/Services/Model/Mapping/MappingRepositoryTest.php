@@ -56,7 +56,7 @@ class MappingRepositoryTest extends TestKernel {
         $mapping = $this->getRepository();
 
         $relations = $mapping->getRecursiveRelations('right');
-        $this->assertEquals(1, count($relations));
+        $this->assertEquals(0, count($relations));
 
         $relations = $mapping->getRecursiveRelations('role_right', 99);
         $this->assertEquals(3, count($relations));

@@ -2,20 +2,20 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
- * @name ModelTest
+ * @name ConcreteModelTest
  * @version    2
- * @since      v1.0.0
+ * @since      v2.2.0
  * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class ModelTest extends TestKernel
+class ConcreteModelTest extends TestKernel
 {
 
     public function testValidateOffset()
@@ -33,7 +33,7 @@ class ModelTest extends TestKernel
     }
 
     /**
-     * @return Model
+     * @return ConcreteModel
      */
     private function getModel()
     {
@@ -42,7 +42,7 @@ class ModelTest extends TestKernel
                          ->disableOriginalConstructor()
                          ->getMock();
 
-        $model = new EmptyModel($provider);
+        $model = new ConcreteModel($provider);
 
         return $model;
     }
@@ -139,10 +139,4 @@ class ModelTest extends TestKernel
             }
         }
     }
-}
-
-class EmptyModel extends Model
-{
-
-    // empty
 }

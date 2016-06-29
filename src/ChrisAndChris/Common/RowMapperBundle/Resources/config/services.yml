@@ -7,7 +7,6 @@ services:
     arguments: [%database_driver%, %database_host%, %database_port%, %database_name%, %database_user%, %database_password%]
   common_rowmapper.rowmapper:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper
-    arguments: ['@event_dispatcher']
   common_rowmapper.rowmapperfactory:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory
     arguments: [@event_dispatcher]
@@ -21,14 +20,27 @@ services:
     arguments: [@common_rowmapper.defaultparser, @common_rowmapper.typebag]
   common_rowmapper.defaultparser:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser
-    arguments: [@common_rowmapper.snippetBag]
+    arguments: [@event_dispatcher, %database_driver%]
   common_rowmapper.typebag:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag
-  common_rowmapper.snippetbag:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\SnippetBag
-  common_rowmapper.utility.mapper:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\DatabaseMapper
-    arguments: [@common_rowmapper.dependencyprovider]
+  common_rowmapper.snippetbag.mysql:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag
+    tags:
+      - { name: kernel.event_subscriber }
+  common_rowmapper.snippetbag.pgsql:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
+    tags:
+      - { name: kernel.event_subscriber }
+  common_rowmapper.utility.mapper.mysql:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\MySqlMapper
+    arguments: [@common_rowmapper.model]
+    tags:
+          - { name: kernel.event_subscriber }
+  common_rowmapper.utility.mapper.pgsql:
+      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\PgSqlMapper
+      arguments: [@common_rowmapper.model]
+      tags:
+            - { name: kernel.event_subscriber }
   common_rowmapper.utilty.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: [%kernel.cache_dir%, 'common_rowmapper']
@@ -37,6 +49,8 @@ services:
     arguments: [%kernel.cache_dir%, 'common_rowmapper', 'mapping.json', @common_rowmapper.command.database_mapper]
   common_rowmapper.command.database_mapper:
     class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
+    calls:
+        - [setContainer, [@service_container]]
   common_rowmapper.search.result_utility:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
     arguments: [@common_rowmapper.dependencyprovider]
