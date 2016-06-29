@@ -15,7 +15,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @name Model
- * @version    2.1.0
+ * @version    2.1.1
  * @lastChange v2.1.0
  * @since      v1.0.0
  * @package    RowMapperBundle
@@ -23,7 +23,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @link       https://github.com/chrisandchris
  * @deprecated v2.1.0; inject ConcreteModel class instead; not to be removed soon (not earlier than 3.0.0!)
  */
-abstract class Model {
+abstract class Model
+{
 
     /** @var string a id representing the current user */
     private static $userId;
@@ -32,7 +33,8 @@ abstract class Model {
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
 
-    function __construct(ModelDependencyProvider $dependencyProvider) {
+    function __construct(ModelDependencyProvider $dependencyProvider)
+    {
         $this->dependencyProvider = $dependencyProvider;
     }
 
@@ -40,7 +42,8 @@ abstract class Model {
      * @return string
      * @deprecated v2.1.0, to be removed in v2.2.0
      */
-    public static function getRunningUser() {
+    public static function getRunningUser()
+    {
         return self::$userId;
     }
 
@@ -50,7 +53,8 @@ abstract class Model {
      * @param $userId
      * @deprecated v2.1.0, to be removed in v2.2.0
      */
-    public function setRunningUser($userId) {
+    public function setRunningUser($userId)
+    {
         self::$userId = $userId;
     }
 
@@ -60,7 +64,8 @@ abstract class Model {
      * @param $offset int the offset to validate
      * @return int
      */
-    public function validateOffset($offset) {
+    public function validateOffset($offset)
+    {
         if ($offset < 0) {
             return 0;
         }
@@ -75,7 +80,8 @@ abstract class Model {
      * @param $max   int the max limit allowed
      * @return int the validated limit as an integer
      */
-    public function validateLimit($limit, $max = 100) {
+    public function validateLimit($limit, $max = 100)
+    {
         if ($limit < 1) {
             return 1;
         } elseif ($limit > $max) {
@@ -92,7 +98,8 @@ abstract class Model {
      * @param array $options
      * @throws InvalidOptionException
      */
-    public function prepareOptions(array $availableOptions, array &$options) {
+    public function prepareOptions(array $availableOptions, array &$options)
+    {
         foreach ($availableOptions as $option) {
             if (!isset($options[$option])) {
                 $options[$option] = null;
@@ -116,7 +123,8 @@ abstract class Model {
      * @param Entity   $entity
      * @return $entity[]
      */
-    protected function run(SqlQuery $query, Entity $entity) {
+    protected function run(SqlQuery $query, Entity $entity)
+    {
         $stmt = $this->prepare($query);
 
         return $this->handle($stmt, $entity);
@@ -128,7 +136,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return PdoStatement
      */
-    protected function prepare(SqlQuery $query) {
+    protected function prepare(SqlQuery $query)
+    {
         $stmt = $this->createStatement($query->getQuery());
         $this->bindValues($stmt, $query);
         $stmt->requiresResult($query->isResultRequired());
@@ -142,7 +151,8 @@ abstract class Model {
      * @param $sql
      * @return PdoStatement
      */
-    private function createStatement($sql) {
+    private function createStatement($sql)
+    {
         return $this->getDependencyProvider()
                     ->getPdo()
                     ->prepare($sql);
@@ -153,7 +163,8 @@ abstract class Model {
      *
      * @return ModelDependencyProvider
      */
-    protected function getDependencyProvider() {
+    protected function getDependencyProvider()
+    {
         return $this->dependencyProvider;
     }
 
@@ -351,7 +362,8 @@ abstract class Model {
      * @return $onSuccess|$onFailure|$onError
      * @throws \Exception
      */
-    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null) {
+    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
+    {
         try {
             if ($this->runSimple($query)) {
                 if ($onSuccess instanceof \Closure) {
@@ -385,7 +397,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return bool
      */
-    protected function runSimple(SqlQuery $query) {
+    protected function runSimple(SqlQuery $query)
+    {
         return $this->handle($this->prepare($query), null);
     }
 
@@ -395,7 +408,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return int
      */
-    protected function runWithLastId(SqlQuery $query) {
+    protected function runWithLastId(SqlQuery $query)
+    {
         return $this->handleWithLastInsertId($this->prepare($query));
     }
 
@@ -405,7 +419,8 @@ abstract class Model {
      * @param PdoStatement $statement
      * @return int
      */
-    private function handleWithLastInsertId(PdoStatement $statement) {
+    private function handleWithLastInsertId(PdoStatement $statement)
+    {
         return $this->handleGeneric(
             $statement,
             function () {
@@ -422,11 +437,19 @@ abstract class Model {
      * @param SqlQuery $query
      * @return mixed
      */
-    protected function runWithFirstKeyFirstValue(SqlQuery $query) {
+    protected function runWithFirstKeyFirstValue(SqlQuery $query)
+    {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
             $stmt, function (PdoStatement $statement) {
+            if ($statement->rowCount() > 1) {
+                throw new DatabaseException(sprintf(
+                    'Expected only a single result record, but got %d',
+                    $statement->rowCount()
+                ));
+            }
+
             return $statement->fetch(\PDO::FETCH_NUM)[0];
         }
         );
@@ -440,7 +463,8 @@ abstract class Model {
      * @param \Closure $closure
      * @return array
      */
-    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure) {
+    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure)
+    {
         return $this->handleGeneric(
             $this->prepare($query),
             function (PdoStatement $statement) use ($entity, $closure) {
@@ -456,7 +480,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return array
      */
-    protected function runAssoc(SqlQuery $query) {
+    protected function runAssoc(SqlQuery $query)
+    {
         return $this->handleGeneric(
             $this->prepare($query),
             function (\PDOStatement $statement) {
@@ -472,7 +497,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return array
      */
-    protected function runKeyValue(SqlQuery $query) {
+    protected function runKeyValue(SqlQuery $query)
+    {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
@@ -503,7 +529,8 @@ abstract class Model {
      * @param SqlQuery $query
      * @return bool whether there is at least one result row or not
      */
-    protected function _handleHasResult(SqlQuery $query) {
+    protected function _handleHasResult(SqlQuery $query)
+    {
         return $this->_handleHas($query, false);
     }
 
@@ -515,7 +542,8 @@ abstract class Model {
      *                             only one returns true
      * @return bool whether there is a row or not
      */
-    protected function _handleHas(SqlQuery $query, $forceEqual = true) {
+    protected function _handleHas(SqlQuery $query, $forceEqual = true)
+    {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
@@ -539,7 +567,8 @@ abstract class Model {
      *
      * @throws TransactionException
      */
-    protected function _startTransaction() {
+    protected function _startTransaction()
+    {
         if (!$this->getDependencyProvider()
                   ->getPdo()
                   ->inTransaction()
@@ -560,7 +589,8 @@ abstract class Model {
      *
      * @throws TransactionException
      */
-    protected function _commit() {
+    protected function _commit()
+    {
         if ($this->getDependencyProvider()
                  ->getPdo()
                  ->inTransaction()

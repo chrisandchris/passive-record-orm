@@ -45,7 +45,8 @@ class SearchableTest extends TestKernel {
         $repo = new MappingRepository(__DIR__, '../Mapping', 'demo_mapping.json');
         $validator = new MappingValidator($repo);
 
-        return new SearchQueryBuilder(new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag()), $repo, $validator);
+        return new SearchQueryBuilder(new BuilderFactory(new DefaultParser(new SnippetBag()), new TypeBag()), $repo,
+            $validator);
     }
 
     public function testSearchByPatternWithPreviousSearch() {

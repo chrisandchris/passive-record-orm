@@ -9,7 +9,8 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-interface BagInterface {
+interface BagInterface
+{
 
     /**
      * Set an entry in the bag

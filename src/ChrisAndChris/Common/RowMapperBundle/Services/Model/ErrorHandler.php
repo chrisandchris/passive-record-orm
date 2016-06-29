@@ -14,7 +14,8 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class ErrorHandler {
+class ErrorHandler
+{
 
     private $databaseExceptions = [
         'HY093',    // pdo not enough values bound
@@ -31,7 +32,7 @@ class ErrorHandler {
         1216,
         1217,
         1451,
-        1452
+        1452,
     ];
 
     /**
@@ -45,7 +46,8 @@ class ErrorHandler {
      * @throws UniqueConstraintException thrown if this is an unique constraint error
      * @throws GeneralDatabaseException thrown otherwise
      */
-    public function handle($errorNum, $errorText) {
+    public function handle($errorNum, $errorText)
+    {
         if (in_array($errorNum, $this->databaseExceptions)) {
             throw new DatabaseException($errorText);
         }

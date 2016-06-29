@@ -11,7 +11,8 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class DatabaseMapper extends Model {
+class DatabaseMapper extends Model
+{
 
     /** @var array */
     private $tables;

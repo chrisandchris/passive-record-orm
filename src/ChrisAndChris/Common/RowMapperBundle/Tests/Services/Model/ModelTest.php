@@ -22,9 +22,11 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class ModelTest extends TestKernel {
+class ModelTest extends TestKernel
+{
 
-    public function testValidateOffset() {
+    public function testValidateOffset()
+    {
         $this->assertEquals(0, $this->getModel()
                                     ->validateOffset(-5));
         $this->assertEquals(0, $this->getModel()
@@ -40,7 +42,8 @@ class ModelTest extends TestKernel {
     /**
      * @return Model
      */
-    private function getModel() {
+    private function getModel()
+    {
         $provider = new ModelDependencyProvider(
             new PdoLayer('sqlite', 'sqlite.db'),
             new RowMapperFactory(new EventDispatcher()),
@@ -53,7 +56,8 @@ class ModelTest extends TestKernel {
         return $model;
     }
 
-    public function testValidateLimit() {
+    public function testValidateLimit()
+    {
         $this->assertEquals(1, $this->getModel()
                                     ->validateLimit(-5));
         $this->assertEquals(1, $this->getModel()
@@ -68,7 +72,8 @@ class ModelTest extends TestKernel {
                                      ->validateLimit(100, 50));
     }
 
-    public function testSetRunningUser() {
+    public function testSetRunningUser()
+    {
         $Model = $this->getModel();
         $Model->setRunningUser('alpha');
 
@@ -76,23 +81,24 @@ class ModelTest extends TestKernel {
         $this->assertEquals('alpha', $Model->getRunningUser());
     }
 
-    public function testPrepareOptions() {
+    public function testPrepareOptions()
+    {
         $Model = $this->getModel();
 
         $options = [
             [
-                'offset' => 10
-            ],
-            [
                 'offset' => 10,
-                'articleId' => 50
             ],
             [
-                'articleId' => 10
+                'offset'    => 10,
+                'articleId' => 50,
+            ],
+            [
+                'articleId' => 10,
             ],
             [
                 'offset' => 50,
-                'limit' => 1000
+                'limit'  => 1000,
             ]
         ];
         foreach ($options as $option) {
@@ -101,7 +107,7 @@ class ModelTest extends TestKernel {
                     [
                         'offset',
                         'limit',
-                        'articleId'
+                        'articleId',
                     ],
                     $option
                 );
@@ -112,19 +118,19 @@ class ModelTest extends TestKernel {
 
         $options = [
             [
-                'offset' => 10,
-                'nulloption' => false
+                'offset'     => 10,
+                'nulloption' => false,
             ],
             [
-                'offset' => 10,
-                'articleDd' => 50
+                'offset'    => 10,
+                'articleDd' => 50,
             ],
             [
-                'idArticle' => 10
+                'idArticle' => 10,
             ],
             [
-                'offset' => 50,
-                'limmmmit' => 1000
+                'offset'   => 50,
+                'limmmmit' => 1000,
             ]
         ];
         foreach ($options as $option) {
@@ -133,7 +139,7 @@ class ModelTest extends TestKernel {
                     [
                         'offset',
                         'limit',
-                        'articleId'
+                        'articleId',
                     ],
                     $option
                 );
@@ -144,7 +150,8 @@ class ModelTest extends TestKernel {
     }
 }
 
-class EmptyModel extends Model {
+class EmptyModel extends Model
+{
 
     // empty
 }

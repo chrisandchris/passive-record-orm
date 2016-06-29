@@ -14,16 +14,19 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class SnippetBag implements BagInterface {
+class SnippetBag implements BagInterface
+{
 
     /** @var array */
     private $snippets = [];
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->init();
     }
 
-    private function init() {
+    private function init()
+    {
         $this->snippets = [
             'select'     => function () {
                 return [
@@ -336,7 +339,8 @@ class SnippetBag implements BagInterface {
         ];
     }
 
-    private function implodeIdentifier($identifier) {
+    private function implodeIdentifier($identifier)
+    {
         // $identifier = 'database:table:field
         if (!is_array($identifier) && strstr($identifier, ':') !== false) {
             return '`' . implode('`.`', explode(':', $identifier)) . '`';
@@ -359,7 +363,8 @@ class SnippetBag implements BagInterface {
      * @return void
      * @throws InvalidOptionException if no closure is given
      */
-    public function set($name, $parser) {
+    public function set($name, $parser)
+    {
         if ($parser instanceof \Closure) {
             throw new InvalidOptionException(
                 'You must give closure as parser for snippet "' . $name . '"'
@@ -371,7 +376,8 @@ class SnippetBag implements BagInterface {
     /**
      * @inheritdoc
      */
-    public function get($name) {
+    public function get($name)
+    {
         if (!isset($this->snippets[$name])) {
             throw new TypeNotFoundException(
                 'No snippet named "' . $name . '" known'
@@ -384,14 +390,16 @@ class SnippetBag implements BagInterface {
     /**
      * @inheritDoc
      */
-    function getAll() {
+    function getAll()
+    {
         return $this->snippets;
     }
 
     /**
      * @inheritDoc
      */
-    function has($name) {
+    function has($name)
+    {
         return isset($this->snippets[$name]);
     }
 }
