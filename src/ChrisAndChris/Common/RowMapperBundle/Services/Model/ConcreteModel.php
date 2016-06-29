@@ -128,9 +128,9 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function runWithLastId(SqlQuery $query)
+    public function runWithLastId(SqlQuery $query, $sequence =null)
     {
-        return parent::runWithLastId($query);
+        return parent::runWithLastId($query, $sequence);
     }
 
     /**

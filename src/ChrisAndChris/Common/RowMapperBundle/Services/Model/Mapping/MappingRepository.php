@@ -15,6 +15,7 @@ use Symfony\Component\Console\Output\NullOutput;
  * @name MappingHandler
  * @version    1.0.1
  * @since      v2.1.0
+ * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
@@ -40,7 +41,8 @@ class MappingRepository
         } else {
             if ($this->databaseMapper instanceof DatabaseMapperCommand && !$forceException) {
                 $this->runMapper();
-                $this->setMapping($mapping, true);
+
+                return $this->setMapping($mapping, true);
             }
             throw new MappingInitFailedException(sprintf(
                 'No file found at path "%s"',
@@ -48,6 +50,8 @@ class MappingRepository
             ));
         }
         $this->mapping = json_decode($mapping, true);
+
+        return true;
     }
 
     private function runMapper()
@@ -106,41 +110,12 @@ class MappingRepository
     }
 
     /**
-     * @param      $table
-     * @param int  $deepness
-     * @param bool $withAliases
-     * @param bool $allRelations if set to false, only 8 relations are returned (performace issues...)
-     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation[] an array of relations
+     * @param     $table
+     * @param int $deepness
+     * @return Relation[] key is table; value is 0: source field, 1: target field
+     * @throws NoSuchTableException
      */
-    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true, $allRelations = false)
-    {
-        $relations = $this->buildRecursiveRelations($table, $deepness, $withAliases);
-
-        foreach ($this->mapping as $mappedTable => $mapping) {
-            // @todo improve this, there might be a better solution to prevent incredibly long queries
-            if (!isset($mapping['relations']) || (count($relations) > 8) && !$allRelations) {
-                break;
-            }
-            foreach ($mapping['relations'] as $relation) {
-                if ($relation['target'][0] == $table) {
-                    if ($this->getTableIndex($mappedTable, false)) {
-                        break;
-                    }
-                    $entity = new Relation();
-                    $entity->source = $table;
-                    $entity->target = $mappedTable;
-                    $entity->alias = $this->getTableAlias($entity);
-                    $entity->sourceField = $relation['target'][1];
-                    $entity->targetField = $relation['source'];
-                    $relations[] = $entity;
-                }
-            }
-        }
-
-        return $relations;
-    }
-
-    private function buildRecursiveRelations($table, $deepness, $withAliases)
+    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true)
     {
         if ($deepness === 0) {
             return [];
@@ -151,7 +126,7 @@ class MappingRepository
         } else {
             $alias = $table;
         }
-        /** @var string $table */
+
         $relations = [];
         foreach ($this->mapping[$table]['relations'] as $relation) {
             $entity = new Relation();
@@ -160,18 +135,20 @@ class MappingRepository
             $entity->sourceField = $relation['source'];
             $entity->targetField = $relation['target'][1];
             if ($withAliases) {
-                $entity->alias = $this->getTableAlias($entity);
+                $entity->alias = implode(null, [
+                    $entity->target,
+                    '_alias_',
+                    $this->getTableIndex($entity->target),
+                ]);
             } else {
                 $entity->alias = $entity->target;
             }
 
             $relations[] = $entity;
-            foreach ($this->buildRecursiveRelations(
-                [
-                    $entity->target,
-                    $entity->alias,
-                ], $deepness - 1, $withAliases
-            ) as $recursiveRelation) {
+            foreach ($this->getRecursiveRelations([
+                $entity->target,
+                $entity->alias,
+            ], $deepness - 1) as $recursiveRelation) {
                 $relations[] = $recursiveRelation;
             };
         }
@@ -179,22 +156,7 @@ class MappingRepository
         return $relations;
     }
 
-    /**
-     * @param Relation $relation
-     * @return string
-     */
-    private function getTableAlias(Relation $relation)
-    {
-        return implode(
-            null, [
-                $relation->target,
-                '_alias_',
-                $this->getTableIndex($relation->target),
-            ]
-        );
-    }
-
-    private function getTableIndex($table, $increase = true)
+    private function getTableIndex($table)
     {
         static $tableIndexes = [];
 
@@ -202,10 +164,6 @@ class MappingRepository
             $tableIndexes[$table] = 0;
 
             return $this->getTableIndex($table);
-        }
-
-        if (!$increase) {
-            return $tableIndexes[$table];
         }
 
         return $tableIndexes[$table]++;
@@ -256,8 +214,7 @@ class MappingRepository
 
     /**
      * @param        $table
-     * @param string $alias if not null, use this value as alias for the table
-     *                      name
+     * @param string $alias if not null, use this value as alias for the table name
      * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field[]
      * @throws NoSuchTableException
      */
@@ -275,32 +232,5 @@ class MappingRepository
         }
 
         return $fields;
-    }
-
-    /**
-     * @param string $rootTable
-     * @param Relation[] $joinedTables
-     */
-    public function completeJoins($rootTable, $joinedTables) {
-        $relations = $this->getRecursiveRelations($rootTable, 1, true, true);
-        $count = 0;
-        foreach ($joinedTables as $join) {
-            foreach ($relations as $relation) {
-                if ($relation->target == $join->target) {
-                    if ($join->source == null) {
-                        $join->source = $rootTable;
-                    }
-                    if ($join->sourceField == null) {
-                        $join->sourceField=$relation->sourceField;
-                    }
-                    if ($join->targetField == null) {
-                        $join->targetField=$relation->targetField;
-                    }
-                    $join->alias = $this->getTableAlias($relation);
-                    $count++;
-                    break;
-                }
-            }
-        }
     }
 }
