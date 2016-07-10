@@ -62,7 +62,7 @@ class ConcreteModel
      * @param Entity   $entity
      * @return $entity[]
      */
-    protected function run(SqlQuery $query, Entity $entity)
+    public function run(SqlQuery $query, Entity $entity)
     {
         $stmt = $this->prepare($query);
 
@@ -75,7 +75,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return PdoStatement
      */
-    protected function prepare(SqlQuery $query)
+    public function prepare(SqlQuery $query)
     {
         $stmt = $this->createStatement($query->getQuery());
         foreach ($query->getParameters() as $id => $parameter) {
@@ -112,7 +112,7 @@ class ConcreteModel
      *
      * @return ModelDependencyProvider
      */
-    protected function getDependencyProvider()
+    public function getDependencyProvider()
     {
         return $this->dependencyProvider;
     }
@@ -204,7 +204,7 @@ class ConcreteModel
      *
      * @return ErrorHandler
      */
-    protected function getErrorHandler()
+    public function getErrorHandler()
     {
         return $this->dependencyProvider->getErrorHandler();
     }
@@ -214,7 +214,7 @@ class ConcreteModel
      *
      * @return RowMapper
      */
-    protected function getMapper()
+    public function getMapper()
     {
         return $this->dependencyProvider->getMapper();
     }
@@ -224,7 +224,7 @@ class ConcreteModel
      *
      * @return ModelDependencyProvider
      */
-    protected function getDp()
+    public function getDp()
     {
         return $this->dependencyProvider;
     }
@@ -241,7 +241,7 @@ class ConcreteModel
      * @return $onSuccess|$onFailure|$onError
      * @throws \Exception
      */
-    protected function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
+    public function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
     {
         try {
             if ($this->runSimple($query)) {
@@ -276,7 +276,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return bool
      */
-    protected function runSimple(SqlQuery $query)
+    public function runSimple(SqlQuery $query)
     {
         return $this->handle($this->prepare($query), null);
     }
@@ -288,7 +288,7 @@ class ConcreteModel
      * @param string   $sequence the sequence to return the last insert id for
      * @return int
      */
-    protected function runWithLastId(SqlQuery $query, $sequence = null)
+    public function runWithLastId(SqlQuery $query, $sequence = null)
     {
         return $this->handleWithLastInsertId($this->prepare($query), $sequence);
     }
@@ -325,7 +325,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return mixed
      */
-    protected function runWithFirstKeyFirstValue(SqlQuery $query)
+    public function runWithFirstKeyFirstValue(SqlQuery $query)
     {
         $stmt = $this->prepare($query);
 
@@ -351,7 +351,7 @@ class ConcreteModel
      * @param \Closure $closure
      * @return array
      */
-    protected function runArray(SqlQuery $query, Entity $entity, \Closure $closure)
+    public function runArray(SqlQuery $query, Entity $entity, \Closure $closure)
     {
         return $this->handleGeneric(
             $this->prepare($query),
@@ -368,7 +368,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return array
      */
-    protected function runAssoc(SqlQuery $query)
+    public function runAssoc(SqlQuery $query)
     {
         return $this->handleGeneric(
             $this->prepare($query),
@@ -385,7 +385,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return array
      */
-    protected function runKeyValue(SqlQuery $query)
+    public function runKeyValue(SqlQuery $query)
     {
         $stmt = $this->prepare($query);
 
@@ -417,7 +417,7 @@ class ConcreteModel
      * @param SqlQuery $query
      * @return bool whether there is at least one result row or not
      */
-    protected function handleHasResult(SqlQuery $query)
+    public function handleHasResult(SqlQuery $query)
     {
         return $this->handleHas($query, false);
     }
@@ -430,7 +430,7 @@ class ConcreteModel
      *                             only one returns true
      * @return bool whether there is a row or not
      */
-    protected function handleHas(SqlQuery $query, $forceEqual = true)
+    public function handleHas(SqlQuery $query, $forceEqual = true)
     {
         $stmt = $this->prepare($query);
 
