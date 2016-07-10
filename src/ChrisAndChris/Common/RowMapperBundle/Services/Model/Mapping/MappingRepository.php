@@ -1,15 +1,12 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
-use ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingInitFailedException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * @name MappingHandler
@@ -25,25 +22,24 @@ class MappingRepository
 
     /** @var \stdClass */
     private $mapping;
-    /** @var DatabaseMapperCommand */
-    private $databaseMapper;
 
-    public function __construct($cacheDir, $dir, $filename = 'mapping.json', DatabaseMapperCommand $command = null)
+    public function __construct($cacheDir, $dir, $filename = 'mapping.json')
     {
-        $this->databaseMapper = $command;
         $this->setMapping($cacheDir . '/' . $dir . '/' . basename($filename));
     }
 
-    public function setMapping($mapping, $forceException = false)
+    /**
+     * Set mapping file
+     *
+     * @param string $mapping the path to the mapping file
+     * @return bool
+     * @throws MappingInitFailedException
+     */
+    public function setMapping($mapping)
     {
         if (is_file($mapping)) {
             $mapping = file_get_contents($mapping);
         } else {
-            if ($this->databaseMapper instanceof DatabaseMapperCommand && !$forceException) {
-                $this->runMapper();
-
-                return $this->setMapping($mapping, true);
-            }
             throw new MappingInitFailedException(sprintf(
                 'No file found at path "%s"',
                 $mapping
@@ -54,10 +50,6 @@ class MappingRepository
         return true;
     }
 
-    private function runMapper()
-    {
-        $this->databaseMapper->run(new ArrayInput([]), new NullOutput());
-    }
 
     /**
      * @param string       $table   the table to check for
