@@ -2,24 +2,40 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Search\SearchContainer;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository;
-use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 
 /**
  * @name SearchResult
  * @version    1.0.0
+ * @lastChange v2.2.2
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class SearchResultUtility extends Model {
+class SearchResultUtility
+{
 
     /** @var MappingRepository */
     private $repository;
     /** @var SearchQueryBuilder */
     private $queryBuilder;
+    /**
+     * @var ConcreteModel
+     */
+    private $model;
+
+    /**
+     * SearchResultUtility constructor.
+     *
+     * @param ConcreteModel $model
+     */
+    public function __construct(ConcreteModel $model)
+    {
+        $this->model = $model;
+    }
 
     public function setMappingRepository(MappingRepository $repository)
     {
@@ -40,7 +56,7 @@ class SearchResultUtility extends Model {
     public function getInStatement($searchId)
     {
         // @formatter:off
-        return $this->getDependencyProvider()->getBuilder()->in()
+        return $this->model->getDependencyProvider()->getBuilder()->in()
             ->select()
                 ->field('primary_key')
             ->table('search_result')
@@ -59,7 +75,7 @@ class SearchResultUtility extends Model {
      */
     public function getSearchTerm($searchId) {
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->field('search_pattern')
             ->table('search')
             ->where()
@@ -68,7 +84,7 @@ class SearchResultUtility extends Model {
             ->getSqlQuery();
         // @formatter:on
 
-        return $this->runWithFirstKeyFirstValue($query);
+        return $this->model->runWithFirstKeyFirstValue($query);
     }
 
     /**
@@ -79,17 +95,13 @@ class SearchResultUtility extends Model {
      */
     public function runSearch(SearchContainer $container)
     {
-        $this->_startTransaction();
-
         $searchId = $this->generateSearchId($container->getTerm(), $container->targetTable);
         $query = $this->queryBuilder->buildSearchQuery($container, function () use ($searchId) {
             return $searchId;
         });
-        $this->runSimple($query);
+        $this->model->runSimple($query);
 
         $this->updateResultCount($searchId, $this->countSearchResults($searchId));
-
-        $this->_commit();
 
         return $searchId;
     }
@@ -104,7 +116,7 @@ class SearchResultUtility extends Model {
     private function generateSearchId($pattern, $targetTable)
     {
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->insert('search')
+        $query = $this->model->getDependencyProvider()->getBuilder()->insert('search')
             ->fieldlist([
                 'search_pattern',
                 'target_table'
@@ -115,7 +127,7 @@ class SearchResultUtility extends Model {
             ->getSqlQuery();
         // @formatter:off
 
-        return $this->runWithLastId($query);
+        return $this->model->runWithLastId($query);
     }
 
     /**
@@ -127,7 +139,7 @@ class SearchResultUtility extends Model {
     private function updateResultCount($searchId, $resultCount)
     {
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->update('search')
+        $query = $this->model->getDependencyProvider()->getBuilder()->update('search')
             ->updates([
                 ['result_count', $resultCount]
             ])
@@ -137,7 +149,7 @@ class SearchResultUtility extends Model {
             ->getSqlQuery();
         // @formatter:on
 
-        $this->runSimple($query);
+        $this->model->runSimple($query);
     }
 
     /**
@@ -149,7 +161,7 @@ class SearchResultUtility extends Model {
     private function countSearchResults($searchId)
     {
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->f('count')->any()->close()
             ->table('search_result')
             ->where()
@@ -158,7 +170,7 @@ class SearchResultUtility extends Model {
             ->getSqlQuery();
         // @formatter:on
 
-        return $this->runWithFirstKeyFirstValue($query);
+        return $this->model->runWithFirstKeyFirstValue($query);
     }
 
     /**
@@ -170,7 +182,7 @@ class SearchResultUtility extends Model {
     public function getSearchResultCount($searchId)
     {
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
                 ->field('result_count')
             ->table('search')
             ->where()
@@ -179,6 +191,6 @@ class SearchResultUtility extends Model {
             ->getSqlQuery();
         // @formatter:on
 
-        return $this->runWithFirstKeyFirstValue($query);
+        return $this->model->runWithFirstKeyFirstValue($query);
     }
 }
