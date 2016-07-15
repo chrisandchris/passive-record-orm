@@ -130,13 +130,12 @@ class ConcreteModel
     {
         return $this->handleGeneric(
             $statement,
-            function (PdoStatement $statement) use ($entity) {
+            function (PdoStatement $statement) use ($entity, $statement) {
+                if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
+                    return $this->handleError($statement);
+                }
                 if ($entity === null) {
-                    if ((int)$statement->errorCode() == 0) {
                         return true;
-                    }
-
-                    return false;
                 }
 
                 return $this->getMapper()
