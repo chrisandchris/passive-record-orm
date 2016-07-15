@@ -8,7 +8,7 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
  * @name ConcreteModelTest
- * @version    2
+ * @version    3
  * @since      v2.2.0
  * @lastChange v2.2.0
  * @package    RowMapperBundle
@@ -17,60 +17,6 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  */
 class ConcreteModelTest extends TestKernel
 {
-
-    public function testValidateOffset()
-    {
-        $this->assertEquals(0, $this->getModel()
-                                    ->validateOffset(-5));
-        $this->assertEquals(0, $this->getModel()
-                                    ->validateOffset(0));
-        $this->assertEquals(5, $this->getModel()
-                                    ->validateOffset(5));
-        $this->assertEquals(5, $this->getModel()
-                                    ->validateOffset(5.254));
-        $this->assertEquals(5, $this->getModel()
-                                    ->validateOffset(5.9));
-    }
-
-    /**
-     * @return ConcreteModel
-     */
-    private function getModel()
-    {
-        /** @var ModelDependencyProvider $provider */
-        $provider = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
-                         ->disableOriginalConstructor()
-                         ->getMock();
-
-        $model = new ConcreteModel($provider);
-
-        return $model;
-    }
-
-    public function testValidateLimit()
-    {
-        $this->assertEquals(1, $this->getModel()
-                                    ->validateLimit(-5));
-        $this->assertEquals(1, $this->getModel()
-                                    ->validateLimit(0));
-        $this->assertEquals(1, $this->getModel()
-                                    ->validateLimit(1));
-        $this->assertEquals(1, $this->getModel()
-                                    ->validateLimit(1.5));
-        $this->assertEquals(99, $this->getModel()
-                                     ->validateLimit(99.9));
-        $this->assertEquals(50, $this->getModel()
-                                     ->validateLimit(100, 50));
-    }
-
-    public function testSetRunningUser()
-    {
-        $model = $this->getModel();
-        $model->setRunningUser('alpha');
-
-        $model = $this->getModel();
-        $this->assertEquals('alpha', $model->getRunningUser());
-    }
 
     public function testPrepareOptions()
     {
@@ -102,7 +48,7 @@ class ConcreteModelTest extends TestKernel
                     ],
                     $option
                 );
-            } catch (InvalidOptionException $E) {
+            } catch (InvalidOptionException $exception) {
                 $this->fail('Must not fail due to correct options');
             }
         }
@@ -135,8 +81,23 @@ class ConcreteModelTest extends TestKernel
                     $option
                 );
                 $this->fail('Must fail due to incorrect options');
-            } catch (InvalidOptionException $E) {
+            } catch (InvalidOptionException $exception) {
             }
         }
+    }
+
+    /**
+     * @return ConcreteModel
+     */
+    private function getModel()
+    {
+        /** @var ModelDependencyProvider $provider */
+        $provider = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
+                         ->disableOriginalConstructor()
+                         ->getMock();
+
+        $model = new ConcreteModel($provider);
+
+        return $model;
     }
 }
