@@ -48,6 +48,9 @@ class TypeBag implements BagInterface
             'close'      => [
                 'params' => [],
             ],
+            'cast'       => [
+                'params' => ['cast'],
+            ],
             'comma'      => [
                 'params' => [],
             ],

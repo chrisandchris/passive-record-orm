@@ -214,6 +214,17 @@ class Builder {
         return $this;
     }
 
+    /**
+     * @param $castTo
+     * @return $this
+     */
+    public function cast($castTo)
+    {
+        $this->append('cast', ['cast' => $castTo]);
+
+        return $this;
+    }
+
     public function delete($table) {
         $this->append('delete', ['table' => $table]);
 
