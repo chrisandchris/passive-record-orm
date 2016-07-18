@@ -60,6 +60,20 @@ class PgSqlBag implements SnippetBagInterface
                     'params' => null,
                 ];
             },
+            'cast'       => function ($castTo) {
+                $pattern = '/^::\s*([a-zA-Z]+)(?:\()?(?:[0-9]+)?(?:\))?\s*(?:\[\])?$/';
+                if (!preg_match($pattern, $castTo)) {
+                    throw new MalformedQueryException(sprintf(
+                        'Short cast syntax must match pattern "%s"',
+                        $pattern
+                    ));
+                }
+
+                return [
+                    'code'   => $castTo,
+                    'params' => null,
+                ];
+            },
             'close'      => function () {
                 return [
                     'code'   => '/@close',
