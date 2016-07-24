@@ -38,7 +38,7 @@ class PgSqlBag implements SnippetBagInterface
             },
             'alias'      => function (array $params) {
                 return [
-                    'code'   => 'as ' . $params['alias'] . '',
+                    'code'   => 'as "' . $params['alias'] . '""',
                     'params' => null,
                 ];
             },

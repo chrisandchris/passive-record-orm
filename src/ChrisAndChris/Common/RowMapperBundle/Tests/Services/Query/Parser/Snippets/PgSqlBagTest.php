@@ -12,6 +12,8 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
+ *
+ * @covers     \ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
  */
 class PgSqlBagTest extends GeneralBagTest
 {
@@ -37,63 +39,63 @@ class PgSqlBagTest extends GeneralBagTest
 
         $this->assertEquals(
             '::int',
-            $cast('::int')['code']
+            $cast(['cast' => '::int'])['code']
         );
         $this->assertEquals(
             '::int[]',
-            $cast('::int[]')['code']
+            $cast(['cast' => '::int[]'])['code']
         );
         $this->assertEquals(
             '::int []',
-            $cast('::int []')['code']
+            $cast(['cast' => '::int []'])['code']
         );
         $this->assertEquals(
             '::int []',
-            $cast('::int []')['code']
+            $cast(['cast' => '::int []'])['code']
         );
         $this->assertEquals(
             ':: int',
-            $cast(':: int')['code']
+            $cast(['cast' => ':: int'])['code']
         );
         $this->assertEquals(
             ':: varchar(255)',
-            $cast(':: varchar(255)')['code']
+            $cast(['cast' => ':: varchar(255)'])['code']
         );
         $this->assertEquals(
             ':: varchar(255)[]',
-            $cast(':: varchar(255)[]')['code']
+            $cast(['cast' => ':: varchar(255)[]'])['code']
         );
         $this->assertEquals(
             ':: varchar(255) []',
-            $cast(':: varchar(255) []')['code']
+            $cast(['cast' => ':: varchar(255) []'])['code']
         );
 
         try {
-            $cast('int');
+            $cast(['cast' => 'int']);
             $this->fail('Must fail due to invalid cast string');
         } catch (MalformedQueryException $e) {
             // ignore
         }
         try {
-            $cast('int[]');
+            $cast(['cast' => 'int[]']);
             $this->fail('Must fail due to invalid cast string');
         } catch (MalformedQueryException $e) {
             // ignore
         }
         try {
-            $cast(':::int');
+            $cast(['cast' => ':::int']);
             $this->fail('Must fail due to invalid cast string');
         } catch (MalformedQueryException $e) {
             // ignore
         }
         try {
-            $cast('::int[');
+            $cast(['cast' => '::int[']);
             $this->fail('Must fail due to invalid cast string');
         } catch (MalformedQueryException $e) {
             // ignore
         }
         try {
-            $cast('::int[ ]');
+            $cast(['cast' => '::int[ ]']);
             $this->fail('Must fail due to invalid cast string');
         } catch (MalformedQueryException $e) {
             // ignore
