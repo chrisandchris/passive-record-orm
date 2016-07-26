@@ -102,6 +102,7 @@ class ConcreteModel
      */
     private function createStatement($sql)
     {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->getDependencyProvider()
                     ->getPdo()
                     ->prepare($sql);
@@ -130,7 +131,7 @@ class ConcreteModel
     {
         return $this->handleGeneric(
             $statement,
-            function (PdoStatement $statement) use ($entity, $statement) {
+            function (PdoStatement $statement) use ($entity) {
                 if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
@@ -151,7 +152,7 @@ class ConcreteModel
      * @param \Closure     $mappingCallback      a callback taking the
      *                                           statement as first and only
      *                                           argument
-     * @return bool
+     * @return mixed
      * @throws NoSuchRowFoundException
      */
     private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
@@ -208,10 +209,9 @@ class ConcreteModel
         return $this->dependencyProvider->getErrorHandler();
     }
 
+
     /**
-     * Get the Mapper
-     *
-     * @return RowMapper
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper
      */
     public function getMapper()
     {
