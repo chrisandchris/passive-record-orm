@@ -108,7 +108,7 @@ class PgSqlBag implements SnippetBagInterface
             },
             'delete'     => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM ' . $params['table'],
+                    'code'   => 'DELETE FROM ""' . $params['table'] . '""',
                     'params' => null,
                 ];
             },
@@ -192,8 +192,7 @@ class PgSqlBag implements SnippetBagInterface
                 }
 
                 return [
-                    'code'   => 'INSERT ' . $mode . ' INTO ' .
-                        $params['table'] . '',
+                    'code'   => 'INSERT ' . $mode . ' INTO "' . $params['table'] . '"',
                     'params' => null,
                 ];
             },
@@ -298,8 +297,9 @@ class PgSqlBag implements SnippetBagInterface
             'table'      => function (array $params) {
                 $table = $params['table'];
                 if (is_array($table)) {
-                    $table = implode('.', $table);
+                    $table = implode('"."', $table);
                 }
+                $table = sprintf('"%s"', $table);
                 $alias = null;
                 if ($params['alias'] !== null) {
                     $alias = 'as ' . $params['alias'] . '';

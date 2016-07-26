@@ -101,4 +101,24 @@ class PgSqlBagTest extends GeneralBagTest
             // ignore
         }
     }
+
+    public function testBag_table()
+    {
+        $bag = new PgSqlBag();
+
+        $table = $bag->get('table');
+
+        $this->assertEquals(
+            'FROM "table" ',
+            $table(['table' => 'table', 'alias' => null])['code']
+        );
+        $this->assertEquals(
+            'FROM "database"."table" ',
+            $table(['table' => ['database', 'table'], 'alias' => null])['code']
+        );
+        $this->assertEquals(
+            'FROM "schema"."database"."table" ',
+            $table(['table' => ['schema', 'database', 'table'], 'alias' => null])['code']
+        );
+    }
 }
