@@ -54,6 +54,25 @@ class ConcreteModel
         }
     }
 
+    /**
+     * Checks whether $optionName is the only option which is not null, except for keys of $allowAlways
+     *
+     * @param array $options
+     * @param       $optionName
+     * @param array $allowAlways
+     * @return bool
+     */
+    public function isOnlyOption(array $options, $optionName, array $allowAlways = [])
+    {
+        foreach ($options as $name => $value) {
+            if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
+                return false;
+            }
+        }
+
+        return true && isset($options[$optionName]);
+    }
+
     /** @noinspection PhpDocSignatureInspection */
     /**
      * Runs a query

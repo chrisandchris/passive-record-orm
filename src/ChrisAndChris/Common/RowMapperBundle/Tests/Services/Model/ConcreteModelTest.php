@@ -100,4 +100,64 @@ class ConcreteModelTest extends TestKernel
 
         return $model;
     }
+
+    public function testIsOnlyOption()
+    {
+        $model = $this->getModel();
+
+        $this->assertTrue(
+            $model->isOnlyOption([
+                'option1' => 1,
+            ], 'option1')
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => null,
+            ], 'option1')
+        );
+        $this->assertTrue(
+            $model->isOnlyOption([
+                'option1' => 1,
+                'option2' => null,
+            ], 'option1')
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => null,
+                'option2' => null,
+            ], 'option1')
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => null,
+                'option2' => 123,
+            ], 'option1')
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => null,
+                'option2' => 123,
+            ], 'option1', ['option2'])
+        );
+        $this->assertTrue(
+            $model->isOnlyOption([
+                'option1' => 133,
+                'option2' => 123,
+            ], 'option1', ['option2'])
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => 133,
+                'option2' => 123,
+                'option3' => 123,
+            ], 'option1', ['option2'])
+        );
+        $this->assertFalse(
+            $model->isOnlyOption([
+                'option1' => null,
+                'option2' => 123,
+                'option3' => 123,
+            ], 'option1', ['option2'])
+        );
+    }
 }
