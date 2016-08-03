@@ -120,4 +120,23 @@ class PgSqlBagTest extends GeneralBagTest
             $table(['table' => ['schema', 'database', 'table'], 'alias' => null])['code']
         );
     }
+
+    public function testBag_delete()
+    {
+        $bag = new PgSqlBag();
+
+        $delete = $bag->get('delete');
+        $this->assertEquals(
+            'DELETE FROM "table"',
+            $delete(['table' => 'table'])['code']
+        );
+        $this->assertEquals(
+            'DELETE FROM "database"."table"',
+            $delete(['table' => ['database', 'table']])['code']
+        );
+        $this->assertEquals(
+            'DELETE FROM "schema"."database"."table"',
+            $delete(['table' => ['schema', 'database', 'table']])['code']
+        );
+    }
 }

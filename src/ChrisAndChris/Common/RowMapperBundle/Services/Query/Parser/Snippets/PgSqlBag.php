@@ -107,7 +107,7 @@ class PgSqlBag implements SnippetBagInterface
             },
             'delete'     => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM ""' . $params['table'] . '""',
+                    'code'   => 'DELETE FROM ' . $this->implodeIdentifier($params['table']),
                     'params' => null,
                 ];
             },
