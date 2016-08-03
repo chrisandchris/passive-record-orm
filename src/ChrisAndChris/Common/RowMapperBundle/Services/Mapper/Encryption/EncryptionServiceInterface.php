@@ -6,7 +6,6 @@ use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 /**
  * @name EncryptionServiceInterface
  * @version    1.0.0
- * @lastChange v2.1.0
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris

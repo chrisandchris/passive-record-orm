@@ -11,7 +11,6 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
  * @name MySqlMapper
  * @version    1.0.0
  * @since      v2.2.0
- * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris

@@ -12,7 +12,6 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @name GeneralBagTest
  * @version    1.0.0
  * @since      v2.2.0
- * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
