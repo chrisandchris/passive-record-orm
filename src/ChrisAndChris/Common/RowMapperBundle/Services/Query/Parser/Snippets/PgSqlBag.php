@@ -235,7 +235,7 @@ class PgSqlBag implements SnippetBagInterface
             },
             'like'       => function (array $params) {
                 return [
-                    'code'   => 'LIKE ?',
+                    'code'   => 'ILIKE ?',
                     'params' => $params['pattern'],
                 ];
             },
