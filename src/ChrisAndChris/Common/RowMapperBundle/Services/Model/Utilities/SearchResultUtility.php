@@ -9,7 +9,6 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 /**
  * @name SearchResult
  * @version    1.0.0
- * @lastChange v2.2.2
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris

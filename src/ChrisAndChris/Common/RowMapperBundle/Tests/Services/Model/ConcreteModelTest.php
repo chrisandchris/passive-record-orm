@@ -10,7 +10,6 @@ use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
  * @name ConcreteModelTest
  * @version    3
  * @since      v2.2.0
- * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris

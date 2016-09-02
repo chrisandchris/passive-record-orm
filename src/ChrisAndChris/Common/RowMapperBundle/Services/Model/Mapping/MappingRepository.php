@@ -12,7 +12,6 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException
  * @name MappingHandler
  * @version    1.0.1
  * @since      v2.1.0
- * @lastChange v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
