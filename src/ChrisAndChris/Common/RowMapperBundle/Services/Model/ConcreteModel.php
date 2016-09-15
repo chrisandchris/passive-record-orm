@@ -62,7 +62,7 @@ class ConcreteModel
      * @param array $allowAlways
      * @return bool
      */
-    public function isOnlyOption(array $options, $optionName, array $allowAlways = [])
+    public function isOnlyOption(array $options, $optionName, array $allowAlways = ['limit', 'offset'])
     {
         foreach ($options as $name => $value) {
             if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
