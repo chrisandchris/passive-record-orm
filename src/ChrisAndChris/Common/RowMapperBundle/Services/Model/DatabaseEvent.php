@@ -20,6 +20,8 @@ class DatabaseEvent extends Event {
     private $table;
     /** @var string the affected primary key (if available) */
     private $primaryKey;
+    /** @var bool true if a listener marked the event as "called" */
+    private $called;
 
     /**
      * DatabaseEvent constructor.
@@ -54,5 +56,22 @@ class DatabaseEvent extends Event {
      */
     public function getPrimaryKey() {
         return $this->primaryKey;
+    }
+
+    /**
+     * Mark the event als "called", which means a listener executed some action using the event data
+     */
+    public function setCalled()
+    {
+        $this->called = true;
+    }
+
+    /**
+     * Returns true if a listener marked the event as "called"
+     * @return bool
+     */
+    public function isCalled()
+    {
+        return $this->called;
     }
 }
