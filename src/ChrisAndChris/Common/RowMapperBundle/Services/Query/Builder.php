@@ -311,8 +311,8 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function values(array $values = null) {
-        if (count($values) > 0) {
+    public function values(array $values = []) {
+        if (is_array($values) && count($values) > 0) {
             $this->append('values');
 
             $insertCounter = 0;
