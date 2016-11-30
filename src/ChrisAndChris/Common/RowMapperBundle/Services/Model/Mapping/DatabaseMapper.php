@@ -41,11 +41,16 @@ class DatabaseMapper extends Model
             ->table(['information_schema', 'columns'])
             ->where()
                 ->field('TABLE_SCHEMA')->equals()->value($schema)
+                ->connect()
+                ->field('TABLE_NAME')->equals()->value($table)
             ->close()
             ->getSqlQuery();
         // @formatter:on
 
         $fields = $this->runAssoc($query);
+        if (count($fields) ==0) {
+            $this->fields[$schema][$table] = [];
+        }
         foreach ($fields as $field) {
             if (!isset($this->fields[$schema][$field['TABLE_NAME']])) {
                 $this->fields[$schema][$field['TABLE_NAME']] = [];
