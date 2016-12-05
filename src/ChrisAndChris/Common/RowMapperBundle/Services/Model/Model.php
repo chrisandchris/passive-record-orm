@@ -611,15 +611,24 @@ abstract class Model
      *
      * @param array $options
      * @param       $optionName
+     * @param null  $expectedValue
      * @param array $allowAlways
      * @return bool
      */
-    public function isOnlyOption(array $options, $optionName, array $allowAlways = ['limit', 'offset'])
-    {
+    public function isOnlyOption(
+        array $options,
+        $optionName,
+        $expectedValue = null,
+        array $allowAlways = ['limit', 'offset']
+    ) {
         foreach ($options as $name => $value) {
             if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
                 return false;
             }
+        }
+
+        if ($expectedValue !== null) {
+            return true && isset($options[$optionName]) && $options[$optionName] == $expectedValue;
         }
 
         return true && isset($options[$optionName]);
