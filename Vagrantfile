@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-    config.vm.box = "chrisandchris/amp"
+    config.vm.box = "ge/amp7"
     config.vm.network :private_network, type: "dhcp"
-    config.vm.synced_folder ".", "/vagrant"
+    config.vm.synced_folder ".", "/vagrant", type: "nfs"
     config.vm.provision :shell, :path => "bootstrap.sh"
 end

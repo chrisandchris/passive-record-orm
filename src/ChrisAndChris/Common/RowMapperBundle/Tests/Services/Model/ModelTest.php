@@ -99,7 +99,7 @@ class ModelTest extends TestKernel
             [
                 'offset' => 50,
                 'limit'  => 1000,
-            ]
+            ],
         ];
         foreach ($options as $option) {
             try {
@@ -131,7 +131,7 @@ class ModelTest extends TestKernel
             [
                 'offset'   => 50,
                 'limmmmit' => 1000,
-            ]
+            ],
         ];
         foreach ($options as $option) {
             try {
@@ -147,6 +147,32 @@ class ModelTest extends TestKernel
             } catch (InvalidOptionException $E) {
             }
         }
+    }
+
+    public function testIsOnlyOption()
+    {
+        $model = $this->getModel();
+
+        $options = [];
+
+        $this->assertFalse($model->isOnlyOption($options, 'foobar'));
+        $this->assertFalse($model->isOnlyOption($options, 'foobar', true));
+        $this->assertFalse($model->isOnlyOption($options, 'foobar', null));
+
+        $options = [
+            'foobar' => null,
+        ];
+        $this->assertFalse($model->isOnlyOption($options, 'barfoo'));
+        $this->assertTrue($model->isOnlyOption($options, 'foobar'));
+        $this->assertTrue($model->isOnlyOption($options, 'foobar', null));
+
+        $options = [
+            'foobar' => 123,
+        ];
+        $this->assertFalse($model->isOnlyOption($options, 'barfoo'));
+        $this->assertTrue($model->isOnlyOption($options, 'foobar'));
+        $this->assertTrue($model->isOnlyOption($options, 'foobar', 123));
+        $this->assertFalse($model->isOnlyOption($options, 'foobar', 321));
     }
 }
 
