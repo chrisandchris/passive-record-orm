@@ -19,7 +19,8 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class Builder {
+class Builder
+{
 
     /** @var array the statement */
     private $statement = [];
@@ -34,22 +35,26 @@ class Builder {
     /** @var EncryptionExecutorInterface the encryption service used */
     private $encryptionExecutor;
 
-    function __construct(ParserInterface $parser, TypeBag $parameterBag) {
+    function __construct(ParserInterface $parser, TypeBag $parameterBag)
+    {
         $this->parser = $parser;
         $this->typeBag = $parameterBag;
     }
 
-    public function setParser(ParserInterface $parser) {
+    public function setParser(ParserInterface $parser)
+    {
         $this->parser = $parser;
     }
 
-    public function select() {
+    public function select()
+    {
         $this->append('select');
 
         return $this;
     }
 
-    private function append($typeName, array $params = []) {
+    private function append($typeName, array $params = [])
+    {
         if ($this->allowAppend() && $this->typeBag->has($typeName)) {
             $endParams = [];
             $type = $this->typeBag->get($typeName);
@@ -89,7 +94,8 @@ class Builder {
         }
     }
 
-    private function allowAppend() {
+    private function allowAppend()
+    {
         // for speed, we first check only the last index
         // if the last index says we should append, we check all other indexes
         // any of the index must be false
@@ -108,7 +114,8 @@ class Builder {
         return true;
     }
 
-    private function getHighestPropagationKey() {
+    private function getHighestPropagationKey()
+    {
         if (count($this->stopPropagation) == 0) {
             return null;
         }
@@ -116,19 +123,22 @@ class Builder {
         return max(array_keys($this->stopPropagation));
     }
 
-    public function alias($alias) {
+    public function alias($alias)
+    {
         $this->append('alias', ['alias' => $alias]);
 
         return $this;
     }
 
-    public function any() {
+    public function any()
+    {
         $this->append('any');
 
         return $this;
     }
 
-    public function update($table) {
+    public function update($table)
+    {
         $this->append('update', ['table' => $table]);
 
         return $this;
@@ -141,7 +151,8 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function updates(array $updates) {
+    public function updates(array $updates)
+    {
         if (count($updates) < 1) {
             throw new MalformedQueryException(
                 sprintf('Must update at least one field, %s given', count($updates))
@@ -180,13 +191,15 @@ class Builder {
      * @param mixed|\Closure $value
      * @return $this
      */
-    public function value($value) {
+    public function value($value)
+    {
         $this->append('value', ['value' => $value]);
 
         return $this;
     }
 
-    public function equals() {
+    public function equals()
+    {
         $this->append('equals');
 
         return $this;
@@ -202,31 +215,36 @@ class Builder {
      * @param string $identifier path of field or field name
      * @return $this
      */
-    public function field($identifier) {
+    public function field($identifier)
+    {
         $this->append('field', ['identifier' => $identifier]);
 
         return $this;
     }
 
-    public function c() {
+    public function c()
+    {
         $this->append('comma');
 
         return $this;
     }
 
-    public function delete($table) {
+    public function delete($table)
+    {
         $this->append('delete', ['table' => $table]);
 
         return $this;
     }
 
-    public function insert($table, $mode = null) {
+    public function insert($table, $mode = null)
+    {
         $this->append('insert', ['table' => $table, 'mode' => $mode]);
 
         return $this;
     }
 
-    public function table($table, $alias = null) {
+    public function table($table, $alias = null)
+    {
         $this->append('table', ['table' => $table, 'alias' => $alias]);
 
         return $this;
@@ -245,7 +263,8 @@ class Builder {
      * @param bool  $encloseWithBraces if set to true, enclose with braces
      * @return $this
      */
-    public function fieldlist(array $fields, $encloseWithBraces = false) {
+    public function fieldlist(array $fields, $encloseWithBraces = false)
+    {
         if ($encloseWithBraces) {
             $this->brace();
         }
@@ -257,19 +276,22 @@ class Builder {
         return $this;
     }
 
-    public function brace() {
+    public function brace()
+    {
         $this->append('brace');
 
         return $this;
     }
 
-    public function close() {
+    public function close()
+    {
         $this->append('close');
 
         return $this;
     }
 
-    public function where() {
+    public function where()
+    {
         $this->append('where');
 
         return $this;
@@ -280,7 +302,8 @@ class Builder {
      *
      * @return $this
      */
-    public function end() {
+    public function end()
+    {
         return $this->close();
     }
 
@@ -292,13 +315,15 @@ class Builder {
      * @param $name
      * @return $this
      */
-    public function f($name) {
+    public function f($name)
+    {
         $this->append('function', ['name' => $name]);
 
         return $this;
     }
 
-    public function compare($comparison) {
+    public function compare($comparison)
+    {
         $this->append('comparison', ['comparison' => $comparison]);
 
         return $this;
@@ -311,7 +336,8 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function values(array $values = []) {
+    public function values(array $values = [])
+    {
         if (is_array($values) && count($values) > 0) {
             $this->append('values');
 
@@ -353,7 +379,8 @@ class Builder {
      * @return $this
      * @throws SecurityBreachException if no encryption service is set
      */
-    public function encryptedValue($value) {
+    public function encryptedValue($value)
+    {
         $this->append('value', ['value' => $this->encrypt($value)]);
 
         return $this;
@@ -366,7 +393,8 @@ class Builder {
      * @return string the encrypted value
      * @throws SecurityBreachException if no executor is set
      */
-    private function encrypt($value) {
+    private function encrypt($value)
+    {
         if ($this->encryptionExecutor === null) {
             throw new SecurityBreachException('No encryption executor is set');
         }
@@ -382,7 +410,8 @@ class Builder {
      *
      * @return $this
      */
-    public function null() {
+    public function null()
+    {
         $this->append('null');
 
         return $this;
@@ -397,7 +426,8 @@ class Builder {
      * @param null|array $in
      * @return $this
      */
-    public function in($in = null) {
+    public function in($in = null)
+    {
         $this->append('in', ['in' => $in]);
 
         return $this;
@@ -410,7 +440,8 @@ class Builder {
      * @param bool $isNull
      * @return $this
      */
-    public function isNull($isNull = true) {
+    public function isNull($isNull = true)
+    {
         if ($isNull) {
             $this->append('isnull', ['isnull' => true]);
         } else {
@@ -426,7 +457,8 @@ class Builder {
      * @param int $limit the maximal amount of rows
      * @return $this
      */
-    public function limit($limit = 1) {
+    public function limit($limit = 1)
+    {
         $this->append('limit', ['limit' => $limit]);
 
         return $this;
@@ -438,13 +470,15 @@ class Builder {
      * @param int $offset the offset
      * @return $this
      */
-    public function offset($offset = 0) {
+    public function offset($offset = 0)
+    {
         $this->append('offset', ['offset' => $offset]);
 
         return $this;
     }
 
-    public function join($table, $type = 'inner', $alias = null) {
+    public function join($table, $type = 'inner', $alias = null)
+    {
         $this->append(
             'join', [
                 'table' => $table,
@@ -456,7 +490,8 @@ class Builder {
         return $this;
     }
 
-    public function union($mode = '') {
+    public function union($mode = '')
+    {
         $this->append(
             'union', [
                 'mode' => $mode,
@@ -464,13 +499,15 @@ class Builder {
         );
     }
 
-    public function using($field) {
+    public function using($field)
+    {
         $this->append('using', ['field' => $field]);
 
         return $this;
     }
 
-    public function on() {
+    public function on()
+    {
         $this->append('on');
 
         return $this;
@@ -487,7 +524,8 @@ class Builder {
      * @param null $field
      * @return $this
      */
-    public function groupBy($field = null) {
+    public function groupBy($field = null)
+    {
         $this->append('group');
         if ($field !== null) {
             $this->append('field', ['identifier' => $field]);
@@ -504,7 +542,8 @@ class Builder {
      *
      * @return $this
      */
-    public function order() {
+    public function order()
+    {
         $this->append('order');
 
         return $this;
@@ -517,7 +556,8 @@ class Builder {
      * @param array $params
      * @return $this
      */
-    public function raw($raw, array $params = []) {
+    public function raw($raw, array $params = [])
+    {
         $this->append('raw', ['raw' => $raw, 'params' => $params]);
 
         return $this;
@@ -534,7 +574,8 @@ class Builder {
      * @param bool|\Closure $condition the condition to validate
      * @return $this
      */
-    public function _if($condition) {
+    public function _if($condition)
+    {
         if ($condition instanceof \Closure && $this->allowAppend()) {
             $this->usedClosures = true;
             $condition = $condition();
@@ -555,7 +596,8 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function _else() {
+    public function _else()
+    {
         // simply swap the latest item propagation
         $maxIndex = $this->getHighestPropagationKey();
         if ($maxIndex === null) {
@@ -573,7 +615,8 @@ class Builder {
      * @return $this
      * @throws MalformedQueryException
      */
-    public function _end() {
+    public function _end()
+    {
         $maxIndex = $this->getHighestPropagationKey();
 
         if ($maxIndex === null) {
@@ -592,7 +635,8 @@ class Builder {
      * @param array $orders
      * @return $this
      */
-    public function orderBy(array $orders) {
+    public function orderBy(array $orders)
+    {
         $this->append('order');
         $idx = 0;
         foreach ($orders as $field => $direction) {
@@ -627,13 +671,15 @@ class Builder {
      * @param string $order
      * @return $this
      */
-    public function by($field, $order = 'desc') {
+    public function by($field, $order = 'desc')
+    {
         $this->append('orderby', ['field' => $field, 'direction' => $order]);
 
         return $this;
     }
 
-    public function connect($relation = '&') {
+    public function connect($relation = '&')
+    {
         switch (strtolower($relation)) {
             case 'and' :
             case '&' :
@@ -660,7 +706,8 @@ class Builder {
      * @throws MissingParameterException
      * @throws TypeNotFoundException
      */
-    public function custom($type, array $params = []) {
+    public function custom($type, array $params = [])
+    {
         $this->append($type, $params);
 
         return $this;
@@ -675,7 +722,8 @@ class Builder {
      * @param mixed|\Closure $pattern
      * @return $this
      */
-    public function like($pattern) {
+    public function like($pattern)
+    {
         $this->append('like', ['pattern' => $pattern]);
 
         return $this;
@@ -692,7 +740,8 @@ class Builder {
      * @param \Closure $callable  the callable to execute on each turn
      * @throws MalformedQueryException
      */
-    public function asLong(\Closure $validator, \Closure $callable) {
+    public function asLong(\Closure $validator, \Closure $callable)
+    {
         while ($validator() === true) {
             $this->appendMultiple($callable());
         }
@@ -707,7 +756,8 @@ class Builder {
      * @throws MissingParameterException if parameters of types are missing
      * @throws TypeNotFoundException if a type is not found
      */
-    private function appendMultiple($types) {
+    private function appendMultiple($types)
+    {
         if ($types instanceof Builder) {
             $types = $types->getStatement();
         } else {
@@ -730,7 +780,8 @@ class Builder {
      *
      * @return array
      */
-    public function getStatement() {
+    public function getStatement()
+    {
         return $this->statement;
     }
 
@@ -765,12 +816,23 @@ class Builder {
         return $this;
     }
 
-    public function each(array $items, \Closure $callable) {
+    public function each(array $items, \Closure $callable)
+    {
         $count = 0;
         foreach ($items as $item) {
             $count++;
             $this->appendMultiple($callable($item, $count < count($items)));
         }
+
+        return $this;
+    }
+
+    public function foundRows($field = null)
+    {
+        if (strlen($field) == 0 || $field === null) {
+            $field = '*';
+        }
+        $this->append('sql_found_rows', ['identifier' => $field]);
 
         return $this;
     }
@@ -783,7 +845,8 @@ class Builder {
      * @throws MalformedQueryException if the query is (probably) malformed
      * @throws SystemException if no parser is available
      */
-    public function getSqlQuery(ParserInterface $parser = null) {
+    public function getSqlQuery(ParserInterface $parser = null)
+    {
         if ($this->parser === null && $parser === null) {
             throw new SystemException('No parser given');
         }
@@ -811,7 +874,8 @@ class Builder {
     /**
      * Clear the class
      */
-    private function clear() {
+    private function clear()
+    {
         $this->stopPropagation = [];
         $this->statement = [];
         $this->usedClosures = false;
@@ -823,7 +887,8 @@ class Builder {
      * @param EncryptionExecutorInterface $executorService
      * @return $this
      */
-    public function useEncryptionService(EncryptionExecutorInterface $executorService) {
+    public function useEncryptionService(EncryptionExecutorInterface $executorService)
+    {
         $this->encryptionExecutor = $executorService;
 
         return $this;

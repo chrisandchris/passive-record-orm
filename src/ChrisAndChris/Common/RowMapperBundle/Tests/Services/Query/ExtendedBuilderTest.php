@@ -20,9 +20,11 @@ use phpseclib\Crypt\AES;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class ExtendedBuilderTest extends AbstractBuilderTest {
+class ExtendedBuilderTest extends AbstractBuilderTest
+{
 
-    public function testSelect() {
+    public function testSelect()
+    {
         $builder = $this->getBuilder();
 
         $builder->select();
@@ -32,7 +34,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         );
     }
 
-    public function testAlias() {
+    public function testAlias()
+    {
         $builder = $this->getBuilder();
 
         $builder->alias('alias');
@@ -42,7 +45,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         );
     }
 
-    public function testIf() {
+    public function testIf()
+    {
         $builder = $this->getBuilder();
 
         $builder->_if(true)
@@ -89,7 +93,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testElse() {
+    public function testElse()
+    {
         $builder = $this->getBuilder();
 
         $builder->_if(true)
@@ -119,7 +124,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testNestedIf() {
+    public function testNestedIf()
+    {
         $builder = $this->getBuilder();
 
         // @formatter:off
@@ -166,7 +172,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->equals('1 2 6', $builder);
     }
 
-    public function testTypeNotFound() {
+    public function testTypeNotFound()
+    {
         $builder = $this->getBuilder();
 
         try {
@@ -177,7 +184,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testMissingParams() {
+    public function testMissingParams()
+    {
         $builder = $this->getBuilder();
 
         try {
@@ -196,7 +204,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testClosure() {
+    public function testClosure()
+    {
         $builder = $this->getBuilder();
 
         $builder->value(
@@ -211,14 +220,16 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->assertEquals(1, $query->getParameters()[0]);
     }
 
-    public function testParamReplacement() {
+    public function testParamReplacement()
+    {
         $builder = $this->getBuilder();
 
         $builder->table('table');
         $this->equals('FROM `table`', $builder);
     }
 
-    public function testValuesStatement() {
+    public function testValuesStatement()
+    {
         $builder = $this->getBuilder();
         $fieldValues = [
             [
@@ -257,7 +268,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->assertEquals('VALUES (   ? , ? , ? , ?  )  , (   ? , ? , ? , ?  )', $query);
     }
 
-    public function testValuesInvalidInput() {
+    public function testValuesInvalidInput()
+    {
         $builder = $this->getBuilder();
         $fieldValues = [
             null,
@@ -282,7 +294,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testAppendMultiple() {
+    public function testAppendMultiple()
+    {
         $builder = $this->getBuilder();
         $array = [0];
         $builder->each(
@@ -325,7 +338,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->assertEquals('`field1` `field2`', $query);
     }
 
-    public function testAppendMultipleWrongInput() {
+    public function testAppendMultipleWrongInput()
+    {
         $builder = $this->getBuilder();
         $array = [0];
         try {
@@ -380,7 +394,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testEncryptedBuilder() {
+    public function testEncryptedBuilder()
+    {
         $builder = $this->getBuilder();
 
         $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
@@ -393,7 +408,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
     }
 
-    public function testEncryptedBuilderWithClosure() {
+    public function testEncryptedBuilderWithClosure()
+    {
         $builder = $this->getBuilder();
 
         $executor = new StringBasedExecutor(new PhpSeclibAesWrapper(new AES()));
@@ -410,7 +426,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         $this->assertNotEquals('Mr. Jones', $query->getParameters()[0]);
     }
 
-    public function testSecurityBreach() {
+    public function testSecurityBreach()
+    {
         $builder = $this->getBuilder();
 
         try {
@@ -421,7 +438,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testUpdates() {
+    public function testUpdates()
+    {
         $builder = $this->getBuilder();
 
         $builder->updates(
@@ -490,5 +508,15 @@ class ExtendedBuilderTest extends AbstractBuilderTest {
 
         $builder->join('table', 'left', 'tx');
         $this->equals('LEFT JOIN `table` as `tx`', $builder);
+    }
+
+    public function testFoundRows()
+    {
+        $builder = $this->getBuilder();
+        $builder->foundRows('field');
+        $this->equals('SQL_CALC_FOUND_ROWS `field`', $builder);
+
+        $builder->foundRows();
+        $this->equals('SQL_CALC_FOUND_ROWS *', $builder);
     }
 }

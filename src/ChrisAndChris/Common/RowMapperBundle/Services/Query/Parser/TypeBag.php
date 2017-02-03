@@ -186,6 +186,9 @@ class TypeBag implements BagInterface
             'select'     => [
                 'params' => [],
             ],
+            'sql_found_rows' => [
+                'params' => ['identifier']
+            ],
             'table'      => [
                 'params'   => [
                     'table',

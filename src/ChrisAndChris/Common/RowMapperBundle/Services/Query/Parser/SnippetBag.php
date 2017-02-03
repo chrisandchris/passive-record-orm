@@ -28,49 +28,49 @@ class SnippetBag implements BagInterface
     private function init()
     {
         $this->snippets = [
-            'select'     => function () {
+            'select'         => function () {
                 return [
                     'code'   => 'SELECT',
                     'params' => null,
                 ];
             },
-            'alias'      => function (array $params) {
+            'alias'          => function (array $params) {
                 return [
                     'code'   => 'as `' . $params['alias'] . '`',
                     'params' => null,
                 ];
             },
-            'and'        => function () {
+            'and'            => function () {
                 return [
                     'code'   => 'AND',
                     'params' => null,
                 ];
             },
-            'any'        => function () {
+            'any'            => function () {
                 return [
                     'code'   => '*',
                     'params' => null,
                 ];
             },
-            'brace'      => function () {
+            'brace'          => function () {
                 return [
                     'code'   => '( /@brace(brace) )',
                     'params' => null,
                 ];
             },
-            'close'      => function () {
+            'close'          => function () {
                 return [
                     'code'   => '/@close',
                     'params' => null,
                 ];
             },
-            'comma'      => function () {
+            'comma'          => function () {
                 return [
                     'code'   => ',',
                     'params' => null,
                 ];
             },
-            'comparison' => function (array $params) {
+            'comparison'     => function (array $params) {
                 $allowed = [
                     '<',
                     '>',
@@ -90,19 +90,19 @@ class SnippetBag implements BagInterface
                     'No such comparison known: ' . $params['comparison']
                 );
             },
-            'delete'     => function (array $params) {
+            'delete'         => function (array $params) {
                 return [
                     'code'   => 'DELETE FROM `' . $params['table'] . '`',
                     'params' => null,
                 ];
             },
-            'equals'     => function () {
+            'equals'         => function () {
                 return [
                     'code'   => '=',
                     'params' => null,
                 ];
             },
-            'fieldlist'  => function (array $params) {
+            'fieldlist'      => function (array $params) {
                 $sql = '';
                 $fieldCount = count($params['fields']);
                 $idx = 0;
@@ -126,25 +126,25 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'field'      => function (array $params) {
+            'field'          => function (array $params) {
                 return [
                     'code'   => $this->implodeIdentifier($params['identifier']),
                     'params' => null,
                 ];
             },
-            'function'   => function (array $params) {
+            'function'       => function (array $params) {
                 return [
                     'code'   => strtoupper($params['name']) . '(/@brace(f))',
                     'params' => null,
                 ];
             },
-            'group'      => function () {
+            'group'          => function () {
                 return [
                     'code'   => 'GROUP BY /@brace(group)',
                     'params' => null,
                 ];
             },
-            'in'         => function (array $params) {
+            'in'             => function (array $params) {
                 if (is_array($params['in'])) {
                     $code = '';
                     $count = count($params['in']);
@@ -166,7 +166,7 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'insert'     => function (array $params) {
+            'insert'         => function (array $params) {
                 $modes = [
                     'ignore',
                 ];
@@ -181,7 +181,7 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'isnull'     => function (array $params) {
+            'isnull'         => function (array $params) {
                 if ($params['isnull']) {
                     return [
                         'code'   => 'IS NULL',
@@ -194,7 +194,7 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'join'       => function (array $params) {
+            'join'           => function (array $params) {
                 $joinTypes = [
                     'left',
                     'right',
@@ -218,37 +218,37 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'like'       => function (array $params) {
+            'like'           => function (array $params) {
                 return [
                     'code'   => 'LIKE ?',
                     'params' => $params['pattern'],
                 ];
             },
-            'limit'      => function (array $params) {
+            'limit'          => function (array $params) {
                 return [
                     'code'   => 'LIMIT ' . abs((int)$params['limit']),
                     'params' => null,
                 ];
             },
-            'null'       => function () {
+            'null'           => function () {
                 return [
                     'code'   => 'NULL',
                     'params' => null,
                 ];
             },
-            'offset'     => function (array $params) {
+            'offset'         => function (array $params) {
                 return [
                     'code'   => 'OFFSET ' . abs((int)$params['offset']),
                     'params' => null,
                 ];
             },
-            'on'         => function () {
+            'on'             => function () {
                 return [
                     'code'   => 'ON ( /@brace(on) )',
                     'params' => null,
                 ];
             },
-            'orderby'    => function (array $params) {
+            'orderby'        => function (array $params) {
                 if ($params['direction'] != 'asc' &&
                     $params['direction'] != 'desc'
                 ) {
@@ -261,25 +261,36 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'order'      => function () {
+            'order'          => function () {
                 return [
                     'code'   => 'ORDER BY /@brace(order)',
                     'params' => null,
                 ];
             },
-            'or'         => function () {
+            'or'             => function () {
                 return [
                     'code'   => 'OR',
                     'params' => null,
                 ];
             },
-            'raw'        => function (array $params) {
+            'sql_found_rows' => function (array $params) {
+                $identifier = $params['identifier'];
+                if ($params['identifier'] != '*') {
+                    $identifier = $this->implodeIdentifier($params['identifier']);
+                }
+
+                return [
+                    'code'   => 'SQL_CALC_FOUND_ROWS ' . $identifier,
+                    'params' => null,
+                ];
+            },
+            'raw'            => function (array $params) {
                 return [
                     'code'   => $params['raw'],
                     'params' => $params['params'],
                 ];
             },
-            'table'      => function (array $params) {
+            'table'          => function (array $params) {
                 $table = $params['table'];
                 if (is_array($table)) {
                     $table = implode('`.`', $table);
@@ -294,7 +305,7 @@ class SnippetBag implements BagInterface
                     'params' => null,
                 ];
             },
-            'union'      => function (array $params) {
+            'union'          => function (array $params) {
                 $mode = strtolower($params['mode']);
                 if ($mode == 'all') {
                     return 'UNION ALL';
@@ -306,31 +317,31 @@ class SnippetBag implements BagInterface
 
                 return 'UNION';
             },
-            'update'     => function (array $params) {
+            'update'         => function (array $params) {
                 return [
                     'code'   => 'UPDATE `' . $params['table'] . '` SET',
                     'params' => null,
                 ];
             },
-            'using'      => function (array $params) {
+            'using'          => function (array $params) {
                 return [
                     'code'   => 'USING(`' . $params['field'] . '`)',
                     'params' => null,
                 ];
             },
-            'value'      => function (array $params) {
+            'value'          => function (array $params) {
                 return [
                     'code'   => '?',
                     'params' => $params['value'],
                 ];
             },
-            'values'     => function () {
+            'values'         => function () {
                 return [
                     'code'   => 'VALUES',
                     'params' => null,
                 ];
             },
-            'where'      => function () {
+            'where'          => function () {
                 return [
                     'code'   => 'WHERE /@brace(where)',
                     'params' => null,

@@ -48,9 +48,11 @@ class ConcreteModel extends Model
     /**
      * @inheritDoc
      */
-    public function run(SqlQuery $query, Entity $entity)
+    public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
     {
-        return parent::run($query, $entity);
+        $result = parent::run($query, $entity, $callAfter);
+
+        return $result;
     }
 
     /**
@@ -195,6 +197,22 @@ class ConcreteModel extends Model
     public function commit()
     {
         parent::_commit();
+    }
+
+    /**
+     * Returns the value of SQL_CALC_FOUND_ROWS
+     *
+     * @return int
+     */
+    public function getFoundRowCount()
+    {
+        // @formatter:off
+        $query = $this->getDependencyProvider()->getBuilder()->select()
+            ->f('FOUND_ROWS')->close()
+            ->getSqlQuery();
+        // @formatter:on
+
+        return (int)$this->runWithFirstKeyFirstValue($query);
     }
 
 }

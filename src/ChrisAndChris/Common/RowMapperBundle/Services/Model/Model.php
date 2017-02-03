@@ -115,19 +115,24 @@ abstract class Model
         }
     }
 
-    /** @noinspection PhpDocSignatureInspection */
     /**
      * Runs a query
      *
      * @param SqlQuery $query
      * @param Entity   $entity
-     * @return $entity[]
+     * @param \Closure $callAfter call after successful run of query
+     * @return bool|Entity[] $entity[]
      */
-    protected function run(SqlQuery $query, Entity $entity)
+    protected function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
     {
         $stmt = $this->prepare($query);
 
-        return $this->handle($stmt, $entity);
+        $result = $this->handle($stmt, $entity);
+        if ($callAfter instanceof \Closure) {
+            $callAfter($result);
+        }
+
+        return $result;
     }
 
     /**
