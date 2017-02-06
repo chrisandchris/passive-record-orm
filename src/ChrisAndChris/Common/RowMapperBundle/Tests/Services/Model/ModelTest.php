@@ -159,12 +159,13 @@ class ModelTest extends TestKernel
         $this->assertFalse($model->isOnlyOption($options, 'foobar', true));
         $this->assertFalse($model->isOnlyOption($options, 'foobar', null));
 
+        // null values do not represent a valid option state
         $options = [
             'foobar' => null,
         ];
         $this->assertFalse($model->isOnlyOption($options, 'barfoo'));
-        $this->assertTrue($model->isOnlyOption($options, 'foobar'));
-        $this->assertTrue($model->isOnlyOption($options, 'foobar', null));
+        $this->assertFalse($model->isOnlyOption($options, 'foobar'));
+        $this->assertFalse($model->isOnlyOption($options, 'foobar', null));
 
         $options = [
             'foobar' => 123,
