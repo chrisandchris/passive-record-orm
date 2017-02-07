@@ -14,9 +14,11 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class BuilderTest extends AbstractBuilderTest {
+class BuilderTest extends AbstractBuilderTest
+{
 
-    function testSimpleQuery() {
+    function testSimpleQuery()
+    {
         // @formatter:off
         $builder = $this->getBuilder();
         $builder->select()
@@ -66,26 +68,30 @@ class BuilderTest extends AbstractBuilderTest {
         $this->assertEquals(4, count($query->getParameters()));
     }
 
-    public function testSelect() {
+    public function testSelect()
+    {
         $builder = $this->getBuilder();
         $builder->select();
 
         $this->equals('SELECT', $builder);
     }
 
-    public function testUpdate() {
+    public function testUpdate()
+    {
         $builder = $this->getBuilder();
         $builder->update('table1');
         $this->equals('UPDATE `table1` SET', $builder);
     }
 
-    public function testInsert() {
+    public function testInsert()
+    {
         $builder = $this->getBuilder();
         $builder->insert('table1');
         $this->equals('INSERT INTO `table1`', $builder);
     }
 
-    public function testInClause() {
+    public function testInClause()
+    {
         $builder = $this->getBuilder();
         $builder->in(['1', '2', '3']);
         $this->equals('IN (?, ?, ?)', $builder);
@@ -100,20 +106,23 @@ class BuilderTest extends AbstractBuilderTest {
         // @formatter:on
     }
 
-    public function testDelete() {
+    public function testDelete()
+    {
         $builder = $this->getBuilder();
         $builder->delete('table1');
         $this->equals('DELETE FROM `table1`', $builder);
     }
 
-    public function testTable() {
+    public function testTable()
+    {
         $builder = $this->getBuilder();
         $builder->table('table');
 
         $this->equals('FROM `table`', $builder);
     }
 
-    public function testFieldlist() {
+    public function testFieldlist()
+    {
         $builder = $this->getBuilder();
         $builder->fieldlist(
             [
@@ -167,7 +176,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('( `field1`, `field2` )', $builder);
     }
 
-    public function testWhere() {
+    public function testWhere()
+    {
         $builder = $this->getBuilder();
         $builder->where()
                 ->field('field1')
@@ -191,7 +201,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('WHERE `field1` = ? AND `field2` = `field3`', $builder);
     }
 
-    public function testField() {
+    public function testField()
+    {
         $builder = $this->getBuilder();
         $builder->field('field1');
         $this->equals('`field1`', $builder);
@@ -205,13 +216,15 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('`database`.`table`.`field`', $builder);
     }
 
-    public function testEquals() {
+    public function testEquals()
+    {
         $builder = $this->getBuilder();
         $builder->equals();
         $this->equals('=', $builder);
     }
 
-    public function testValue() {
+    public function testValue()
+    {
         $builder = $this->getBuilder();
         $builder->value('value1');
         $query = $builder->getSqlQuery();
@@ -226,14 +239,16 @@ class BuilderTest extends AbstractBuilderTest {
         $this->assertEquals(0, count($query->getParameters()));
     }
 
-    public function testBrace() {
+    public function testBrace()
+    {
         $builder = $this->getBuilder();
         $builder->brace()
                 ->close();
         $this->equals('( )', $builder);
     }
 
-    public function testLimit() {
+    public function testLimit()
+    {
         $builder = $this->getBuilder();
         $builder->limit(1);
         $this->equals('LIMIT 1', $builder);
@@ -247,13 +262,15 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('LIMIT 1', $builder);
     }
 
-    public function testUsing() {
+    public function testUsing()
+    {
         $builder = $this->getBuilder();
         $builder->using('field1');
         $this->equals('USING(`field1`)', $builder);
     }
 
-    public function testOn() {
+    public function testOn()
+    {
         $builder = $this->getBuilder();
         $builder->on()
                 ->field('field1')
@@ -271,7 +288,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('ON ( `t1`.`field1` = `t2`.`field2` )', $builder);
     }
 
-    public function testGroupBy() {
+    public function testGroupBy()
+    {
         $builder = $this->getBuilder();
         $builder->groupBy('field1');
         $this->equals('GROUP BY `field1`', $builder);
@@ -285,7 +303,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('GROUP BY `field1` , `field2`', $builder);
     }
 
-    public function testOrder() {
+    public function testOrder()
+    {
         $builder = $this->getBuilder();
         $builder->order()
                 ->by('field1')
@@ -307,7 +326,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('ORDER BY `field1` ASC , `field2` DESC', $builder);
     }
 
-    public function testOderBy() {
+    public function testOderBy()
+    {
         $builder = $this->getBuilder();
         $builder->orderBy(
             [
@@ -334,7 +354,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->equals('ORDER BY `field1` ASC , `field2` DESC', $builder);
     }
 
-    public function testConnect() {
+    public function testConnect()
+    {
         $builder = $this->getBuilder();
         $builder->connect('&');
         $this->equals('AND', $builder);
@@ -368,18 +389,21 @@ class BuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testC() {
+    public function testC()
+    {
         $builder = $this->getBuilder();
         $builder->c();
         $this->equals(',', $builder);
     }
 
-    public function testGetSqlQuery() {
+    public function testGetSqlQuery()
+    {
         $builder = $this->getBuilder();
         $this->assertTrue($builder->getSqlQuery() instanceof SqlQuery);
     }
 
-    public function testComparison() {
+    public function testComparison()
+    {
         $tests = [
             '<=',
             '<',
@@ -414,7 +438,8 @@ class BuilderTest extends AbstractBuilderTest {
         }
     }
 
-    public function testAsLong() {
+    public function testAsLong()
+    {
         $builder = $this->getBuilder();
 
         $limit = 5;
@@ -435,7 +460,8 @@ class BuilderTest extends AbstractBuilderTest {
         $this->assertEquals('`field` `field` `field` `field` `field`', $query->getQuery());
     }
 
-    public function testEach() {
+    public function testEach()
+    {
         $builder = $this->getBuilder();
 
         $array = [
@@ -462,12 +488,21 @@ class BuilderTest extends AbstractBuilderTest {
         $this->assertEquals('`field` , `field` , `field`', $query->getQuery());
     }
 
-    public function testValues() {
+    public function testValues()
+    {
         $builder = $this->getBuilder();
 
         $builder->values();
         $query = $builder->getSqlQuery()
                          ->getQuery();
         $this->assertEquals('VALUES', $query);
+    }
+
+    public function testCombine()
+    {
+        $builder = $this->getBuilder();
+
+        $r = $builder->combine(null);
+        $this->assertEquals($builder, $r);
     }
 }

@@ -794,7 +794,7 @@ class Builder
      */
     public function combine($builder)
     {
-        if (!$this->allowAppend()) {
+        if (!$this->allowAppend() || $builder === null) {
             return $this;
         }
 
