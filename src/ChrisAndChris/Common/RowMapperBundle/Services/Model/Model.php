@@ -624,7 +624,7 @@ abstract class Model
         array $options,
         $optionName,
         $expectedValue = null,
-        array $allowAlways = ['limit', 'offset']
+        array $allowAlways = ['limit', 'offset', 'pagination']
     ) {
         foreach ($options as $name => $value) {
             if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
