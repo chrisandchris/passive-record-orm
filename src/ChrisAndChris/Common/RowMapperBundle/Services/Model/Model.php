@@ -636,6 +636,6 @@ abstract class Model
             return true && array_key_exists($optionName, $options) && $options[$optionName] == $expectedValue;
         }
 
-        return true && array_key_exists($optionName, $options);
+        return true && array_key_exists($optionName, $options) && $options[$optionName] !== null;
     }
 }
