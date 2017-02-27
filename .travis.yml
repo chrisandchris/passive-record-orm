@@ -9,3 +9,6 @@ before_script:
   - composer install
 services:
   - mysql
+addons:
+    code_climate:
+        repo_token: 7aff27efa0c3e0bc7c670a8ebedabbaadc3b2d4d767f3db4b4f5ecf53d57ddce
