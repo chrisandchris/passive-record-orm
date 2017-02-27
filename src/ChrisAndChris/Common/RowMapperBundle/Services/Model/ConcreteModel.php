@@ -208,10 +208,6 @@ class ConcreteModel extends Model
      */
     public function getFoundRowCount()
     {
-
-
-        var_dump($this->lastStatement->isCalcRowCapable());
-
         if ($this->lastStatement->isCalcRowCapable() == false) {
             throw new NotCapableException(
                 'Last executed query is not capable to run FOUND_ROWS() on it'

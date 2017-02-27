@@ -145,8 +145,6 @@ abstract class Model
      */
     protected function prepare(SqlQuery $query)
     {
-        var_dump($query->isCalcRowCapable());
-
         $stmt = $this->createStatement($query->getQuery());
         $this->bindValues($stmt, $query);
         $stmt->requiresResult($query->isResultRequired());
