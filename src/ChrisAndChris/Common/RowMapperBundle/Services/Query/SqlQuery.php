@@ -12,16 +12,18 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Query;
  */
 class SqlQuery {
 
+    private $calcRowCapable = false;
     private $query;
     private $parameters;
     private $requiresResult = false;
 
-    function __construct($query, $parameters = []) {
+    function __construct($query, $parameters = [], $calcRowCapable = false) {
         $this->query = $query;
         if (!is_array($parameters)) {
             $parameters = [$parameters];
         }
         $this->parameters = $parameters;
+        $this->calcRowCapable = $calcRowCapable;
     }
 
     /**
@@ -50,5 +52,10 @@ class SqlQuery {
      */
     public function isResultRequired() {
         return $this->requiresResult;
+    }
+
+    public function isCalcRowCapable()
+    {
+        return $this->calcRowCapable;
     }
 }

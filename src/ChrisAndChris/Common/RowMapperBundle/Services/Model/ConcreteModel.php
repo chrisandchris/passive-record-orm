@@ -2,6 +2,7 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 
 /**
@@ -203,9 +204,20 @@ class ConcreteModel extends Model
      * Returns the value of SQL_CALC_FOUND_ROWS
      *
      * @return int
+     * @throws NotCapableException
      */
     public function getFoundRowCount()
     {
+
+
+        var_dump($this->lastStatement->isCalcRowCapable());
+
+        if ($this->lastStatement->isCalcRowCapable() == false) {
+            throw new NotCapableException(
+                'Last executed query is not capable to run FOUND_ROWS() on it'
+            );
+        }
+
         // @formatter:off
         $query = $this->getDependencyProvider()->getBuilder()->select()
             ->f('FOUND_ROWS')->close()

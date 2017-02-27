@@ -861,9 +861,17 @@ class Builder
         if (!isset($query)) {
             $parser->setStatement($this->statement);
             $parser->execute();
+            $calcRowCapable = false;
+            foreach ($this->statement as $item) {
+                if ($item['type'] == 'sql_found_rows') {
+                    $calcRowCapable = true;
+                    break;
+                }
+            }
             $query = new SqlQuery(
                 $parser->getSqlQuery(),
-                $parser->getParameters()
+                $parser->getParameters(),
+                $calcRowCapable
             );
         }
         $this->clear();

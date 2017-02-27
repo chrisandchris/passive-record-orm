@@ -32,6 +32,8 @@ abstract class Model
     protected $dependencyProvider;
     /** @var bool if set to true, current result must have at least one row */
     private $currentMustHaveRow;
+    /** @var PdoStatement */
+    protected $lastStatement = null;
 
     function __construct(ModelDependencyProvider $dependencyProvider)
     {
@@ -143,9 +145,14 @@ abstract class Model
      */
     protected function prepare(SqlQuery $query)
     {
+        var_dump($query->isCalcRowCapable());
+
         $stmt = $this->createStatement($query->getQuery());
         $this->bindValues($stmt, $query);
         $stmt->requiresResult($query->isResultRequired());
+        $stmt->setCalcRowCapable($query->isCalcRowCapable());
+
+        $this->lastStatement = $stmt;
 
         return $stmt;
     }

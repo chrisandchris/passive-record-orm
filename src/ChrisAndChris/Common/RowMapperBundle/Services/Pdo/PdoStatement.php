@@ -18,6 +18,8 @@ class PdoStatement extends \PDOStatement {
     private $params = [];
     /** @var bool true if a result is required */
     private $requiresResult = false;
+    /** @var bool true if SQL_CALC_FOUND_ROWS is used */
+    private $calcRowCapable = false;
 
     /**
      * @return boolean
@@ -69,5 +71,21 @@ class PdoStatement extends \PDOStatement {
      */
     public function getMeta() {
         return ['query' => $this->queryString, 'params' => $this->params];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCalcRowCapable()
+    {
+        return $this->calcRowCapable;
+    }
+
+    /**
+     * @param bool $calcRowCapable
+     */
+    public function setCalcRowCapable($calcRowCapable = true)
+    {
+        $this->calcRowCapable = (bool)$calcRowCapable;
     }
 }
