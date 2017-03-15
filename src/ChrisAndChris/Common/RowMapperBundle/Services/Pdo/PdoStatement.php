@@ -12,7 +12,8 @@ use PDO;
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
  */
-class PdoStatement extends \PDOStatement {
+class PdoStatement extends \PDOStatement
+{
 
     /** @var array the list of set parameters */
     private $params = [];
@@ -20,11 +21,13 @@ class PdoStatement extends \PDOStatement {
     private $requiresResult = false;
     /** @var bool true if SQL_CALC_FOUND_ROWS is used */
     private $calcRowCapable = false;
+    private $errorMessage;
 
     /**
      * @return boolean
      */
-    public function isResultRequired() {
+    public function isResultRequired()
+    {
         return $this->requiresResult;
     }
 
@@ -32,15 +35,24 @@ class PdoStatement extends \PDOStatement {
      * Set to true if this statement must have a rowCount greater than zero
      *
      * @param boolean $requiresResult
+     * @param string  $errorMessage
      */
-    public function requiresResult($requiresResult = true) {
+    public function requiresResult($requiresResult = true, $errorMessage = '')
+    {
+        $this->errorMessage = $errorMessage;
         $this->requiresResult = (bool)$requiresResult;
+    }
+
+    public function getRequiresResultErrorMessage()
+    {
+        return $this->errorMessage;
     }
 
     /**
      * @inheritdoc
      */
-    public function bindValue($parameter, $value, $data_type = PDO::PARAM_STR) {
+    public function bindValue($parameter, $value, $data_type = PDO::PARAM_STR)
+    {
         $this->params[$parameter] = $value;
 
         return parent::bindValue($parameter, $value, $data_type);
@@ -49,7 +61,13 @@ class PdoStatement extends \PDOStatement {
     /**
      * @inheritdoc
      */
-    public function bindParam($parameter, &$variable, $data_type = PDO::PARAM_STR, $length = null, $driver_options = null) {
+    public function bindParam(
+        $parameter,
+        &$variable,
+        $data_type = PDO::PARAM_STR,
+        $length = null,
+        $driver_options = null
+    ) {
         $this->params[$parameter] = $variable;
 
         return parent::bindParam($parameter, $variable, $data_type, $length, $driver_options);
@@ -58,7 +76,8 @@ class PdoStatement extends \PDOStatement {
     /**
      * @inheritdoc
      */
-    public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null) {
+    public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null)
+    {
         $this->params[$column] = $param;
 
         return parent::bindColumn($column, $param, $type, $maxlen, $driverdata);
@@ -69,7 +88,8 @@ class PdoStatement extends \PDOStatement {
      *
      * @return string
      */
-    public function getMeta() {
+    public function getMeta()
+    {
         return ['query' => $this->queryString, 'params' => $this->params];
     }
 
