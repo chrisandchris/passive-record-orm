@@ -147,7 +147,7 @@ abstract class Model
     {
         $stmt = $this->createStatement($query->getQuery());
         $this->bindValues($stmt, $query);
-        $stmt->requiresResult($query->isResultRequired());
+        $stmt->requiresResult($query->isResultRequired(), $query->getRequiresResultErrorMessage());
         $stmt->setCalcRowCapable($query->isCalcRowCapable());
 
         $this->lastStatement = $stmt;
@@ -236,7 +236,11 @@ abstract class Model
             if ($statement->rowCount() === 0 &&
                 ($mustHaveRow || $statement->isResultRequired())
             ) {
-                throw new NotFoundHttpException("No row found with query");
+                $error = 'No row found with query';
+                if (!empty($statement->getRequiresResultErrorMessage())) {
+                    $error = $statement->getRequiresResultErrorMessage();
+                }
+                throw new NotFoundHttpException($error);
             }
 
             return $mappingCallback($statement);
