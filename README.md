@@ -1,6 +1,11 @@
 # symfony-rowmapper
 
-[![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper) [![Code Climate](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/gpa.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper) [![Test Coverage](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/coverage.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/coverage)
+[![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper)
+[![Code Climate](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/gpa.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper)
+[![Test Coverage](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/coverage.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/coverage)
+[![Version](https://img.shields.io/packagist/v/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/v/chrisandchris/symfony-rowmapper.svg)
+[![Downloads](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)
+[![Licence](https://img.shields.io/packagist/l/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/l/chrisandchirs/symfony-rowmapper.svg)
 
 Despite it's name, it's not simply a row mapper. And it's not simply for Symfony.
 This project is a *QueryBuilder* and a *Mapper for SQL Result Sets*,
