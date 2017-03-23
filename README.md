@@ -1,4 +1,4 @@
-# symfony-rowmapper
+# A Query Builder for MySQL and Postgres - easy to use.
 
 [![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper)
 [![Code Climate](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/gpa.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper)
@@ -7,9 +7,35 @@
 [![Downloads](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)
 [![Licence](https://img.shields.io/packagist/l/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/l/chrisandchirs/symfony-rowmapper.svg)
 
-Despite it's name, it's not simply a row mapper. And it's not simply for Symfony.
+Despite it's package name, it's not simply a row mapper. And it's not simply for Symfony.
 This project is a *QueryBuilder* and a *Mapper for SQL Result Sets*,
 both combined but still very separated, so you can use them independent.
+
+```php
+<?php
+
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
+
+class DemoRepo {
+    /** @var ConcreteModel  */
+    private $model;
+    
+    public function __construct(ConcreteModel $model){
+        $this->model = $model;
+    }
+    
+    public function getCustomerName($customerId) {
+        $query = $this->model->getDependencyProvider->getBuilder->select()
+            ->field('customer_name')
+            ->table('customer')
+            ->where()
+                ->field('customer_id')->equals()->value($customerId)
+            ->close()
+            ->getSqlQuery();
+        return $this->runWithFirstKeyFirstValue($query);
+    }
+}
+```
 
 This doc gives a short overview of all the possibilities this package provides.
 We are moving the contents continuously to the `doc/` directory, so look more detailed
@@ -36,27 +62,30 @@ database.
 Actually, there is no further configuration possible.
 
 ## A simple query
-You could extend the `ChrisAndChris\Common\RowMapperBundle\Services\Model\Model` class
-for a simpler use in your services or you could inject the
-`ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider` in your
-custom model. I like to show you the usage with the first method:
-
-Let's create a service
-
-```xml
-<service id="my_gold_project.demoModel"
-         class="My\Gold\Project\Services\DemoModel">
-    <argument type="service" id="common_rowmapper.dependencyProvider"/>
-</service>
+Let's create a service definition:
+```yml
+services:
+    project.demo_repo:
+        class: DemoRepo
+        arguments: ['@common_rowmapper.model']
 ```
 
-Create the model
+Create the repository:
 ```php
 <?php
-namespace \My\Gold\Project\Services;
-class DemoModel extends ChrisAndChris\Common\RowMapperBundle\Services\Model\Model {
+
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
+
+class DemoRepo {
+    /** @var ConcreteModel  */
+    private $model;
+    
+    public function __construct(ConcreteModel $model){
+        $this->model = $model;
+    }
+    
     public function getCustomerName($customerId) {
-        $query = $this->getDependencyProvider->getBuilder->select()
+        $query = $this->model->getDependencyProvider->getBuilder->select()
             ->field('customer_name')
             ->table('customer')
             ->where()
@@ -71,8 +100,10 @@ class DemoModel extends ChrisAndChris\Common\RowMapperBundle\Services\Model\Mode
 If you want to map a more complicated query to a class, use something like this:
 ```php
 <?php
-namespace \My\Gold\Project\Entity;
-class CustomerEntity implements ChrisAndChris\Common\RowMapperBundle\Entity\Entity {
+
+use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
+
+class CustomerEntity implements Entity {
     public $customerId;
     public $name;
     public $street;
@@ -84,10 +115,20 @@ class CustomerEntity implements ChrisAndChris\Common\RowMapperBundle\Entity\Enti
 And to map, use this method
 ```php
 <?php
-namespace \My\Gold\Project\Services;
-class DemoModel extends ChrisAndChris\Common\RowMapperBundle\Services\Model\Model {
+
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
+
+class DemoModel {
+    
+    /** @var ConcreteModel  */
+    private $model;
+    
+    public function __construct(ConcreteModel $model){
+        $this->model = $model;
+    }
+    
     public function getCustomer($customerId) {
-        $query = $this->getDependencyProvider()->getBuilder->select()
+        $query = $this->model->getDependencyProvider()->getBuilder->select()
             ->fieldlist([
                 'customer_id' => 'customerId',
                 'cus_name' => 'name',
@@ -100,7 +141,8 @@ class DemoModel extends ChrisAndChris\Common\RowMapperBundle\Services\Model\Mode
                 ->field('customer_id')->equals()->value($customerId)
             ->close()
             ->getSqlQuery();
-        return $this->run($query, new \My\Gold\Project\Entity\CustomerEntity());
+        return $this->run($query, new SomeEntity());
+    }
 }
 ```
 ## Some more information
