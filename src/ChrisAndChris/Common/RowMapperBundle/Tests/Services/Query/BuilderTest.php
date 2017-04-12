@@ -488,6 +488,46 @@ class BuilderTest extends AbstractBuilderTest
         $this->assertEquals('`field` , `field` , `field`', $query->getQuery());
     }
 
+    public function testEach_empty()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->each(
+            null,
+            function ($item, $isNotLast) {
+                $builder = $this->getBuilder();
+                $builder->field($item)
+                        ->_if($isNotLast)
+                        ->c()
+                        ->_end();
+
+                return $builder;
+            }
+        );
+
+        $this->assertEquals(0, count($builder->getStatement()));
+    }
+
+    public function testEach_notAnArray()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->each(
+            1,
+            function ($item, $isNotLast) {
+                $builder = $this->getBuilder();
+                $builder->field($item)
+                        ->_if($isNotLast)
+                        ->c()
+                        ->_end();
+
+                return $builder;
+            }
+        );
+
+        $this->assertEquals(0, count($builder->getStatement()));
+    }
+
     public function testValues()
     {
         $builder = $this->getBuilder();
