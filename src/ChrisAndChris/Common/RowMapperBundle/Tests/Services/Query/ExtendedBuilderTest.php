@@ -510,6 +510,22 @@ class ExtendedBuilderTest extends AbstractBuilderTest
         $this->equals('LEFT JOIN `table` as `tx`', $builder);
     }
 
+    public function testIn()
+    {
+        $builder = $this->getBuilder();
+        $builder->in();
+        $this->equals('IN (?)', $builder);
+
+        $builder->in([1]);
+        $this->equals('IN (?)', $builder);
+
+        $builder->in([1, 1]);
+        $this->equals('IN (?, ?)', $builder);
+
+        $builder->in([1 => 1, 2 => 1]);
+        $this->equals('IN (?, ?)', $builder);
+    }
+
     public function testFoundRows()
     {
         $builder = $this->getBuilder();

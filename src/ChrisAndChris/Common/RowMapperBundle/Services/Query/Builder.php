@@ -426,9 +426,14 @@ class Builder
      * @param null|array $in
      * @return $this
      */
-    public function in($in = null)
+    public function in($in = [])
     {
-        $this->append('in', ['in' => $in]);
+        // array cannot be empty because IN() clause cannot be empty
+        if (!is_array($in) || count($in) == 0) {
+            $in = [null];
+        }
+        // only use array values, parser otherwise fails
+        $this->append('in', ['in' => array_values($in)]);
 
         return $this;
     }
