@@ -825,12 +825,31 @@ class Builder
         return $this;
     }
 
-    public function each(array $items, \Closure $callable)
+    /**
+     * Iterate over $items calling $callable
+     *
+     * The callable gets either $item or [$key, $value] as param 0
+     * and bool $hasMoreItems as param 1
+     *
+     * @param          $items
+     * @param \Closure $callable a closure to call
+     * @param bool     $keyValue if set to true, the closure gets as 1. param [key, value]
+     * @return $this
+     */
+    public function each($items, \Closure $callable, $keyValue = false)
     {
         $count = 0;
-        foreach ($items as $item) {
+        if (!is_array($items)) {
+            return $this;
+        }
+
+        foreach ($items as $key => $value) {
             $count++;
-            $this->appendMultiple($callable($item, $count < count($items)));
+            if ($keyValue) {
+                $this->appendMultiple($callable([$key, $value], $count < count($items)));
+            } else {
+                $this->appendMultiple($callable($value, $count < count($items)));
+            }
         }
 
         return $this;
