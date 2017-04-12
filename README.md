@@ -1,11 +1,11 @@
-# A Query Builder for MySQL and Postgres - easy to use.
+# A QueryBuilder and passive record ORM for Symfony2
 
-[![Build Status](https://travis-ci.org/chrisandchris/symfony-rowmapper.svg?branch=master)](https://travis-ci.org/chrisandchris/symfony-rowmapper)
-[![Code Climate](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/gpa.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper)
-[![Test Coverage](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/badges/coverage.svg)](https://codeclimate.com/github/chrisandchris/symfony-rowmapper/coverage)
-[![Version](https://img.shields.io/packagist/v/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/v/chrisandchris/symfony-rowmapper.svg)
-[![Downloads](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/dt/chrisandchris/symfony-rowmapper.svg)
-[![Licence](https://img.shields.io/packagist/l/chrisandchris/symfony-rowmapper.svg)](https://img.shields.io/packagist/l/chrisandchirs/symfony-rowmapper.svg)
+[![Build Status](https://travis-ci.org/chrisandchris/passive-record-orm.svg?branch=master)](https://travis-ci.org/chrisandchris/passive-record-orm)
+[![Code Climate](https://codeclimate.com/github/chrisandchris/passive-record-orm/badges/gpa.svg)](https://codeclimate.com/github/chrisandchris/passive-record-orm)
+[![Test Coverage](https://codeclimate.com/github/chrisandchris/passive-record-orm/badges/coverage.svg)](https://codeclimate.com/github/chrisandchris/passive-record-orm/coverage)
+[![Version](https://img.shields.io/packagist/v/chrisandchris/passive-record-orm.svg)](https://packagist.org/packages/chrisandchris/passive-record-orm)
+[![Downloads](https://img.shields.io/packagist/dt/chrisandchris/passive-record-orm.svg)](https://packagist.org/packages/chrisandchris/passive-record-orm)
+[![Licence](https://img.shields.io/packagist/l/chrisandchris/passive-record-orm.svg)](https://github.com/chrisandchris/passive-record-orm/blob/master/LICENSE)
 
 Despite it's package name, it's not simply a row mapper. And it's not simply for Symfony.
 This project is a *QueryBuilder* and a *Mapper for SQL Result Sets*,

@@ -1,8 +1,8 @@
 {
-  "name": "chrisandchris/symfony-rowmapper",
+  "name": "chrisandchris/passive-record-orm",
   "license": "GPL-2.0",
   "type": "project",
-  "description": "A RowMapper and QueryBuilder, makes querying databases easier and better than orm",
+  "description": "A database layer, passive record and orm abstraction layer for your php application. ",
   "keywords": [
     "rowmapper",
     "database",
