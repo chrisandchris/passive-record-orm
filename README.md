@@ -25,14 +25,15 @@ class DemoRepo {
     }
     
     public function getCustomerName($customerId) {
-        $query = $this->model->getDependencyProvider->getBuilder->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->field('customer_name')
             ->table('customer')
             ->where()
                 ->field('customer_id')->equals()->value($customerId)
             ->close()
             ->getSqlQuery();
-        return $this->runWithFirstKeyFirstValue($query);
+
+        return $this->model->runWithFirstKeyFirstValue($query);
     }
 }
 ```
@@ -85,14 +86,15 @@ class DemoRepo {
     }
     
     public function getCustomerName($customerId) {
-        $query = $this->model->getDependencyProvider->getBuilder->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->field('customer_name')
             ->table('customer')
             ->where()
                 ->field('customer_id')->equals()->value($customerId)
             ->close()
             ->getSqlQuery();
-        return $this->runWithFirstKeyFirstValue($query);
+
+        return $this->model->runWithFirstKeyFirstValue($query);
     }
 }
 ```
@@ -128,7 +130,7 @@ class DemoModel {
     }
     
     public function getCustomer($customerId) {
-        $query = $this->model->getDependencyProvider()->getBuilder->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->fieldlist([
                 'customer_id' => 'customerId',
                 'cus_name' => 'name',
@@ -141,7 +143,8 @@ class DemoModel {
                 ->field('customer_id')->equals()->value($customerId)
             ->close()
             ->getSqlQuery();
-        return $this->run($query, new SomeEntity());
+
+        return $this->model->run($query, new SomeEntity());
     }
 }
 ```
