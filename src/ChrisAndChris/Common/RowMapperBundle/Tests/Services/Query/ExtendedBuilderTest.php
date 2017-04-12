@@ -513,8 +513,8 @@ class ExtendedBuilderTest extends AbstractBuilderTest
     public function testIn()
     {
         $builder = $this->getBuilder();
-        $builder->in();
-        $this->equals('IN (?)', $builder);
+        $builder->in()->close();
+        $this->equals('IN ( )', $builder);
 
         $builder->in([1]);
         $this->equals('IN (?)', $builder);

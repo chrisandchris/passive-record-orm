@@ -32,7 +32,7 @@ class SearchQueryBuilderTest extends TestKernel
         $this->assertNull($container->getSearchId());
         $this->assertEquals('term%', $container->getTerm());
         $this->assertEquals(0, count($container->getFilterConditions()));
-        $this->assertEquals(0, count($container->getJoinedTables()));
+        $this->assertEquals(1, count($container->getJoinedTables()));
         $this->assertEquals('right', $container->getRootTable());
         $this->assertEquals('right', $container->targetTable);
         $this->assertEquals('right_id', $container->primaryKey);
