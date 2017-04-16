@@ -1,15 +1,12 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
-use ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingInitFailedException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
 
 /**
  * @name MappingHandler
@@ -24,36 +21,34 @@ class MappingRepository
 
     /** @var \stdClass */
     private $mapping;
-    /** @var DatabaseMapperCommand */
-    private $databaseMapper;
 
-    public function __construct($cacheDir, $dir, $filename = 'mapping.json', DatabaseMapperCommand $command = null)
+    public function __construct($cacheDir, $dir, $filename = 'mapping.json')
     {
-        $this->databaseMapper = $command;
         $this->setMapping($cacheDir . '/' . $dir . '/' . basename($filename));
     }
 
-    public function setMapping($mapping, $forceException = false)
+    /**
+     * Set mapping file
+     *
+     * @param string $mapping the path to the mapping file
+     * @return bool
+     * @throws MappingInitFailedException
+     */
+    public function setMapping($mapping)
     {
         if (is_file($mapping)) {
             $mapping = file_get_contents($mapping);
         } else {
-            if ($this->databaseMapper instanceof DatabaseMapperCommand && !$forceException) {
-                $this->runMapper();
-                $this->setMapping($mapping, true);
-            }
             throw new MappingInitFailedException(sprintf(
                 'No file found at path "%s"',
                 $mapping
             ));
         }
         $this->mapping = json_decode($mapping, true);
+
+        return true;
     }
 
-    private function runMapper()
-    {
-        $this->databaseMapper->run(new ArrayInput([]), new NullOutput());
-    }
 
     /**
      * @param string       $table   the table to check for
@@ -109,16 +104,14 @@ class MappingRepository
      * @param      $table
      * @param int  $deepness
      * @param bool $withAliases
-     * @param bool $allRelations if set to false, only 8 relations are returned (performace issues...)
-     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation[] an array of relations
+     * @return Relation[] an array of relations
      */
-    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true, $allRelations = false)
+    public function getRecursiveRelations($table, $deepness = 1, $withAliases = true)
     {
         $relations = $this->buildRecursiveRelations($table, $deepness, $withAliases);
 
         foreach ($this->mapping as $mappedTable => $mapping) {
-            // @todo improve this, there might be a better solution to prevent incredibly long queries
-            if (!isset($mapping['relations']) || (count($relations) > 8) && !$allRelations) {
+            if (!isset($mapping['relations'])) {
                 break;
             }
             foreach ($mapping['relations'] as $relation) {
@@ -275,32 +268,5 @@ class MappingRepository
         }
 
         return $fields;
-    }
-
-    /**
-     * @param string $rootTable
-     * @param Relation[] $joinedTables
-     */
-    public function completeJoins($rootTable, $joinedTables) {
-        $relations = $this->getRecursiveRelations($rootTable, 1, true, true);
-        $count = 0;
-        foreach ($joinedTables as $join) {
-            foreach ($relations as $relation) {
-                if ($relation->target == $join->target) {
-                    if ($join->source == null) {
-                        $join->source = $rootTable;
-                    }
-                    if ($join->sourceField == null) {
-                        $join->sourceField=$relation->sourceField;
-                    }
-                    if ($join->targetField == null) {
-                        $join->targetField=$relation->targetField;
-                    }
-                    $join->alias = $this->getTableAlias($relation);
-                    $count++;
-                    break;
-                }
-            }
-        }
     }
 }

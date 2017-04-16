@@ -14,7 +14,6 @@ use phpseclib\Crypt\AES;
  *
  * @name ExtendedBuilderTest
  * @version    2
- * @lastChange v2.1.0
  * @since      v2.0.2
  * @package    RowMapperBundle
  * @author     ChrisAndChris

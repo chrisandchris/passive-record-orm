@@ -4,7 +4,6 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption;
 /**
  * @name EncryptionExecutorInterface
  * @version    1.0.0
- * @lastChange v2.1.0
  * @since      v2.1.0
  * @package    RowMapperbundle
  * @author     ChrisAndChris

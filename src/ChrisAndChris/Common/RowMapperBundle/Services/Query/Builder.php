@@ -13,7 +13,6 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 /**
  * @name Builder
  * @version    1.1.0
- * @lastChange v2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -225,6 +224,17 @@ class Builder
     public function c()
     {
         $this->append('comma');
+
+        return $this;
+    }
+
+    /**
+     * @param $castTo
+     * @return $this
+     */
+    public function cast($castTo)
+    {
+        $this->append('cast', ['cast' => $castTo]);
 
         return $this;
     }

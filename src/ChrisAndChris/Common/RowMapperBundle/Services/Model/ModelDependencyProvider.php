@@ -15,7 +15,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 /**
  * @name ModelDependencyProvider
  * @version    2.1.0
- * @lastChange v2.1.0
  * @since      v2.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -33,6 +32,8 @@ class ModelDependencyProvider {
     private $container;
     /** @var BuilderFactory the builder factory */
     private $builderFactory;
+    /** @var EventDispatcherInterface the event dispatcher */
+    private $eventDispatcher;
 
     function __construct(
         \PDO $pdo,

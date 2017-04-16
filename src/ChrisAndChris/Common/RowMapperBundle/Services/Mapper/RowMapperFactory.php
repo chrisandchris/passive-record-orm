@@ -5,14 +5,14 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @name RowMapperFactory
- * @version    1.0.1
- * @lastChange v2.1.1
+ * @version    1.0.0
  * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class RowMapperFactory {
+class RowMapperFactory
+{
 
     /** @var EventDispatcherInterface */
     private $eventDispatcher;
@@ -20,7 +20,8 @@ class RowMapperFactory {
     /**
      * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct(EventDispatcherInterface $eventDispatcher) {
+    public function __construct(EventDispatcherInterface $eventDispatcher)
+    {
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -29,13 +30,13 @@ class RowMapperFactory {
      *
      * @return RowMapper
      */
-    public function getMapper() {
+    public function getMapper()
+    {
         $mapper = new RowMapper(
             $this->eventDispatcher
         );
         /** @var NewMapperEvent $event */
-        $event =
-            $this->eventDispatcher->dispatch('rowMapperBundle.createNewMapper', new NewMapperEvent());
+        $event = $this->eventDispatcher->dispatch('rowMapperBundle.createNewMapper', new NewMapperEvent());
         foreach ($event->getEncryptionAbilities() as $ability) {
             $mapper->addEncryptionAbility($ability);
         }

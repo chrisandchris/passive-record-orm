@@ -6,7 +6,6 @@ use Symfony\Component\EventDispatcher\Event;
 /**
  * @name DatabaseEvent
  * @version    1.0.0
- * @lastChange v2.0.1
  * @since      v2.0.1
  * @package    RowMapperBundle
  * @author     ChrisAndChris

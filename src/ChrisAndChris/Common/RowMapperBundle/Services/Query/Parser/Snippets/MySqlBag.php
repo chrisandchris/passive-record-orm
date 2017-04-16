@@ -1,20 +1,21 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser;
+namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\BagInterface;
 
 /**
- * @name SnippetBag
- * @version   1.0.0
- * @since     v2.0.2
- * @package   RowMapperBundle
- * @author    ChrisAndChris
- * @link      https://github.com/chrisandchris
+ * @name MySqlBag
+ * @version    1.1.0
+ * @since      v2.0.2
+ * @package    RowMapperBundle
+ * @author     ChrisAndChris
+ * @link       https://github.com/chrisandchris
  */
-class SnippetBag implements BagInterface
+class MySqlBag implements SnippetBagInterface
 {
 
     /** @var array */
@@ -211,9 +212,8 @@ class SnippetBag implements BagInterface
 
                 return [
                     'code'   => strtoupper($params['type'])
-                        . ' JOIN `'
-                        . $params['table']
-                        . '`'
+                        . ' JOIN '
+                        . $this->implodeIdentifier($params['table'])
                         . $alias,
                     'params' => null,
                 ];
@@ -324,6 +324,11 @@ class SnippetBag implements BagInterface
                 ];
             },
             'using'          => function (array $params) {
+                if (is_array($params['field'])) {
+                    throw new InvalidOptionException(
+                        'Field list for using() clause cannot be array when using MySQL'
+                    );
+                }
                 return [
                     'code'   => 'USING(`' . $params['field'] . '`)',
                     'params' => null,
@@ -366,6 +371,21 @@ class SnippetBag implements BagInterface
         }
 
         throw new InvalidOptionException('Invalid input given');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            RowMapperEvents::SNIPPET_COLLECTOR => ['onCollectorEvent', 10],
+        ];
+    }
+
+    public function onCollectorEvent(SnippetBagEvent $event)
+    {
+        $event->add($this, ['mysql']);
     }
 
     /**

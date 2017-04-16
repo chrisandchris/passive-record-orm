@@ -2,7 +2,6 @@
 namespace ChrisAndChris\Common\RowMapperBundle\Events\Mapping;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\PopulateEntity;
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MissingContextException;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -49,19 +48,12 @@ class PopulationEvent extends Event
         return clone $this->entity;
     }
 
-    /**
-     * @param $field
-     * @param $value
-     */
     public function fill($field, $value)
     {
         $function = $this->entityFiller;
         $this->fieldCount += $function($this->entity, $field, $value);
     }
 
-    /**
-     * @return int
-     */
     public function getWrittenFieldCount()
     {
         return $this->fieldCount;

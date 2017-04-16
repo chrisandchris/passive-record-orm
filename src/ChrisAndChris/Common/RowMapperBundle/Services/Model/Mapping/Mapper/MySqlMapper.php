@@ -1,17 +1,21 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
+namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper;
 
-use ChrisAndChris\Common\RowMapperBundle\Services\Model\Model;
+use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
+use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\MapperEvent;
+use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
 
 /**
- * @name DatabaseMapper
+ * A mapper for mysql databases
+ *
+ * @name MySqlMapper
  * @version    1.0.0
- * @since      v2.1.0
+ * @since      v2.2.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class DatabaseMapper extends Model
+class MySqlMapper implements MapperInterface
 {
 
     /** @var array */
@@ -20,6 +24,34 @@ class DatabaseMapper extends Model
     private $fields;
     /** @var array */
     private $relations;
+    /** @var ConcreteModel */
+    private $model;
+
+    /**
+     * @param ConcreteModel $model
+     */
+    public function __construct(ConcreteModel $model)
+    {
+        $this->model = $model;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            RowMapperEvents::MAPPER_COLLECTOR => ['onCollectorEvent'],
+        ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function onCollectorEvent(MapperEvent $event)
+    {
+        $event->add($this, ['mysql']);
+    }
 
     public function getFields($schema, $table) {
         if (isset($this->fields[$schema]) &&
@@ -29,7 +61,7 @@ class DatabaseMapper extends Model
         }
 
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->fieldlist([
                 'TABLE_NAME',
                 'COLUMN_NAME',
@@ -47,7 +79,7 @@ class DatabaseMapper extends Model
             ->getSqlQuery();
         // @formatter:on
 
-        $fields = $this->runAssoc($query);
+        $fields = $this->model->runAssoc($query);
         if (count($fields) ==0) {
             $this->fields[$schema][$table] = [];
         }
@@ -90,7 +122,7 @@ class DatabaseMapper extends Model
         }
 
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->field('table_name')->alias('value')
             ->table(['information_schema', 'tables'])
             ->where()
@@ -98,7 +130,7 @@ class DatabaseMapper extends Model
             ->close()
             ->getSqlQuery();
         // @formatter:on
-        $this->tables[$schema] = $this->runKeyValue($query);
+        $this->tables[$schema] = $this->model->runKeyValue($query);
 
         return $this->getTables($schema);
     }
@@ -115,7 +147,7 @@ class DatabaseMapper extends Model
         }
 
         // @formatter:off
-        $query = $this->getDependencyProvider()->getBuilder()->select()
+        $query = $this->model->getDependencyProvider()->getBuilder()->select()
             ->fieldlist([
                 'TABLE_NAME',
                 'COLUMN_NAME',
@@ -130,7 +162,7 @@ class DatabaseMapper extends Model
             ->close()
             ->getSqlQuery();
         // @formatter:on
-        foreach ($this->runAssoc($query) as $relation) {
+        foreach ($this->model->runAssoc($query) as $relation) {
             $this->relations[$schema][$relation['TABLE_NAME']][] = [
                 'source' => $relation['COLUMN_NAME'],
                 'target' => [

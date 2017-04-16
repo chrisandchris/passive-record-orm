@@ -12,8 +12,8 @@
     "querybuilder",
     "builder",
     "mysql",
-    "pgsql",
-    "postgres"
+    "postgres",
+    "pgsql"
   ],
   "autoload": {
     "psr-0": {
@@ -22,7 +22,7 @@
   },
   "require": {
     "php": ">=5.6",
-    "symfony/symfony": "2.3.*|2.7.*"
+    "symfony/symfony": "2.3.*|2.7.*|2.8.*"
   },
   "suggests": {
     "phpseclib/phpseclib": "^2.0",

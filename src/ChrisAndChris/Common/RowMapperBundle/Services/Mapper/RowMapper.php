@@ -17,7 +17,6 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * @name RowMapper
  * @version    2.0.1
- * @lastChange v2.1.0
  * @since      v1.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
@@ -158,9 +157,9 @@ class RowMapper
             }
         };
 
-        $count = count(get_object_vars($entity));
+        $count = 0;
         foreach ($row as $field => $value) {
-            $count -= $entityFiller($entity, $field, $value);
+            $count += $entityFiller($entity, $field, $value);
         }
 
         if ($entity instanceof PopulateEntity) {
@@ -168,13 +167,13 @@ class RowMapper
                 MappingEvents::POST_MAPPING_ROW_POPULATION,
                 new PopulationEvent($entity, $entityFiller)
             );
-            $count -= $event->getWrittenFieldCount();
+            $count += $event->getWrittenFieldCount();
         }
 
-        if ($entity instanceof StrictEntity && $count != 0) {
+        if ($entity instanceof StrictEntity && count($row) != $count) {
             throw new InsufficientPopulationException(
                 sprintf(
-                    'Tried entity "%s" to populate for %d fields, and left %d not populated',
+                    'Requires entity "%s" to get populated for %d fields, but did only %d',
                     get_class($entity),
                     count($row),
                     $count
