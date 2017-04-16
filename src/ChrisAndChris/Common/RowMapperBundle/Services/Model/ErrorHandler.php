@@ -26,7 +26,7 @@ class ErrorHandler
 
     private $uniqueConstraintExceptions = [
         1062,        // unique constraint problem
-        7
+        7,
     ];
 
     private $foreignKeyConstraintExceptions = [

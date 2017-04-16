@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Events\Transmitters;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\ClassNotFoundException;

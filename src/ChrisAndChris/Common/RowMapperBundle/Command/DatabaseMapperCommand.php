@@ -49,7 +49,7 @@ class DatabaseMapperCommand extends ContainerAwareCommand {
         );
 
         $mapper = $event->getMapper($subsystem);
-        
+
         $schema = $this->getContainer()
                        ->getParameter('database_name');
 

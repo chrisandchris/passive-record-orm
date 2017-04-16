@@ -1,13 +1,11 @@
 <?php
-namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
-use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel;
-use ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
 
 /**
@@ -89,19 +87,69 @@ class ConcreteModelTest extends TestKernel
         }
     }
 
-    /**
-     * @return ConcreteModel
-     */
-    private function getModel()
+    public function getModel($calcRowCapable = false, SqlQuery $queryMock = null)
     {
-        /** @var ModelDependencyProvider $provider */
-        $provider = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
-                         ->disableOriginalConstructor()
-                         ->getMock();
+        $dependencyMock =
+            $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
+                 ->disableOriginalConstructor()
+                 ->getMock();
 
-        $model = new ConcreteModel($provider);
+        $mapperMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper')
+                           ->disableOriginalConstructor()
+                           ->getMock();
 
-        return $model;
+        $mapperMock->method('mapFromResult')
+                   ->willReturn([]);
+
+        $dependencyMock->method('getMapper')
+                       ->willReturn($mapperMock);
+
+        $pdoMock = $this->getMockBuilder('\PDO')
+                        ->disableOriginalConstructor()
+                        ->getMock();
+
+        $statementMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement')
+                              ->disableOriginalConstructor()
+                              ->getMock();
+
+        $statementMock->method('isCalcRowCapable')
+                      ->willReturn($calcRowCapable);
+
+        $pdoMock->method('prepare')
+                ->willReturn($statementMock);
+
+        $dependencyMock->method('getPdo')
+                       ->willReturn($pdoMock);
+
+        $errorHandlerMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler')
+                                 ->disableOriginalConstructor()
+                                 ->getMock();
+
+        $errorHandlerMock->method('handle')
+                         ->willReturn(false);
+
+        $dependencyMock->method('getErrorHandler')
+                       ->willReturn($errorHandlerMock);
+
+        $builderMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder')
+                            ->disableOriginalConstructor()
+                            ->getMock();
+
+        $methods = ['select', 'f', 'close'];
+        foreach ($methods as $method) {
+            $builderMock->method($method)
+                        ->willReturn($builderMock);
+        }
+
+        $builderMock->method('getSqlQuery')
+                    ->willReturn($queryMock);
+
+        $dependencyMock->method('getBuilder')
+                       ->willReturn($builderMock);
+
+        return new ConcreteModel(
+            $dependencyMock
+        );
     }
 
     public function testIsOnlyOption()
@@ -186,71 +234,6 @@ class ConcreteModelTest extends TestKernel
         } catch (NotCapableException $e) {
             // ignore
         }
-    }
-
-    public function getModel($calcRowCapable = false, SqlQuery $queryMock = null)
-    {
-        $dependencyMock =
-            $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider')
-                 ->disableOriginalConstructor()
-                 ->getMock();
-
-        $mapperMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper')
-                           ->disableOriginalConstructor()
-                           ->getMock();
-
-        $mapperMock->method('mapFromResult')
-                   ->willReturn([]);
-
-        $dependencyMock->method('getMapper')
-                       ->willReturn($mapperMock);
-
-        $pdoMock = $this->getMockBuilder('\PDO')
-                        ->disableOriginalConstructor()
-                        ->getMock();
-
-        $statementMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement')
-                              ->disableOriginalConstructor()
-                              ->getMock();
-
-        $statementMock->method('isCalcRowCapable')
-                      ->willReturn($calcRowCapable);
-
-        $pdoMock->method('prepare')
-                ->willReturn($statementMock);
-
-        $dependencyMock->method('getPdo')
-                       ->willReturn($pdoMock);
-
-        $errorHandlerMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Model\ErrorHandler')
-                                 ->disableOriginalConstructor()
-                                 ->getMock();
-
-        $errorHandlerMock->method('handle')
-                         ->willReturn(false);
-
-        $dependencyMock->method('getErrorHandler')
-                       ->willReturn($errorHandlerMock);
-
-        $builderMock = $this->getMockBuilder('ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder')
-                            ->disableOriginalConstructor()
-                            ->getMock();
-
-        $methods = ['select', 'f', 'close'];
-        foreach ($methods as $method) {
-            $builderMock->method($method)
-                        ->willReturn($builderMock);
-        }
-
-        $builderMock->method('getSqlQuery')
-                    ->willReturn($queryMock);
-
-        $dependencyMock->method('getBuilder')
-                       ->willReturn($builderMock);
-
-        return new ConcreteModel(
-            $dependencyMock
-        );
     }
 
     public function testCalcRows_capable()

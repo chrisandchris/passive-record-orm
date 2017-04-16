@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Exceptions\Database;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;

@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\MapperEvent;

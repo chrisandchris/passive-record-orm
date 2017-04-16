@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
@@ -7,9 +8,9 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundExcep
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
-use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
 
 /**
@@ -25,6 +26,8 @@ class ConcreteModel
 
     /** @var ModelDependencyProvider the dependency provider */
     protected $dependencyProvider;
+    /** @var PdoStatement */
+    private $lastStatement;
 
     function __construct(ModelDependencyProvider $dependencyProvider)
     {
@@ -74,19 +77,19 @@ class ConcreteModel
         return true && isset($options[$optionName]);
     }
 
-    /** @noinspection PhpDocSignatureInspection */
     /**
      * Runs a query
      *
-     * @param SqlQuery $query
-     * @param Entity   $entity
-     * @return $entity[]
+     * @param SqlQuery      $query
+     * @param Entity        $entity
+     * @param \Closure|null $callAfter a closure to call after the mapping is done
+     * @return bool|Entity[] $entity[]
      */
     public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
     {
         $stmt = $this->prepare($query);
 
-        return $this->handle($stmt, $entity);
+        return $this->handle($stmt, $entity, $callAfter);
     }
 
     /**
@@ -122,10 +125,14 @@ class ConcreteModel
      */
     private function createStatement($sql)
     {
-        /** @noinspection PhpIncompatibleReturnTypeInspection */
-        return $this->getDependencyProvider()
-                    ->getPdo()
-                    ->prepare($sql);
+        /** @var PDOStatement $stmt */
+        $stmt = $this->getDependencyProvider()
+                     ->getPdo()
+                     ->prepare($sql);
+
+        $this->lastStatement = $stmt;
+
+        return $stmt;
     }
 
     /**
@@ -143,24 +150,31 @@ class ConcreteModel
      * handling<br /> If no entity is given returns true on success, false
      * otherwise
      *
-     * @param PdoStatement $statement
-     * @param Entity       $entity
-     * @return Entity[]|bool
+     * @param PdoStatement  $statement
+     * @param Entity        $entity
+     * @param \Closure|null $callAfter a callable to call after the mapping is done
+     * @return bool|Entity[]
      */
-    private function handle(PdoStatement $statement, Entity $entity = null)
+    private function handle(PdoStatement $statement, Entity $entity = null, \Closure $callAfter = null)
     {
         return $this->handleGeneric(
             $statement,
-            function (PdoStatement $statement) use ($entity) {
+            function (PdoStatement $statement) use ($entity, $callAfter) {
                 if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
                 if ($entity === null) {
-                        return true;
+                    return true;
                 }
 
-                return $this->getMapper()
-                            ->mapFromResult($statement, $entity);
+                $mapping = $this->getMapper()
+                                ->mapFromResult($statement, $entity);
+
+                if ($callAfter instanceof \Closure) {
+                    $callAfter($mapping);
+                }
+
+                return $mapping;
             }
         );
     }
@@ -339,30 +353,6 @@ class ConcreteModel
     }
 
     /**
-     * Call query and get first column of first row
-     *
-     * @param SqlQuery $query
-     * @return mixed
-     */
-    public function runWithFirstKeyFirstValue(SqlQuery $query)
-    {
-        $stmt = $this->prepare($query);
-
-        return $this->handleGeneric(
-            $stmt, function (PdoStatement $statement) {
-            if ($statement->rowCount() > 1) {
-                throw new DatabaseException(sprintf(
-                    'Expected only a single result record, but got %d',
-                    $statement->rowCount()
-                ));
-            }
-
-            return $statement->fetch(\PDO::FETCH_NUM)[0];
-        }
-        );
-    }
-
-    /**
      * Handles an array query
      *
      * @param SqlQuery $query
@@ -490,5 +480,29 @@ class ConcreteModel
         // @formatter:on
 
         return (int)$this->runWithFirstKeyFirstValue($query);
+    }
+
+    /**
+     * Call query and get first column of first row
+     *
+     * @param SqlQuery $query
+     * @return mixed
+     */
+    public function runWithFirstKeyFirstValue(SqlQuery $query)
+    {
+        $stmt = $this->prepare($query);
+
+        return $this->handleGeneric(
+            $stmt, function (PdoStatement $statement) {
+            if ($statement->rowCount() > 1) {
+                throw new DatabaseException(sprintf(
+                    'Expected only a single result record, but got %d',
+                    $statement->rowCount()
+                ));
+            }
+
+            return $statement->fetch(\PDO::FETCH_NUM)[0];
+        }
+        );
     }
 }

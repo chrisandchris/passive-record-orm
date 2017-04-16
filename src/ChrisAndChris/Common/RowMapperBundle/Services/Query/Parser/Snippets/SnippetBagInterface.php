@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;

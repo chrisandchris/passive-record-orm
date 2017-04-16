@@ -7,7 +7,6 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\DefaultParser;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\MySqlBag;
 use ChrisAndChris\Common\RowMapperBundle\Tests\TestKernel;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**

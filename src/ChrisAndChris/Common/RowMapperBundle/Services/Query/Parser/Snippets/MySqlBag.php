@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
 use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
@@ -329,6 +330,7 @@ class MySqlBag implements SnippetBagInterface
                         'Field list for using() clause cannot be array when using MySQL'
                     );
                 }
+
                 return [
                     'code'   => 'USING(`' . $params['field'] . '`)',
                     'params' => null,

@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;

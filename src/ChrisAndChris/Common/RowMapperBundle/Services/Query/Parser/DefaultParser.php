@@ -285,7 +285,7 @@ class DefaultParser implements ParserInterface {
                 'query'  => $this->query,
                 'before' => $matches[1],
                 'after'  => $matches[3],
-                'key' => $matches[2],
+                'key'    => $matches[2],
             ];
             // empty query
             $this->query = [];
