@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Utility;
 
 /**
@@ -9,13 +11,15 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Utility;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class CacheWriter {
+class CacheWriter
+{
 
     /**
      * @param $cacheDir
      * @param $dir
      */
-    public function __construct($cacheDir, $dir) {
+    public function __construct(string $cacheDir, string $dir)
+    {
         $this->cacheDir = $cacheDir . '/' . $dir . '/';
         if (!file_exists($this->cacheDir)) {
             mkdir($this->cacheDir, 0766, true);
@@ -25,22 +29,24 @@ class CacheWriter {
     /**
      * @param $file
      * @param $content
-     * @return int
+     * @return bool
      */
-    public function writeToCache($file, $content) {
-        return file_put_contents($this->cacheDir . basename($file), $content);
+    public function writeToCache(string $file, string $content) : bool
+    {
+        return (bool)file_put_contents($this->cacheDir . basename($file), $content);
     }
 
     /**
      * @param $file
-     * @return null|string
+     * @return string
      */
-    public function readFromCache($file) {
+    public function readFromCache(string $file) : string
+    {
         $file = basename($file);
         if (is_file($this->cacheDir . $file)) {
             return file_get_contents($this->cacheDir . $file);
         }
 
-        return null;
+        return '';
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Entity\Search;
 
 /**
@@ -8,6 +9,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Entity\Search;
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
+ * @deprecated Do not use FilterCondition, replaced in favor of @todo
  */
 class FilterCondition
 {

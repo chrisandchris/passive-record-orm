@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
@@ -14,7 +15,8 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class MappingValidator {
+class MappingValidator
+{
 
     /** @var MappingRepository */
     private $mapper;
@@ -22,11 +24,13 @@ class MappingValidator {
     /**
      * @param MappingRepository $mapper
      */
-    public function __construct(MappingRepository $mapper) {
+    public function __construct(MappingRepository $mapper)
+    {
         $this->mapper = $mapper;
     }
 
-    public function validateTables(array $tables) {
+    public function validateTables(array $tables)
+    {
         foreach ($tables as $table) {
             try {
                 $this->mapper->hasTable($table);
@@ -46,7 +50,8 @@ class MappingValidator {
      * @param Field[] $fields
      * @throws NoSuchColumnException
      */
-    public function validateFields($sourceTable, array $fields) {
+    public function validateFields($sourceTable, array $fields)
+    {
         foreach ($fields as $field) {
             try {
                 if (!($field instanceof Field)) {
@@ -71,7 +76,8 @@ class MappingValidator {
         }
     }
 
-    private function validateField($table, $field) {
+    private function validateField($table, $field)
+    {
         $this->mapper->hasColumns($table, $field);
     }
 

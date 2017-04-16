@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Entity\Search;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
@@ -11,8 +12,10 @@ use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
+ * @deprecated Do not use SearchContainer, replaced in favor of @todo
  */
-class SearchContainer {
+class SearchContainer
+{
 
     /** @var string the primary key of the base table */
     public $primaryKey;

@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\EmptyEntity;
@@ -163,6 +164,7 @@ class RowMapper
         }
 
         if ($entity instanceof PopulateEntity) {
+            /** @var $event PopulationEvent */
             $event = $this->eventDispatcher->dispatch(
                 MappingEvents::POST_MAPPING_ROW_POPULATION,
                 new PopulationEvent($entity, $entityFiller)

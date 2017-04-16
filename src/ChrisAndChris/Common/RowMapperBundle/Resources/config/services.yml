@@ -42,16 +42,14 @@ services:
       arguments: ['@common_rowmapper.model']
       tags:
             - { name: kernel.event_subscriber }
-  common_rowmapper.utilty.cache_writer:
+  common_rowmapper.utility.cache_writer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
     arguments: ['%kernel.cache_dir%', 'common_rowmapper']
   common_rowmapper.mapping.repository:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
-    arguments: ['%kernel.cache_dir%', 'common_rowmapper', 'mapping.json', @common_rowmapper.command.database_mapper]
-  common_rowmapper.command.database_mapper:
-    class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
+    arguments: ['%kernel.cache_dir%', 'common_rowmapper']
     calls:
-        - [setContainer, ['@service_container']]
+      - [setMapper, ['@common_rowmapper.mapping.database_mapper']]
   common_rowmapper.search.result_utility:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
     arguments: ['@common_rowmapper.model']
@@ -67,3 +65,6 @@ services:
   common_rowmapper.model:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
     arguments: ['@common_rowmapper.dependencyprovider']
+  common_rowmapper.mapping.database_mapper:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Mapper\DatabaseMapperService
+    arguments: ['@common_rowmapper.utility.cache_writer', '@event_dispatcher', '%database_driver%', '%database_schema%']

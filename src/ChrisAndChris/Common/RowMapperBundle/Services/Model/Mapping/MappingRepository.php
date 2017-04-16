@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Field;
@@ -7,9 +8,10 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\MappingInitFailedExc
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoPrimaryKeyFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchColumnException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException;
+use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\DatabaseMapperService;
 
 /**
- * @name MappingHandler
+ * @name MappingRepository
  * @version    1.0.1
  * @since      v2.1.0
  * @package    RowMapperBundle
@@ -19,12 +21,17 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\NoSuchTableException
 class MappingRepository
 {
 
-    /** @var \stdClass */
+    /** @var array */
     private $mapping;
+    /** @var DatabaseMapperService */
+    private $mapperService;
+    /** @var string */
+    private $mappingFile;
 
     public function __construct($cacheDir, $dir, $filename = 'mapping.json')
     {
-        $this->setMapping($cacheDir . '/' . $dir . '/' . basename($filename));
+        $this->mappingFile = $cacheDir . '/' . $dir . '/' . basename($filename);
+        $this->setMapping($this->mappingFile);
     }
 
     /**
@@ -34,7 +41,7 @@ class MappingRepository
      * @return bool
      * @throws MappingInitFailedException
      */
-    public function setMapping($mapping)
+    public function setMapping($mapping = null)
     {
         if (is_file($mapping)) {
             $mapping = file_get_contents($mapping);
@@ -46,9 +53,19 @@ class MappingRepository
         }
         $this->mapping = json_decode($mapping, true);
 
+        if (!json_last_error() !== JSON_ERROR_NONE) {
+            throw new MappingInitFailedException(sprintf(
+                'Mapping was found, but json was invalid'
+            ));
+        }
+
         return true;
     }
 
+    public function setMapper(DatabaseMapperService $mapperService)
+    {
+        $this->mapperService = $mapperService;
+    }
 
     /**
      * @param string       $table   the table to check for
@@ -85,12 +102,25 @@ class MappingRepository
      */
     public function hasTable($table)
     {
+        if (!$this->isMapped()) {
+            $this->setMapping($this->mappingFile);
+        }
+
         if (!isset($this->mapping[$table])) {
             throw new NoSuchTableException(sprintf(
                 'No table named "%s" found',
                 $table
             ));
         }
+    }
+
+    private function isMapped() : bool
+    {
+        if (is_array($this->mapping)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getRelations($table)
@@ -135,6 +165,10 @@ class MappingRepository
 
     private function buildRecursiveRelations($table, $deepness, $withAliases)
     {
+        if (!$this->isMapped()) {
+            $this->setMapping($this->mappingFile);
+        }
+
         if ($deepness === 0) {
             return [];
         }
