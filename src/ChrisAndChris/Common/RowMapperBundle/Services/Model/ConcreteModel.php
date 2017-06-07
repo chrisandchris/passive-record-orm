@@ -193,6 +193,9 @@ class ConcreteModel
     {
         if ($this->execute($statement)) {
             if ($statement->rowCount() === 0 && $statement->isResultRequired()) {
+                if (strlen($statement->getRequiresResultErrorMessage()) > 0) {
+                    throw new NoSuchRowFoundException($statement->getRequiresResultErrorMessage());
+                }
                 throw new NoSuchRowFoundException("No row found with query");
             }
 
@@ -330,7 +333,8 @@ class ConcreteModel
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $statement
-     * @param string       $sequence the sequence to return the last insert id for
+     * @param string       $sequence the sequence to return the last insert id
+     *                               for
      * @return int
      */
     private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
@@ -424,7 +428,7 @@ class ConcreteModel
      * Validates whether the given statement has a row count greater than zero
      *
      * @param SqlQuery $query
-     * @return bool whether there is at least one result row or not
+     * @return bool whether there is at least one result row or notgit l
      */
     public function handleHasResult(SqlQuery $query)
     {
