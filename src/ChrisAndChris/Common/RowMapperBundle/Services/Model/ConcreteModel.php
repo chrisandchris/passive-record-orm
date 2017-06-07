@@ -112,7 +112,8 @@ class ConcreteModel
             }
             $stmt->bindValue(++$id, $parameter, $bindType);
         }
-        $stmt->requiresResult($query->isResultRequired());
+        $stmt->requiresResult($query->isResultRequired(),
+            $query->getRequiresResultErrorMessage());
 
         return $stmt;
     }
@@ -152,7 +153,8 @@ class ConcreteModel
      *
      * @param PdoStatement  $statement
      * @param Entity        $entity
-     * @param \Closure|null $callAfter a callable to call after the mapping is done
+     * @param \Closure|null $callAfter a callable to call after the mapping is
+     *                                 done
      * @return bool|Entity[]
      */
     private function handle(PdoStatement $statement, Entity $entity = null, \Closure $callAfter = null)
