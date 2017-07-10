@@ -3,6 +3,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Services\Model;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\KeyValueEntity;
+use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\ForeignKeyConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
@@ -240,7 +241,7 @@ abstract class Model
                 if (!empty($statement->getRequiresResultErrorMessage())) {
                     $error = $statement->getRequiresResultErrorMessage();
                 }
-                throw new NotFoundHttpException($error);
+                throw new NoSuchRowFoundException($error);
             }
 
             return $mappingCallback($statement);
