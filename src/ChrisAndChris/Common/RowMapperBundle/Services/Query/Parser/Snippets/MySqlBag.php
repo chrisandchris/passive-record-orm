@@ -94,7 +94,7 @@ class MySqlBag implements SnippetBagInterface
             },
             'delete'         => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM `' . $params['table'] . '`',
+                    'code'   => 'DELETE `' . $params['table'] . '` FROM `' . $params['table'] . '`',
                     'params' => null,
                 ];
             },
