@@ -110,7 +110,7 @@ class BuilderTest extends AbstractBuilderTest
     {
         $builder = $this->getBuilder();
         $builder->delete('table1');
-        $this->equals('DELETE FROM `table1`', $builder);
+        $this->equals('DELETE `table1` FROM `table1`', $builder);
     }
 
     public function testTable()
