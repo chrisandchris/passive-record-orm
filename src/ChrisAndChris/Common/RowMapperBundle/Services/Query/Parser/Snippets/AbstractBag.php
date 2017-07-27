@@ -1,6 +1,6 @@
 <?php
 
-namespace ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
+namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 
