@@ -83,7 +83,7 @@ class ConcreteModel
      * @param SqlQuery      $query
      * @param Entity        $entity
      * @param \Closure|null $callAfter a closure to call after the mapping is done
-     * @return bool|Entity[] $entity[]
+     * @return entity[]
      */
     public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
     {
@@ -155,7 +155,7 @@ class ConcreteModel
      * @param Entity        $entity
      * @param \Closure|null $callAfter a callable to call after the mapping is
      *                                 done
-     * @return bool|Entity[]
+     * @return bool|entity[]
      */
     private function handle(PdoStatement $statement, Entity $entity = null, \Closure $callAfter = null)
     {
@@ -211,13 +211,11 @@ class ConcreteModel
      * Execute a PDOStatement and writes it to the log
      *
      * @param PdoStatement $statement
-     * @return mixed
+     * @return bool
      */
     private function execute(PdoStatement $statement)
     {
-        $result = $statement->execute();
-
-        return $result;
+        return $statement->execute();
     }
 
     /**
@@ -276,7 +274,7 @@ class ConcreteModel
      * @param mixed|\Closure $onFailure on failure
      * @param null|\Closure  $onError   on exception, if null exception is
      *                                  thrown
-     * @return $onSuccess|$onFailure|$onError
+     * @return mixed
      * @throws \Exception
      */
     public function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)

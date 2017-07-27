@@ -134,11 +134,28 @@ class BuilderTest extends AbstractBuilderTest
         $builder = $this->getBuilder();
         $builder->fieldlist(
             [
+                '!user_id',
+            ]
+        );
+        $this->equals('`user_id` as `userId`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
                 'field1',
                 'field2',
             ]
         );
         $this->equals('`field1`, `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                '!user_id',
+                '!first_name',
+            ]
+        );
+        $this->equals('`user_id` as `userId`, `first_name` as `firstName`', $builder);
 
         $builder = $this->getBuilder();
         $builder->fieldlist(
