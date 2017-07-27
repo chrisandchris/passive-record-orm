@@ -2,7 +2,6 @@
 
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets;
 
-use ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\AbstractBag;
 use ChrisAndChris\Common\RowMapperBundle\Events\RowMapperEvents;
 use ChrisAndChris\Common\RowMapperBundle\Events\Transmitters\SnippetBagEvent;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
