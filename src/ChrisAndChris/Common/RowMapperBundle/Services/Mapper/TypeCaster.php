@@ -28,6 +28,7 @@ class TypeCaster
         $this->casts = [
             'int'  => [$this, 'castInt'],
             'json' => [$this, 'castJson'],
+            'bool' => [$this, 'castBool'],
         ];
     }
 
@@ -50,6 +51,11 @@ class TypeCaster
     public function castInt($value)
     {
         return (int)$value;
+    }
+
+    public function castBool($value)
+    {
+        return (bool)$value;
     }
 
     public function castJson($value)
