@@ -211,7 +211,7 @@ class Builder
      * <br />
      * database:table:field parses to database.table.field
      *
-     * @param string $identifier path of field or field name
+     * @param string|array $identifier path of field or field name
      * @return $this
      */
     public function field($identifier)
@@ -909,7 +909,8 @@ class Builder
             $query = new SqlQuery(
                 $parser->getSqlQuery(),
                 $parser->getParameters(),
-                $calcRowCapable
+                $calcRowCapable,
+                $parser->getMappingInfo()
             );
         }
         $this->clear();

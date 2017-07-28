@@ -78,7 +78,7 @@ class ConcreteModel
     }
 
     /**
-     * Runs a query
+     * Runs a query and maps the result to $entity
      *
      * @param SqlQuery      $query
      * @param Entity        $entity
@@ -89,7 +89,8 @@ class ConcreteModel
     {
         $stmt = $this->prepare($query);
 
-        return $this->handle($stmt, $entity, $callAfter);
+        return $this->handle($stmt, $entity, $callAfter,
+            $query->getMappingInfo());
     }
 
     /**
@@ -153,15 +154,24 @@ class ConcreteModel
      *
      * @param PdoStatement  $statement
      * @param Entity        $entity
-     * @param \Closure|null $callAfter a callable to call after the mapping is
-     *                                 done
-     * @return bool|entity[]
+     * @param \Closure|null $callAfter   callback to run after mapping is done
+     * @param array         $mappingInfo the mapping info to use (typecast)
+     * @return bool|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity[]
      */
-    private function handle(PdoStatement $statement, Entity $entity = null, \Closure $callAfter = null)
+    private function handle(
+        PdoStatement $statement,
+        Entity $entity = null,
+        \Closure $callAfter = null,
+        array $mappingInfo = []
+    )
     {
         return $this->handleGeneric(
             $statement,
-            function (PdoStatement $statement) use ($entity, $callAfter) {
+            function (PdoStatement $statement) use (
+                $entity,
+                $callAfter,
+                $mappingInfo
+            ) {
                 if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
@@ -170,7 +180,8 @@ class ConcreteModel
                 }
 
                 $mapping = $this->getMapper()
-                                ->mapFromResult($statement, $entity);
+                                ->mapFromResult($statement, $entity, null,
+                                    $mappingInfo);
 
                 if ($callAfter instanceof \Closure) {
                     $callAfter($mapping);
@@ -182,12 +193,10 @@ class ConcreteModel
     }
 
     /**
-     * Generic handle method
+     * Does low-level handling of the query
      *
      * @param PdoStatement $statement
-     * @param \Closure     $mappingCallback      a callback taking the
-     *                                           statement as first and only
-     *                                           argument
+     * @param \Closure     $mappingCallback callback to map results
      * @return mixed
      * @throws NoSuchRowFoundException
      */
@@ -428,7 +437,8 @@ class ConcreteModel
      * Validates whether the given statement has a row count greater than zero
      *
      * @param SqlQuery $query
-     * @return bool whether there is at least one result row or notgit l
+     * @return bool whether there is at least one result row or not
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception
      */
     public function handleHasResult(SqlQuery $query)
     {
@@ -442,6 +452,7 @@ class ConcreteModel
      * @param bool     $forceEqual if set to true, only a row count of one and
      *                             only one returns true
      * @return bool whether there is a row or not
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception
      */
     public function handleHas(SqlQuery $query, $forceEqual = true)
     {

@@ -25,6 +25,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class RowMapper
 {
 
+    /** @var \ChrisAndChris\Common\RowMapperBundle\Services\Mapper\TypeCaster */
+    public $typeCaster;
     /**
      * @var EncryptionServiceInterface[]
      */
@@ -37,11 +39,16 @@ class RowMapper
     /**
      * RowMapper constructor.
      *
-     * @param EventDispatcherInterface $eventDispatcher
+     * @param EventDispatcherInterface                                         $eventDispatcher
+     * @param \ChrisAndChris\Common\RowMapperBundle\Services\Mapper\TypeCaster $typeCaster
      */
-    public function __construct(EventDispatcherInterface $eventDispatcher)
+    public function __construct(
+        EventDispatcherInterface $eventDispatcher,
+        TypeCaster $typeCaster
+    )
     {
         $this->eventDispatcher = $eventDispatcher;
+        $this->typeCaster = $typeCaster;
     }
 
     /**
@@ -75,21 +82,27 @@ class RowMapper
     /**
      * Maps a result from a statement into an entity
      *
-     * @param \PDOStatement $statement the statement to map
-     * @param Entity        $entity    the entity to use
-     * @param int           $limit     max amount of rows to map
-     * @return Entity[] list of mapped rows
+     * @param \PDOStatement $statement   the statement to map
+     * @param Entity        $entity      the entity to use
+     * @param int           $limit       max amount of rows to map
+     * @param array         $mappingInfo the mapping info (typecast)
+     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Entity[] list of mapped rows
      */
-    public function mapFromResult(\PDOStatement $statement, Entity $entity = null, $limit = null)
+    public function mapFromResult(
+        \PDOStatement $statement,
+        Entity $entity = null,
+        $limit = null,
+        array $mappingInfo = []
+    )
     {
         $return = [];
         $count = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
             (++$count <= $limit || $limit === null)) {
             if ($entity === null) {
-                $return[] = $this->mapRow($row);
+                $return[] = $this->mapRow($row, null, $mappingInfo);
             } else {
-                $return[] = $this->mapRow($row, clone $entity);
+                $return[] = $this->mapRow($row, clone $entity, $mappingInfo);
             }
         }
 
@@ -107,13 +120,17 @@ class RowMapper
      *  <li>a "set" string is added to the beginning</li>
      * </ul>
      *
-     * @param array $row    the single row to map
+     * @param array $row         the single row to map
      * @param       $entity Entity entity to map to
-     * @return Entity|array $entity the mapped entity
-     * @throws DatabaseException if there is no such property
-     * @throws InvalidOptionException if a EmptyEntity instance is given
+     * @param array $mappingInfo the mapping info (typecast)
+     * @return array|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity $entity the mapped entity
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException if a EmptyEntity instance is given
      */
-    public function mapRow(array $row, Entity $entity = null)
+    public function mapRow(
+        array $row,
+        Entity $entity = null,
+        array $mappingInfo = []
+    )
     {
         if ($entity instanceof EmptyEntity) {
             throw new InvalidOptionException(
@@ -123,7 +140,7 @@ class RowMapper
         if (!isset($entity)) {
             $entity = new EmptyEntity();
         }
-        $this->populateFields($row, $entity);
+        $this->populateFields($row, $entity, $mappingInfo);
 
         $entity = $this->checkForDecryption($entity);
 
@@ -133,13 +150,22 @@ class RowMapper
     /**
      * @param array  $row
      * @param Entity $entity
-     * @throws DatabaseException
-     * @throws InsufficientPopulationException if strict entity is not fully populated
+     * @param array  $mappingInfo the mapping info (typecast)
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\InsufficientPopulationException if strict entity is not fully populated
      */
-    private function populateFields(array $row, Entity $entity)
+    public function populateFields(
+        array $row,
+        Entity $entity,
+        array $mappingInfo
+    )
     {
-        $entityFiller = function (Entity &$entity, $field, $value) {
+        $entityFiller =
+            function (Entity &$entity, $field, $value, $mappingInfo) {
             $methodName = $this->buildMethodName($field);
+                if (isset($mappingInfo[$field]) && $value !== null) {
+                    $value = $this->getTypeCaster()
+                                  ->cast($mappingInfo[$field], $value);
+                }
             if (method_exists($entity, $methodName)) {
                 $entity->$methodName($value);
 
@@ -159,7 +185,7 @@ class RowMapper
 
         $count = 0;
         foreach ($row as $field => $value) {
-            $count += $entityFiller($entity, $field, $value);
+            $count += $entityFiller($entity, $field, $value, $mappingInfo);
         }
 
         if ($entity instanceof PopulateEntity) {
@@ -268,5 +294,10 @@ class RowMapper
         }
 
         return $return;
+    }
+
+    private function getTypeCaster()
+    {
+        return $this->typeCaster;
     }
 }

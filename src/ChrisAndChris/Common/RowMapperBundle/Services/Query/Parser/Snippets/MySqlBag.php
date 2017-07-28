@@ -109,26 +109,47 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
                 $sql = '';
                 $fieldCount = count($params['fields']);
                 $idx = 0;
+                $mapping = [];
+
+                // key = db column name, value = alias
                 foreach ($params['fields'] as $key => $value) {
+                    // we append field with an alias
                     if (!is_numeric($key) || substr($value, 0, 1) === '!') {
                         if (substr($value, 0, 1) === '!') {
                             $key = substr($value, 1);
                             $value = $this->toCamelCase($key);
                         }
-                        $key = $this->implodeIdentifier($key, self::DELIMITER);
-                        $sql .= $key . ' as ' . $this->implodeIdentifier($value, self::DELIMITER);
                     } else {
-                        $sql .= $this->implodeIdentifier($value,
-                            self::DELIMITER);
+                        $key = $value;
                     }
+
+                    if (strstr($key, '::') !== false) {
+                        if ($key === $value) {
+                            $value = explode('::', $value)[0];
+                        }
+                        list ($key, $targetType) = explode('::', $key);
+                        $mapping[$value] = $targetType;
+                    }
+
+                    if (isset($targetType) || $key !== $value) {
+                        $sql .=
+                            $this->implodeIdentifier($key, self::DELIMITER)
+                            . ' as '
+                            . $this->implodeIdentifier($value, self::DELIMITER);
+                    } else {
+                        $sql .=
+                            $this->implodeIdentifier($key, self::DELIMITER);
+                    }
+
                     if (++$idx < $fieldCount) {
                         $sql .= ', ';
                     }
                 }
 
                 return [
-                    'code'   => $sql,
-                    'params' => null,
+                    'code'         => $sql,
+                    'params'       => null,
+                    'mapping_info' => $mapping,
                 ];
             },
             'field'          => function (array $params) {
