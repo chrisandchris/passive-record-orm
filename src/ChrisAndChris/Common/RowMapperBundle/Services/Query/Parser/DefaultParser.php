@@ -18,6 +18,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class DefaultParser implements ParserInterface {
 
+    /** @var array mapping info (typecast) */
+    public $mappingInfo = [];
     /**
      * The statement array
      *
@@ -53,6 +55,7 @@ class DefaultParser implements ParserInterface {
      * Initialize class
      *
      * @param EventDispatcherInterface $eventDispatcher
+     * @param  string                  $subsystem the database system to use
      */
     function __construct(EventDispatcherInterface $eventDispatcher, $subsystem)
     {
@@ -60,20 +63,10 @@ class DefaultParser implements ParserInterface {
         $this->subsystem = $subsystem;
     }
 
-    /**
-     * Set the query information
-     *
-     * @param array $statement
-     */
     function setStatement(array $statement) {
         $this->statement = $statement;
     }
 
-    /**
-     * Get the parsed statement
-     *
-     * @return string
-     */
     function getSqlQuery() {
         if (!is_array($this->query)) {
             $this->query = [];
@@ -82,11 +75,11 @@ class DefaultParser implements ParserInterface {
         return trim(implode(' ', $this->query));
     }
 
-    /**
-     * Get the parameters array
-     *
-     * @return array
-     */
+    function getMappingInfo()
+    {
+        return $this->mappingInfo;
+    }
+
     function getParameters() {
         return $this->parameters;
     }
@@ -165,7 +158,8 @@ class DefaultParser implements ParserInterface {
      * @param array    $type    the type interface to use
      * @param \Closure $snippet the snippet interface to use
      * @return string the generated query
-     * @throws MalformedQueryException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\MissingParameterException
      */
     private function parseCode($type, \Closure $snippet) {
         if (!array_key_exists('params', $type)) {
@@ -190,6 +184,10 @@ class DefaultParser implements ParserInterface {
 
         $this->checkForParameters($type, $result['code'], $result['params']);
         $result['code'] = $this->checkForMethodChaining($result['code']);
+
+        if (isset($result['mapping_info'])) {
+            $this->addMappingInfo($result['mapping_info']);
+        }
 
         return $result['code'];
     }
@@ -234,7 +232,7 @@ class DefaultParser implements ParserInterface {
     /**
      * Checks for parameters used in the code
      *
-     * @param string $type
+     * @param array  $type
      * @param string $code
      * @param        $params
      * @throws MissingParameterException
@@ -296,5 +294,13 @@ class DefaultParser implements ParserInterface {
         }
 
         return $code;
+    }
+
+    private function addMappingInfo($mappingInfo)
+    {
+        $this->mappingInfo = array_merge(
+            $this->mappingInfo,
+            $mappingInfo
+        );
     }
 }

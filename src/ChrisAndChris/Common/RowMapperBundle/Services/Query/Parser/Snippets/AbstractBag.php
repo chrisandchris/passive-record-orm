@@ -18,7 +18,7 @@ abstract class AbstractBag
 {
 
     /**
-     * @param string $identifier the identifiert to implode
+     * @param string $identifier the identifier to implode
      * @param string $d          the delimiter to use
      * @return string
      * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException

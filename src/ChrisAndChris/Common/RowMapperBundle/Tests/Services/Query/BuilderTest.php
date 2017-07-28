@@ -151,6 +151,27 @@ class BuilderTest extends AbstractBuilderTest
         $builder = $this->getBuilder();
         $builder->fieldlist(
             [
+                'field1::int',
+                'field2',
+            ]
+        );
+        // whenever we have type casts, we enforce aliases
+        $this->equals('`field1` as `field1`, `field2` as `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'field1::int' => 'alias1',
+                'field2',
+            ]
+        );
+        // whenever we have type casts, we enforce aliases, but we still validate
+        // assigned aliases
+        $this->equals('`field1` as `alias1`, `field2` as `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
                 '!user_id',
                 '!first_name',
             ]
