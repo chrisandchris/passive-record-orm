@@ -113,14 +113,18 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
 
                 // key = db column name, value = alias
                 foreach ($params['fields'] as $key => $value) {
-                    // we append field with an alias
+                    // explicit value
                     if (!is_numeric($key) || substr($value, 0, 1) === '!') {
                         if (substr($value, 0, 1) === '!') {
                             $key = substr($value, 1);
                             $value = $this->toCamelCase($key);
                         }
                     } else {
+                        // implicit value
                         $key = $value;
+                        // remove casting and schema/table qualifier from alias
+                        $value = strrev(explode(':',
+                            strrev(explode('::', $value)[0]))[0]);
                     }
 
                     if (strstr($key, '::') !== false) {
@@ -153,8 +157,22 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
                 ];
             },
             'field'          => function (array $params) {
+                $qualifiedKey = $params['identifier'];
+
+                if (is_array($qualifiedKey)) {
+                    $qualifiedKey = implode(':', $qualifiedKey);
+                }
+
+                if (strstr($qualifiedKey, '::') !== false) {
+                    list ($qualifiedKey, $targetType) =
+                        explode('::', $qualifiedKey);
+                    $unqualifiedKey =
+                        strrev(explode(':', strrev($qualifiedKey))[0]);
+                    $mapping[$unqualifiedKey] = $targetType;
+                }
+
                 return [
-                    'code'   => $this->implodeIdentifier($params['identifier'],
+                    'code'   => $this->implodeIdentifier($qualifiedKey,
                         self::DELIMITER),
                     'params' => null,
                 ];

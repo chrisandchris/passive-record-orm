@@ -121,6 +121,17 @@ class BuilderTest extends AbstractBuilderTest
         $this->equals('FROM `table`', $builder);
     }
 
+    public function testFieldlist_withCast()
+    {
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'table:field1::int',
+            ]
+        );
+        $this->equals('`table`.`field1` as `field1`', $builder);
+    }
+
     public function testFieldlist()
     {
         $builder = $this->getBuilder();
@@ -237,6 +248,17 @@ class BuilderTest extends AbstractBuilderTest
                 ->close();
 
         $this->equals('WHERE `field1` = ? AND `field2` = `field3`', $builder);
+    }
+
+    public function testField_withCast()
+    {
+        $builder = $this->getBuilder();
+        $builder->field('field1::int');
+        $this->equals('`field1`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->field('table1:field1::int');
+        $this->equals('`table1`.`field1`', $builder);
     }
 
     public function testField()
