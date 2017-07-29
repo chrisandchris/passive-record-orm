@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
@@ -132,6 +133,17 @@ class BuilderTest extends AbstractBuilderTest
         $this->equals('`table`.`field1` as `field1`', $builder);
     }
 
+    public function testFiedllist_withCastAndCamelCase()
+    {
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                '!table:camel_case::int',
+            ]
+        );
+        $this->equals('`table`.`camel_case` as `camelCase`', $builder);
+    }
+
     public function testFieldlist()
     {
         $builder = $this->getBuilder();
@@ -187,7 +199,8 @@ class BuilderTest extends AbstractBuilderTest
                 '!first_name',
             ]
         );
-        $this->equals('`user_id` as `userId`, `first_name` as `firstName`', $builder);
+        $this->equals('`user_id` as `userId`, `first_name` as `firstName`',
+            $builder);
 
         $builder = $this->getBuilder();
         $builder->fieldlist(
@@ -517,7 +530,8 @@ class BuilderTest extends AbstractBuilderTest
 
         $this->assertEquals(5, count($builder->getStatement()));
         $query = $builder->getSqlQuery();
-        $this->assertEquals('`field` `field` `field` `field` `field`', $query->getQuery());
+        $this->assertEquals('`field` `field` `field` `field` `field`',
+            $query->getQuery());
     }
 
     public function testEach()
