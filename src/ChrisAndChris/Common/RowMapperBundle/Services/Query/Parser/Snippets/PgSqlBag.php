@@ -16,11 +16,12 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class PgSqlBag implements SnippetBagInterface
+class PgSqlBag extends AbstractBag implements SnippetBagInterface
 {
 
     /** @var array */
     private $snippets = [];
+    const DELIMITER = '"';
 
     public function __construct()
     {
@@ -108,7 +109,9 @@ class PgSqlBag implements SnippetBagInterface
             },
             'delete'     => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM ' . $this->implodeIdentifier($params['table']),
+                    'code'   => 'DELETE FROM ' .
+                        $this->implodeIdentifier($params['table'],
+                            self::DELIMITER),
                     'params' => null,
                 ];
             },
@@ -123,14 +126,16 @@ class PgSqlBag implements SnippetBagInterface
                 $fieldCount = count($params['fields']);
                 $idx = 0;
                 foreach ($params['fields'] as $key => $value) {
-                    if (!is_numeric($key)) {
-                        $key = $this->implodeIdentifier($key);
-                    }
-                    $value = $this->implodeIdentifier($value);
-                    if (!is_numeric($key)) {
-                        $sql .= $key . ' as ' . $value;
+                    if (!is_numeric($key) || substr($value, 0, 1) === '!') {
+                        if (substr($value, 0, 1) === '!') {
+                            $key = substr($value, 1);
+                            $value = $this->toCamelCase($key);
+                        }
+                        $key = $this->implodeIdentifier($key, self::DELIMITER);
+                        $sql .= $key . ' as ' . $this->implodeIdentifier($value, self::DELIMITER);
                     } else {
-                        $sql .= $value;
+                        $sql .= $this->implodeIdentifier($value,
+                            self::DELIMITER);
                     }
                     if (++$idx < $fieldCount) {
                         $sql .= ', ';
@@ -144,7 +149,8 @@ class PgSqlBag implements SnippetBagInterface
             },
             'field'      => function (array $params) {
                 return [
-                    'code'   => $this->implodeIdentifier($params['identifier']),
+                    'code'   => $this->implodeIdentifier($params['identifier'],
+                        self::DELIMITER),
                     'params' => null,
                 ];
             },
@@ -227,7 +233,8 @@ class PgSqlBag implements SnippetBagInterface
                 return [
                     'code'   => strtoupper($params['type'])
                         . ' JOIN '
-                        . $this->implodeIdentifier($params['table'])
+                        . $this->implodeIdentifier($params['table'],
+                            self::DELIMITER)
                         . ''
                         . $alias,
                     'params' => null,
@@ -271,7 +278,8 @@ class PgSqlBag implements SnippetBagInterface
                 }
 
                 return [
-                    'code'   => $this->implodeIdentifier($params['field'])
+                    'code'   => $this->implodeIdentifier($params['field'],
+                            self::DELIMITER)
                         . ' ' . strtoupper($params['direction']),
                     'params' => null,
                 ];
@@ -332,7 +340,8 @@ class PgSqlBag implements SnippetBagInterface
                 if (is_array($params['field'])) {
                     $using = [];
                     foreach ($params['field'] as $field) {
-                        $using[] = $this->implodeIdentifier($field);
+                        $using[] =
+                            $this->implodeIdentifier($field, self::DELIMITER);
                     }
                     $using = implode(', ', $using);
                 } else {
@@ -363,24 +372,6 @@ class PgSqlBag implements SnippetBagInterface
                 ];
             },
         ];
-    }
-
-    private function implodeIdentifier($identifier)
-    {
-        // $identifier = 'database:table:field
-        if (!is_array($identifier) && strstr($identifier, ':') !== false) {
-            return '"' . implode('"."', explode(':', $identifier)) . '"';
-        } else {
-            if (is_array($identifier)) {
-                return '"' . implode('"."', $identifier) . '"';
-            } else {
-                if (is_string($identifier)) {
-                    return '"' . $identifier . '"';
-                }
-            }
-        }
-
-        throw new InvalidOptionException('Invalid input given');
     }
 
     /**

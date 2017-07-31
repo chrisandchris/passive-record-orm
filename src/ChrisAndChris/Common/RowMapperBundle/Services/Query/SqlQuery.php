@@ -18,8 +18,17 @@ class SqlQuery
     private $parameters;
     private $requiresResult = false;
     private $errorMessage;
+    /**
+     * @var array
+     */
+    private $mappingInfo;
 
-    function __construct($query, $parameters = [], $calcRowCapable = false)
+    function __construct(
+        $query,
+        $parameters = [],
+        $calcRowCapable = false,
+        array $mappingInfo = null
+    )
     {
         $this->query = $query;
         if (!is_array($parameters)) {
@@ -27,6 +36,10 @@ class SqlQuery
         }
         $this->parameters = $parameters;
         $this->calcRowCapable = $calcRowCapable;
+        if ($mappingInfo === null) {
+            $mappingInfo = [];
+        }
+        $this->mappingInfo = $mappingInfo;
     }
 
     /**
@@ -70,5 +83,15 @@ class SqlQuery
     public function isCalcRowCapable()
     {
         return $this->calcRowCapable;
+    }
+
+    /**
+     * Get the mapping info
+     *
+     * @return array
+     */
+    public function getMappingInfo()
+    {
+        return $this->mappingInfo;
     }
 }

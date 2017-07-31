@@ -78,18 +78,19 @@ class ConcreteModel
     }
 
     /**
-     * Runs a query
+     * Runs a query and maps the result to $entity
      *
      * @param SqlQuery      $query
      * @param Entity        $entity
      * @param \Closure|null $callAfter a closure to call after the mapping is done
-     * @return bool|Entity[] $entity[]
+     * @return entity[]
      */
     public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
     {
         $stmt = $this->prepare($query);
 
-        return $this->handle($stmt, $entity, $callAfter);
+        return $this->handle($stmt, $entity, $callAfter,
+            $query->getMappingInfo());
     }
 
     /**
@@ -112,7 +113,8 @@ class ConcreteModel
             }
             $stmt->bindValue(++$id, $parameter, $bindType);
         }
-        $stmt->requiresResult($query->isResultRequired());
+        $stmt->requiresResult($query->isResultRequired(),
+            $query->getRequiresResultErrorMessage());
 
         return $stmt;
     }
@@ -152,14 +154,24 @@ class ConcreteModel
      *
      * @param PdoStatement  $statement
      * @param Entity        $entity
-     * @param \Closure|null $callAfter a callable to call after the mapping is done
-     * @return bool|Entity[]
+     * @param \Closure|null $callAfter   callback to run after mapping is done
+     * @param array         $mappingInfo the mapping info to use (typecast)
+     * @return bool|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity[]
      */
-    private function handle(PdoStatement $statement, Entity $entity = null, \Closure $callAfter = null)
+    private function handle(
+        PdoStatement $statement,
+        Entity $entity = null,
+        \Closure $callAfter = null,
+        array $mappingInfo = []
+    )
     {
         return $this->handleGeneric(
             $statement,
-            function (PdoStatement $statement) use ($entity, $callAfter) {
+            function (PdoStatement $statement) use (
+                $entity,
+                $callAfter,
+                $mappingInfo
+            ) {
                 if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
@@ -168,7 +180,8 @@ class ConcreteModel
                 }
 
                 $mapping = $this->getMapper()
-                                ->mapFromResult($statement, $entity);
+                                ->mapFromResult($statement, $entity, null,
+                                    $mappingInfo);
 
                 if ($callAfter instanceof \Closure) {
                     $callAfter($mapping);
@@ -180,12 +193,10 @@ class ConcreteModel
     }
 
     /**
-     * Generic handle method
+     * Does low-level handling of the query
      *
      * @param PdoStatement $statement
-     * @param \Closure     $mappingCallback      a callback taking the
-     *                                           statement as first and only
-     *                                           argument
+     * @param \Closure     $mappingCallback callback to map results
      * @return mixed
      * @throws NoSuchRowFoundException
      */
@@ -193,6 +204,9 @@ class ConcreteModel
     {
         if ($this->execute($statement)) {
             if ($statement->rowCount() === 0 && $statement->isResultRequired()) {
+                if (strlen($statement->getRequiresResultErrorMessage()) > 0) {
+                    throw new NoSuchRowFoundException($statement->getRequiresResultErrorMessage());
+                }
                 throw new NoSuchRowFoundException("No row found with query");
             }
 
@@ -206,13 +220,11 @@ class ConcreteModel
      * Execute a PDOStatement and writes it to the log
      *
      * @param PdoStatement $statement
-     * @return mixed
+     * @return bool
      */
     private function execute(PdoStatement $statement)
     {
-        $result = $statement->execute();
-
-        return $result;
+        return $statement->execute();
     }
 
     /**
@@ -271,7 +283,7 @@ class ConcreteModel
      * @param mixed|\Closure $onFailure on failure
      * @param null|\Closure  $onError   on exception, if null exception is
      *                                  thrown
-     * @return $onSuccess|$onFailure|$onError
+     * @return mixed
      * @throws \Exception
      */
     public function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
@@ -330,7 +342,8 @@ class ConcreteModel
      * Handles a statement and returns the last insert id on success
      *
      * @param PdoStatement $statement
-     * @param string       $sequence the sequence to return the last insert id for
+     * @param string       $sequence the sequence to return the last insert id
+     *                               for
      * @return int
      */
     private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
@@ -425,6 +438,7 @@ class ConcreteModel
      *
      * @param SqlQuery $query
      * @return bool whether there is at least one result row or not
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception
      */
     public function handleHasResult(SqlQuery $query)
     {
@@ -438,6 +452,7 @@ class ConcreteModel
      * @param bool     $forceEqual if set to true, only a row count of one and
      *                             only one returns true
      * @return bool whether there is a row or not
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception
      */
     public function handleHas(SqlQuery $query, $forceEqual = true)
     {

@@ -33,7 +33,8 @@ class RowMapperFactory
     public function getMapper()
     {
         $mapper = new RowMapper(
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            new TypeCaster()
         );
         /** @var NewMapperEvent $event */
         $event = $this->eventDispatcher->dispatch('rowMapperBundle.createNewMapper', new NewMapperEvent());

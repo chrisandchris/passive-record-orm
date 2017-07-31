@@ -37,4 +37,11 @@ interface ParserInterface {
      * @return array
      */
     function getParameters();
+
+    /**
+     * Get the mapping information
+     *
+     * @return array
+     */
+    function getMappingInfo();
 }

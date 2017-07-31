@@ -16,9 +16,10 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
  */
-class MySqlBag implements SnippetBagInterface
+class MySqlBag extends AbstractBag implements SnippetBagInterface
 {
 
+    const DELIMITER = '`';
     /** @var array */
     private $snippets = [];
 
@@ -94,7 +95,7 @@ class MySqlBag implements SnippetBagInterface
             },
             'delete'         => function (array $params) {
                 return [
-                    'code'   => 'DELETE FROM `' . $params['table'] . '`',
+                    'code'   => 'DELETE `' . $params['table'] . '` FROM `' . $params['table'] . '`',
                     'params' => null,
                 ];
             },
@@ -108,29 +109,76 @@ class MySqlBag implements SnippetBagInterface
                 $sql = '';
                 $fieldCount = count($params['fields']);
                 $idx = 0;
+                $mapping = [];
+
+                // key = db column name, value = alias
                 foreach ($params['fields'] as $key => $value) {
-                    if (!is_numeric($key)) {
-                        $key = $this->implodeIdentifier($key);
-                    }
-                    $value = $this->implodeIdentifier($value);
-                    if (!is_numeric($key)) {
-                        $sql .= $key . ' as ' . $value;
+                    // explicit value or auto camelCase
+                    if (!is_numeric($key) || substr($value, 0, 1) === '!') {
+                        // auto camelCase
+                        if (substr($value, 0, 1) === '!') {
+                            $key = substr($value, 1);
+                            $value = $this->toCamelCase($key);
+                        }
                     } else {
-                        $sql .= $value;
+                        // implicit value
+                        $key = $value;
                     }
+
+                    // remove explicit schema qualifier and typecast from alias
+                    if (strstr($value, ':') !== false) {
+                        // remove casting and schema/table qualifier from alias
+                        $value = strrev(explode(':',
+                            strrev(explode('::', $value)[0]))[0]);
+                    }
+
+                    if (strstr($key, '::') !== false) {
+                        if ($key === $value) {
+                            $value = explode('::', $value)[0];
+                        }
+                        list ($key, $targetType) = explode('::', $key);
+                        $mapping[$value] = $targetType;
+                    }
+
+                    if (isset($targetType) || $key !== $value) {
+                        $sql .=
+                            $this->implodeIdentifier($key, self::DELIMITER)
+                            . ' as '
+                            . $this->implodeIdentifier($value, self::DELIMITER);
+                    } else {
+                        $sql .=
+                            $this->implodeIdentifier($key, self::DELIMITER);
+                    }
+
                     if (++$idx < $fieldCount) {
                         $sql .= ', ';
                     }
                 }
 
                 return [
-                    'code'   => $sql,
-                    'params' => null,
+                    'code'         => $sql,
+                    'params'       => null,
+                    'mapping_info' => $mapping,
                 ];
             },
             'field'          => function (array $params) {
+                $qualifiedKey = $params['identifier'];
+
+                if (is_array($qualifiedKey)) {
+                    $qualifiedKey = implode(':', $qualifiedKey);
+                }
+
+                if (strstr($qualifiedKey, '::') !== false) {
+                    list ($qualifiedKey, $targetType) =
+                        explode('::', $qualifiedKey);
+                    $unqualifiedKey =
+                        strrev(explode(':', strrev($qualifiedKey))[0]);
+                    $mapping[$unqualifiedKey] = $targetType;
+                }
+
                 return [
-                    'code'   => $this->implodeIdentifier($params['identifier']),
+                    'code'   => $this->implodeIdentifier($qualifiedKey,
+                        self::DELIMITER),
                     'params' => null,
                 ];
             },
@@ -214,7 +262,8 @@ class MySqlBag implements SnippetBagInterface
                 return [
                     'code'   => strtoupper($params['type'])
                         . ' JOIN '
-                        . $this->implodeIdentifier($params['table'])
+                        . $this->implodeIdentifier($params['table'],
+                            self::DELIMITER)
                         . $alias,
                     'params' => null,
                 ];
@@ -257,7 +306,8 @@ class MySqlBag implements SnippetBagInterface
                 }
 
                 return [
-                    'code'   => $this->implodeIdentifier($params['field'])
+                    'code'   => $this->implodeIdentifier($params['field'],
+                            self::DELIMITER)
                         . ' ' . strtoupper($params['direction']),
                     'params' => null,
                 ];
@@ -277,7 +327,9 @@ class MySqlBag implements SnippetBagInterface
             'sql_found_rows' => function (array $params) {
                 $identifier = $params['identifier'];
                 if ($params['identifier'] != '*') {
-                    $identifier = $this->implodeIdentifier($params['identifier']);
+                    $identifier =
+                        $this->implodeIdentifier($params['identifier'],
+                            self::DELIMITER);
                 }
 
                 return [
@@ -355,24 +407,6 @@ class MySqlBag implements SnippetBagInterface
                 ];
             },
         ];
-    }
-
-    private function implodeIdentifier($identifier)
-    {
-        // $identifier = 'database:table:field
-        if (!is_array($identifier) && strstr($identifier, ':') !== false) {
-            return '`' . implode('`.`', explode(':', $identifier)) . '`';
-        } else {
-            if (is_array($identifier)) {
-                return '`' . implode('`.`', $identifier) . '`';
-            } else {
-                if (is_string($identifier)) {
-                    return '`' . $identifier . '`';
-                }
-            }
-        }
-
-        throw new InvalidOptionException('Invalid input given');
     }
 
     /**

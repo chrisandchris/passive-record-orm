@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Query;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException;
@@ -110,7 +111,7 @@ class BuilderTest extends AbstractBuilderTest
     {
         $builder = $this->getBuilder();
         $builder->delete('table1');
-        $this->equals('DELETE FROM `table1`', $builder);
+        $this->equals('DELETE `table1` FROM `table1`', $builder);
     }
 
     public function testTable()
@@ -119,6 +120,28 @@ class BuilderTest extends AbstractBuilderTest
         $builder->table('table');
 
         $this->equals('FROM `table`', $builder);
+    }
+
+    public function testFieldlist_withCast()
+    {
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'table:field1::int',
+            ]
+        );
+        $this->equals('`table`.`field1` as `field1`', $builder);
+    }
+
+    public function testFiedllist_withCastAndCamelCase()
+    {
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                '!table:camel_case::int',
+            ]
+        );
+        $this->equals('`table`.`camel_case` as `camelCase`', $builder);
     }
 
     public function testFieldlist()
@@ -134,11 +157,50 @@ class BuilderTest extends AbstractBuilderTest
         $builder = $this->getBuilder();
         $builder->fieldlist(
             [
+                '!user_id',
+            ]
+        );
+        $this->equals('`user_id` as `userId`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
                 'field1',
                 'field2',
             ]
         );
         $this->equals('`field1`, `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'field1::int',
+                'field2',
+            ]
+        );
+        // whenever we have type casts, we enforce aliases
+        $this->equals('`field1` as `field1`, `field2` as `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                'field1::int' => 'alias1',
+                'field2',
+            ]
+        );
+        // whenever we have type casts, we enforce aliases, but we still validate
+        // assigned aliases
+        $this->equals('`field1` as `alias1`, `field2` as `field2`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->fieldlist(
+            [
+                '!user_id',
+                '!first_name',
+            ]
+        );
+        $this->equals('`user_id` as `userId`, `first_name` as `firstName`',
+            $builder);
 
         $builder = $this->getBuilder();
         $builder->fieldlist(
@@ -199,6 +261,17 @@ class BuilderTest extends AbstractBuilderTest
                 ->close();
 
         $this->equals('WHERE `field1` = ? AND `field2` = `field3`', $builder);
+    }
+
+    public function testField_withCast()
+    {
+        $builder = $this->getBuilder();
+        $builder->field('field1::int');
+        $this->equals('`field1`', $builder);
+
+        $builder = $this->getBuilder();
+        $builder->field('table1:field1::int');
+        $this->equals('`table1`.`field1`', $builder);
     }
 
     public function testField()
@@ -457,7 +530,8 @@ class BuilderTest extends AbstractBuilderTest
 
         $this->assertEquals(5, count($builder->getStatement()));
         $query = $builder->getSqlQuery();
-        $this->assertEquals('`field` `field` `field` `field` `field`', $query->getQuery());
+        $this->assertEquals('`field` `field` `field` `field` `field`',
+            $query->getQuery());
     }
 
     public function testEach()
