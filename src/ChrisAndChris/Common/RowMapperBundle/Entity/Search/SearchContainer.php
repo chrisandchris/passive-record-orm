@@ -12,7 +12,7 @@ use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
- * @deprecated Do not use SearchContainer, replaced in favor of @todo
+ * @deprecated Do not use SearchContainer, no replacement, tbr 3.1
  */
 class SearchContainer
 {

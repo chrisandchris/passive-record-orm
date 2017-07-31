@@ -164,8 +164,9 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
             'field'          => function (array $params) {
                 $qualifiedKey = $params['identifier'];
 
-                if (is_array($qualifiedKey)) {
-                    $qualifiedKey = implode(':', $qualifiedKey);
+                if (substr($qualifiedKey, 0, 1) === '!') {
+                    var_dump($qualifiedKey);
+                    $qualifiedKey = $this->toCamelCase($qualifiedKey);
                 }
 
                 if (strstr($qualifiedKey, '::') !== false) {

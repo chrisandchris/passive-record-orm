@@ -53,9 +53,10 @@ class MappingRepository
         }
         $this->mapping = json_decode($mapping, true);
 
-        if (!json_last_error() !== JSON_ERROR_NONE) {
+        if (json_last_error() !== JSON_ERROR_NONE) {
             throw new MappingInitFailedException(sprintf(
-                'Mapping was found, but json was invalid'
+                'Invalid JSON mapping was found, %s',
+                json_last_error_msg()
             ));
         }
 
@@ -302,5 +303,33 @@ class MappingRepository
         }
 
         return $fields;
+    }
+
+    /**
+     * @param string     $rootTable
+     * @param Relation[] $joinedTables
+     */
+    public function completeJoins($rootTable, $joinedTables)
+    {
+        $relations = $this->getRecursiveRelations($rootTable, 1, true);
+        $count = 0;
+        foreach ($joinedTables as $join) {
+            foreach ($relations as $relation) {
+                if ($relation->target == $join->target) {
+                    if ($join->source == null) {
+                        $join->source = $rootTable;
+                    }
+                    if ($join->sourceField == null) {
+                        $join->sourceField = $relation->sourceField;
+                    }
+                    if ($join->targetField == null) {
+                        $join->targetField = $relation->targetField;
+                    }
+                    $join->alias = $this->getTableAlias($relation);
+                    $count++;
+                    break;
+                }
+            }
+        }
     }
 }

@@ -16,12 +16,17 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
+ * Handles mapping from rows to objects (entities)
+ *
+ * To instantiate, use factory
+ *
  * @name RowMapper
  * @version    2.0.1
  * @since      v1.0.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
+ * @see        \ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory
  */
 class RowMapper
 {

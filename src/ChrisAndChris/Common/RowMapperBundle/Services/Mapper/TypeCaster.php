@@ -26,9 +26,10 @@ class TypeCaster
     public function __construct()
     {
         $this->casts = [
-            'int'  => [$this, 'castInt'],
-            'json' => [$this, 'castJson'],
-            'bool' => [$this, 'castBool'],
+            'int'   => [$this, 'castInt'],
+            'json'  => [$this, 'castJson'],
+            'bool'  => [$this, 'castBool'],
+            'float' => [$this, 'castDouble'],
         ];
     }
 
@@ -70,5 +71,10 @@ class TypeCaster
         }
 
         return new \DateTime($value);
+    }
+
+    public function castDouble($value)
+    {
+        return (double)$value;
     }
 }

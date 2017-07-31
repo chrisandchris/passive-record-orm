@@ -9,7 +9,7 @@ namespace ChrisAndChris\Common\RowMapperBundle\Entity\Search;
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
- * @deprecated Do not use FilterCondition, replaced in favor of @todo
+ * @deprecated Do not use FilterCondition, no replacement, tbr 3.1
  */
 class FilterCondition
 {

@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  apache:
+    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www/
+    tmpfs: /tmp
+    ports:
+      - 8081:80

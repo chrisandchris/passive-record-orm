@@ -18,7 +18,7 @@ class SnippetBagEvent extends Event
 {
 
     /** @var BagInterface */
-    private $bags;
+    private $bags = [];
 
     /**
      * Add (and override) bag for the compatible systems
@@ -46,8 +46,9 @@ class SnippetBagEvent extends Event
     {
         if (!isset($this->bags[$desiredSystem])) {
             throw new ClassNotFoundException(sprintf(
-                'There is no bag registered for desired type "%s"',
-                $desiredSystem
+                'There is no bag registered for desired type "%s", we have [%s]',
+                $desiredSystem,
+                implode(', ', array_keys($this->bags))
             ));
         }
 

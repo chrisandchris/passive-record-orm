@@ -438,7 +438,7 @@ class ConcreteModel
      *
      * @param SqlQuery $query
      * @return bool whether there is at least one result row or not
-     * @deprecated use SqlQuery::requiresResult() instead and throw exception
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception, tbr 3.1.0
      */
     public function handleHasResult(SqlQuery $query)
     {
@@ -452,7 +452,8 @@ class ConcreteModel
      * @param bool     $forceEqual if set to true, only a row count of one and
      *                             only one returns true
      * @return bool whether there is a row or not
-     * @deprecated use SqlQuery::requiresResult() instead and throw exception
+     * @deprecated use SqlQuery::requiresResult() instead and throw exception,
+     *             tbr 3.1
      */
     public function handleHas(SqlQuery $query, $forceEqual = true)
     {

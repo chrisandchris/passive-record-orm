@@ -9,6 +9,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\EncryptionExecutorInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\ParserInterface;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
+use ChrisAndChris\Common\RowMapperBundle\Services\Query\Relation\RelationQueryBuilder;
 
 /**
  * @name Builder
@@ -21,6 +22,8 @@ use ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\TypeBag;
 class Builder
 {
 
+    /** @var RelationQueryBuilder */
+    public $relationQueryBuilder;
     /** @var array the statement */
     private $statement = [];
     /** @var ParserInterface */
@@ -43,6 +46,12 @@ class Builder
     public function setParser(ParserInterface $parser)
     {
         $this->parser = $parser;
+    }
+
+    public function setRelationQueryBuilder(
+        RelationQueryBuilder $relationQueryBuilder
+    ) {
+        $this->relationQueryBuilder = $relationQueryBuilder;
     }
 
     public function select()
@@ -206,16 +215,20 @@ class Builder
 
     /**
      * Select a field<br />
-     * Array usage of $identifier is deprecated, use only with double-colon<br
-     * />
-     * <br />
      * database:table:field parses to database.table.field
      *
      * @param string|array $identifier path of field or field name
      * @return $this
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\MalformedQueryException
      */
     public function field($identifier)
     {
+        if (!is_string($identifier)) {
+            throw new MalformedQueryException(sprintf(
+                'Please only supply strings as identifier, not %s',
+                gettype($identifier)
+            ));
+        }
         $this->append('field', ['identifier' => $identifier]);
 
         return $this;
@@ -311,6 +324,7 @@ class Builder
      * Synonym for close()
      *
      * @return $this
+     * @deprecated use ::close() instead, tbr 3.2
      */
     public function end()
     {
@@ -633,8 +647,20 @@ class Builder
      *
      * @return $this
      * @throws MalformedQueryException
+     * @deprecated use ::_endif() instead for clearer code, tbr 3.2
      */
     public function _end()
+    {
+        return $this->_endif();
+    }
+
+    /**
+     * Reset propagation state
+     *
+     * @return $this
+     * @throws MalformedQueryException
+     */
+    public function _endif()
     {
         $maxIndex = $this->getHighestPropagationKey();
 
@@ -937,6 +963,13 @@ class Builder
     public function useEncryptionService(EncryptionExecutorInterface $executorService)
     {
         $this->encryptionExecutor = $executorService;
+
+        return $this;
+    }
+
+    public function entity(string $entity)
+    {
+        $this->relationQueryBuilder->build($this, $entity);
 
         return $this;
     }

@@ -106,6 +106,7 @@ class ModelDependencyProvider {
 
         $eventData = new DatabaseEvent($type, $table, $primaryKey);
 
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->dispatchEvent($event, $eventData);
     }
 

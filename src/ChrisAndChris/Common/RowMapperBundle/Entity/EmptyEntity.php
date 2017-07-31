@@ -1,6 +1,8 @@
 <?php
 namespace ChrisAndChris\Common\RowMapperBundle\Entity;
 
+use ChrisAndChris\Common\RowMapperBundle\Entity\Mapping\Relation;
+
 /**
  * @name EmptyEntity
  * @version    1.0.0
@@ -11,4 +13,10 @@ namespace ChrisAndChris\Common\RowMapperBundle\Entity;
  */
 class EmptyEntity implements Entity {
 
+    public function getRelations()
+    {
+        return [
+            new Relation(),
+        ];
+    }
 }
