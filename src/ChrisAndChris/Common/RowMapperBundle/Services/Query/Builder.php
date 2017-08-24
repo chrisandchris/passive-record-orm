@@ -920,7 +920,8 @@ class Builder
                 $parser->getSqlQuery(),
                 $parser->getParameters(),
                 $calcRowCapable,
-                $parser->getMappingInfo()
+                $parser->getMappingInfo(),
+                $this->isReadOnly
             );
         }
         $this->clear();

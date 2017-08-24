@@ -110,7 +110,8 @@ class ConcreteModel
      */
     public function prepare(SqlQuery $query)
     {
-        $stmt = $this->createStatement($query->getQuery());
+        $stmt =
+            $this->createStatement($query->getQuery(), $query->isReadOnly());
         foreach ($query->getParameters() as $id => $parameter) {
             $bindType = \PDO::PARAM_STR;
             if ($parameter === true || $parameter === false) {
@@ -122,8 +123,10 @@ class ConcreteModel
             }
             $stmt->bindValue(++$id, $parameter, $bindType);
         }
-        $stmt->requiresResult($query->isResultRequired(),
-            $query->getRequiresResultErrorMessage());
+        $stmt->requiresResult(
+            $query->isResultRequired(),
+            $query->getRequiresResultErrorMessage()
+        );
 
         return $stmt;
     }
@@ -131,14 +134,15 @@ class ConcreteModel
     /**
      * Create a new statement from SQL-Code
      *
-     * @param $sql
-     * @return PdoStatement
+     * @param      $sql
+     * @param bool $readOnly
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement
      */
-    private function createStatement($sql)
+    private function createStatement($sql, bool $readOnly = false)
     {
         /** @var PDOStatement $stmt */
         $stmt = $this->getDependencyProvider()
-                     ->getPdo()
+                     ->getPdo(($readOnly) ? 'r' : 'w')
                      ->prepare($sql);
 
         $this->lastStatement = $stmt;
@@ -189,8 +193,12 @@ class ConcreteModel
                 }
 
                 $mapping = $this->getMapper()
-                                ->mapFromResult($statement, $entity, null,
-                                    $mappingInfo);
+                                ->mapFromResult(
+                                    $statement,
+                                    $entity,
+                                    null,
+                                    $mappingInfo
+                                );
 
                 if ($callAfter instanceof \Closure) {
                     $callAfter($mapping);
@@ -377,7 +385,7 @@ class ConcreteModel
                 }
 
                 return $this->getDependencyProvider()
-                            ->getPdo()
+                            ->getPdo('w')// always with write
                             ->lastInsertId($sequence);
             }
         );
