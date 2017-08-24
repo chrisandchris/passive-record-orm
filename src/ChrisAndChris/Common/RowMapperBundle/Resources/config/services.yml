@@ -69,3 +69,6 @@ services:
   common_rowmapper.model:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
     arguments: ['@common_rowmapper.dependencyprovider']
+  common_rowmapper.pdo.factory:
+    class: ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
+    arguments: ['%pr_orm%']

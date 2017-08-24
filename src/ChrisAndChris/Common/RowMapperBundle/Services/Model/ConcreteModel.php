@@ -59,17 +59,22 @@ class ConcreteModel
     }
 
     /**
-     * Checks whether $optionName is the only option which is not null, except for keys of $allowAlways
+     * Checks whether $optionName is the only option which is not null, except
+     * for keys of $allowAlways
      *
      * @param array $options
      * @param       $optionName
      * @param array $allowAlways
      * @return bool
      */
-    public function isOnlyOption(array $options, $optionName, array $allowAlways = ['limit', 'offset'])
-    {
+    public function isOnlyOption(
+        array $options,
+        $optionName,
+        array $allowAlways = ['limit', 'offset']
+    ) {
         foreach ($options as $name => $value) {
-            if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
+            if ($name != $optionName && $value !== null &&
+                !in_array($name, $allowAlways)) {
                 return false;
             }
         }
@@ -82,11 +87,15 @@ class ConcreteModel
      *
      * @param SqlQuery      $query
      * @param Entity        $entity
-     * @param \Closure|null $callAfter a closure to call after the mapping is done
+     * @param \Closure|null $callAfter a closure to call after the mapping is
+     *                                 done
      * @return entity[]
      */
-    public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
-    {
+    public function run(
+        SqlQuery $query,
+        Entity $entity,
+        \Closure $callAfter = null
+    ) {
         $stmt = $this->prepare($query);
 
         return $this->handle($stmt, $entity, $callAfter,
@@ -163,8 +172,7 @@ class ConcreteModel
         Entity $entity = null,
         \Closure $callAfter = null,
         array $mappingInfo = []
-    )
-    {
+    ) {
         return $this->handleGeneric(
             $statement,
             function (PdoStatement $statement) use (
@@ -172,7 +180,8 @@ class ConcreteModel
                 $callAfter,
                 $mappingInfo
             ) {
-                if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
+                if ((int)$statement->errorCode() != 0 ||
+                    $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
                 if ($entity === null) {
@@ -200,10 +209,13 @@ class ConcreteModel
      * @return mixed
      * @throws NoSuchRowFoundException
      */
-    private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
-    {
+    private function handleGeneric(
+        PdoStatement $statement,
+        \Closure $mappingCallback
+    ) {
         if ($this->execute($statement)) {
-            if ($statement->rowCount() === 0 && $statement->isResultRequired()) {
+            if ($statement->rowCount() === 0 &&
+                $statement->isResultRequired()) {
                 if (strlen($statement->getRequiresResultErrorMessage()) > 0) {
                     throw new NoSuchRowFoundException($statement->getRequiresResultErrorMessage());
                 }
@@ -286,8 +298,12 @@ class ConcreteModel
      * @return mixed
      * @throws \Exception
      */
-    public function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
-    {
+    public function runCustom(
+        SqlQuery $query,
+        $onSuccess,
+        $onFailure,
+        $onError = null
+    ) {
         try {
             if ($this->runSimple($query)) {
                 if ($onSuccess instanceof \Closure) {
@@ -346,8 +362,10 @@ class ConcreteModel
      *                               for
      * @return int
      */
-    private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
-    {
+    private function handleWithLastInsertId(
+        PdoStatement $statement,
+        $sequence = null
+    ) {
         return $this->handleGeneric(
             $statement,
             function () use ($sequence) {

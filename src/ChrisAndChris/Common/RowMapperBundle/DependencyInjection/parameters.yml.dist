@@ -1,0 +1,5 @@
+parameters:
+  pr_orm:
+    read: ~
+    write:
+      - ['system','host','port','database','user','password']

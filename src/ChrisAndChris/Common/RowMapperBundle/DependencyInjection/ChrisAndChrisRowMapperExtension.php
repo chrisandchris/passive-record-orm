@@ -13,12 +13,14 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  * To learn more see {@link
  * http://symfony.com/doc/current/cookbook/bundles/extension.html}
  */
-class ChrisAndChrisRowMapperExtension extends Extension {
+class ChrisAndChrisRowMapperExtension extends Extension
+{
 
     /**
      * {@inheritDoc}
      */
-    public function load(array $configs, ContainerBuilder $container) {
+    public function load(array $configs, ContainerBuilder $container)
+    {
         $loader = new Loader\YamlFileLoader(
             $container, new FileLocator(
                 __DIR__ . '/../Resources/config'
@@ -28,7 +30,8 @@ class ChrisAndChrisRowMapperExtension extends Extension {
         $loader->load('services.yml');
     }
 
-    public function getAlias() {
-        return 'chris_and_chris_row_mapper';
+    public function getAlias()
+    {
+        return 'pr_orm';
     }
 }
