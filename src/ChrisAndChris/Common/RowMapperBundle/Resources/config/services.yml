@@ -1,7 +1,7 @@
 services:
   common_rowmapper.dependencyprovider:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ModelDependencyProvider
-    arguments: ['@common_rowmapper.pdoLayer', '@common_rowmapper.rowmapperfactory', '@common_rowmapper.errorHandler', '@common_rowmapper.querybuilderfactory', '@service_container', '@event_dispatcher']
+    arguments: ['@common_rowmapper.pdo.factory', '@common_rowmapper.rowmapperfactory', '@common_rowmapper.errorhandler', '@common_rowmapper.querybuilderfactory']
   common_rowmapper.pdolayer:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
     arguments: ['%database_driver%', '%database_host%', '%database_port%', '%database_name%', '%database_user%', '%database_password%']
@@ -70,5 +70,5 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
     arguments: ['@common_rowmapper.dependencyprovider']
   common_rowmapper.pdo.factory:
-    class: ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
-    arguments: ['%pr_orm%']
+    class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
+    arguments: ['@common_rowmapper.pdolayer', '%chris_and_chris_row_mapper%']

@@ -32,6 +32,6 @@ class ChrisAndChrisRowMapperExtension extends Extension
 
     public function getAlias()
     {
-        return 'pr_orm';
+        return 'chris_and_chris_row_mapper';
     }
 }

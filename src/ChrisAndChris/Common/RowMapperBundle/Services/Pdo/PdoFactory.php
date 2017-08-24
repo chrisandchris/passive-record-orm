@@ -26,10 +26,14 @@ class PdoFactory
 
     public function __construct(PdoLayer $layer, array $params = [])
     {
+        // default connection defaults to write
         $this->connections['w'] = [$layer];
         $this->connections['r'] = [];
 
         foreach ($params as $type => $pool) {
+            if (!is_array($pool)) {
+                continue;
+            }
             if ($type !== 'read' && $type !== 'write') {
                 continue;
             }
@@ -51,26 +55,32 @@ class PdoFactory
      * Get a read or a write connection
      *
      * @param string|null $type either null, r or w
-     * @return \PDO
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
      */
-    public function getPdo(string $type = null) : \PDO
+    public function getPdo(string $type = null) : PdoLayer
     {
-        if ($type === null || count($this->connections['type']) == 0) {
-            return $this->getRandom($this->connections['w']);
+        if ($type === null || count($this->connections[$type]) == 0) {
+            $conn = $this->getRandom($this->connections['w']);
+        } else {
+            return $this->getRandom($this->connections[$type]);
         }
 
-        return $this->getRandom($this->connections[$type]);
+        if ($conn instanceof \Closure) {
+            return $conn();
+        }
+
+        return $conn;
     }
 
     /**
      * Get a random connection from list of connections
      *
      * @param array $connections
-     * @return \PDO
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
      */
-    private function getRandom(array $connections) : \PDO
+    private function getRandom(array $connections) : PdoLayer
     {
-        return array_rand($connections);
+        return $connections[array_rand($connections)];
     }
 
     public function getReadPoolCount() : int

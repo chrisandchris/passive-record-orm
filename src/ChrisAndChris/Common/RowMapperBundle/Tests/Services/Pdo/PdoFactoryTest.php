@@ -45,5 +45,15 @@ class PdoFactoryTests extends \PHPUnit_Framework_TestCase
             1,
             $factory->getReadPoolCount()
         );
+
+        $this->assertTrue(
+            $factory->getPdo() instanceof \PDO
+        );
+        $this->assertTrue(
+            $factory->getPdo('r') instanceof \PDO
+        );
+        $this->assertTrue(
+            $factory->getPdo('w') instanceof \PDO
+        );
     }
 }
