@@ -110,8 +110,10 @@ class ConcreteModel
      */
     public function prepare(SqlQuery $query)
     {
-        $stmt =
-            $this->createStatement($query->getQuery(), $query->isReadOnly());
+        $stmt = $this->createStatement(
+            $query->getQuery(),
+            $query->isReadOnly()
+        );
         foreach ($query->getParameters() as $id => $parameter) {
             $bindType = \PDO::PARAM_STR;
             if ($parameter === true || $parameter === false) {

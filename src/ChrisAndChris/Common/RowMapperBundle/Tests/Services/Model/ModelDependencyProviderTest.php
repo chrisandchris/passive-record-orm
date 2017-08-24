@@ -26,7 +26,6 @@ class ModelDependencyProviderTest extends TestKernel
     {
         $provider = $this->getProvider();
         $matches = [
-            [$provider->getPdo(), '\PDO'],
             [
                 $provider->getBuilder(),
                 'ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder',

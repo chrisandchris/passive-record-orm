@@ -25,7 +25,7 @@ class SqlQuery
     /**
      * @var bool
      */
-    private $readOnly;
+    private $readOnly = false;
 
     function __construct(
         $query,

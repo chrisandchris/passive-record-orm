@@ -60,7 +60,7 @@ class ModelDependencyProvider {
      * @param string|null $type either r for read-only and w for write
      * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
      */
-    public function getPdo(string $type = null)
+    public function getPdo(string $type = null) : \PDO
     {
         return $this->pdoFactory->getPdo($type);
     }
