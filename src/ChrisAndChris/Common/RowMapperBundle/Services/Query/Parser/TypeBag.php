@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser;
 
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
@@ -27,7 +28,7 @@ class TypeBag implements BagInterface
     private function init()
     {
         $this->types = [
-            'alias'      => [
+            'alias'          => [
                 'params'   => [
                     'alias',
                 ],
@@ -35,25 +36,25 @@ class TypeBag implements BagInterface
                     'alias',
                 ],
             ],
-            'and'        => [
+            'and'            => [
                 'params' => [],
             ],
-            'any'        => [
+            'any'            => [
                 'params' => [],
             ],
-            'brace'      => [
+            'brace'          => [
                 'params' => [],
             ],
-            'close'      => [
+            'close'          => [
                 'params' => [],
             ],
-            'cast'       => [
+            'cast'           => [
                 'params' => ['cast'],
             ],
-            'comma'      => [
+            'comma'          => [
                 'params' => [],
             ],
-            'comparison' => [
+            'comparison'     => [
                 'params'   => [
                     'comparison',
                 ],
@@ -61,18 +62,19 @@ class TypeBag implements BagInterface
                     'comparison',
                 ],
             ],
-            'delete'     => [
-                'params'   => [
+            'delete'         => [
+                'params'     => [
                     'table',
                 ],
-                'required' => [
+                'required'   => [
                     'table',
                 ],
+                'read_write' => true,
             ],
-            'equals'     => [
+            'equals'         => [
                 'params' => [],
             ],
-            'fieldlist'  => [
+            'fieldlist'      => [
                 'params'   => [
                     'fields',
                 ],
@@ -80,7 +82,7 @@ class TypeBag implements BagInterface
                     'fields',
                 ],
             ],
-            'field'      => [
+            'field'          => [
                 'params'   => [
                     'identifier',
                 ],
@@ -88,7 +90,7 @@ class TypeBag implements BagInterface
                     'identifier',
                 ],
             ],
-            'function'   => [
+            'function'       => [
                 'params'   => [
                     'name',
                 ],
@@ -96,31 +98,32 @@ class TypeBag implements BagInterface
                     'name',
                 ],
             ],
-            'group'      => [
+            'group'          => [
                 'params' => [],
             ],
-            'in'         => [
+            'in'             => [
                 'params'   => [
                     'in',
                 ],
                 'required' => [
                 ],
             ],
-            'insert'     => [
-                'params'   => [
+            'insert'         => [
+                'params'     => [
                     'table',
                     'mode',
                 ],
-                'required' => [
+                'required'   => [
                     'table',
                 ],
+                'read_write' => true,
             ],
-            'isnull'     => [
+            'isnull'         => [
                 'params' => [
                     'isnull',
                 ],
             ],
-            'join'       => [
+            'join'           => [
                 'params'   => [
                     'table',
                     'type',
@@ -130,7 +133,7 @@ class TypeBag implements BagInterface
                     'table',
                 ],
             ],
-            'like'       => [
+            'like'           => [
                 'params'   => [
                     'pattern',
                 ],
@@ -138,7 +141,7 @@ class TypeBag implements BagInterface
                     'pattern',
                 ],
             ],
-            'limit'      => [
+            'limit'          => [
                 'params'   => [
                     'limit',
                 ],
@@ -146,10 +149,10 @@ class TypeBag implements BagInterface
                     'limit',
                 ],
             ],
-            'null'       => [
+            'null'           => [
                 'params' => [],
             ],
-            'offset'     => [
+            'offset'         => [
                 'params'   => [
                     'offset',
                 ],
@@ -157,10 +160,10 @@ class TypeBag implements BagInterface
                     'offset',
                 ],
             ],
-            'on'         => [
+            'on'             => [
                 'params' => [],
             ],
-            'orderby'    => [
+            'orderby'        => [
                 'params'   => [
                     'field',
                     'direction',
@@ -170,29 +173,30 @@ class TypeBag implements BagInterface
                     'direction',
                 ],
             ],
-            'order'      => [
+            'order'          => [
                 'params' => [],
             ],
-            'or'         => [
+            'or'             => [
                 'params' => [],
             ],
-            'raw'        => [
-                'params'   => [
+            'raw'            => [
+                'params'     => [
                     'raw',
                     'params',
                 ],
-                'required' => [
+                'required'   => [
                     'raw',
                     'params',
                 ],
+                'read_write' => true,
             ],
-            'select'     => [
+            'select'         => [
                 'params' => [],
             ],
             'sql_found_rows' => [
-                'params' => ['identifier']
+                'params' => ['identifier'],
             ],
-            'table'      => [
+            'table'          => [
                 'params'   => [
                     'table',
                     'alias',
@@ -201,20 +205,21 @@ class TypeBag implements BagInterface
                     'table',
                 ],
             ],
-            'union'      => [
+            'union'          => [
                 'params' => [
                     'mode',
                 ],
             ],
-            'update'     => [
-                'params'   => [
+            'update'         => [
+                'params'     => [
                     'table',
                 ],
-                'required' => [
+                'required'   => [
                     'table',
                 ],
+                'read_write' => true,
             ],
-            'using'      => [
+            'using'          => [
                 'params'   => [
                     'field',
                 ],
@@ -222,10 +227,10 @@ class TypeBag implements BagInterface
                     'field',
                 ],
             ],
-            'values'     => [
+            'values'         => [
                 'params' => [],
             ],
-            'value'      => [
+            'value'          => [
                 'params'   => [
                     'value',
                 ],
@@ -233,7 +238,7 @@ class TypeBag implements BagInterface
                     'value',
                 ],
             ],
-            'where'      => [
+            'where'          => [
                 'params' => [],
             ],
         ];
