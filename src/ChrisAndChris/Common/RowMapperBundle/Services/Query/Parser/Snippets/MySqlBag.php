@@ -19,9 +19,9 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\TypeNotFoundException;
 class MySqlBag extends AbstractBag implements SnippetBagInterface
 {
 
+    const DELIMITER = '`';
     /** @var array */
     private $snippets = [];
-    const DELIMITER = '`';
 
     public function __construct()
     {
@@ -113,8 +113,9 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
 
                 // key = db column name, value = alias
                 foreach ($params['fields'] as $key => $value) {
-                    // explicit value
+                    // explicit value or auto camelCase
                     if (!is_numeric($key) || substr($value, 0, 1) === '!') {
+                        // auto camelCase
                         if (substr($value, 0, 1) === '!') {
                             $key = substr($value, 1);
                             $value = $this->toCamelCase($key);
@@ -122,6 +123,10 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
                     } else {
                         // implicit value
                         $key = $value;
+                    }
+
+                    // remove explicit schema qualifier and typecast from alias
+                    if (strstr($value, ':') !== false) {
                         // remove casting and schema/table qualifier from alias
                         $value = strrev(explode(':',
                             strrev(explode('::', $value)[0]))[0]);
