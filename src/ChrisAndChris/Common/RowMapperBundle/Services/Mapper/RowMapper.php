@@ -2,11 +2,11 @@
 
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
-use ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Entity\WeakEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\EmptyEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\PopulateEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\StrictEntity;
+use ChrisAndChris\Common\RowMapperBundle\Entity\WeakEntity;
 use ChrisAndChris\Common\RowMapperBundle\Events\Mapping\PopulationEvent;
 use ChrisAndChris\Common\RowMapperBundle\Events\MappingEvents;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;

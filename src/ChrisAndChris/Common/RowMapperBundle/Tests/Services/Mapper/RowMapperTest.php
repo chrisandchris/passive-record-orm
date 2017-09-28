@@ -2,8 +2,8 @@
 
 namespace ChrisAndChris\Common\RowMapperBundle\Tests\Services\Mapper;
 
-use ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Entity\WeakEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
+use ChrisAndChris\Common\RowMapperBundle\Entity\WeakEntity;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\Encryption\Executors\StringBasedExecutor;
