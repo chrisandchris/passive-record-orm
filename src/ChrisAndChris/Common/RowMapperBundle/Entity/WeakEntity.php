@@ -1,9 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace ChrisAndChris\Common\RowMapper\ChrisAndChris\Common\RowMapperBundle\Entity;
-
-use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
+namespace ChrisAndChris\Common\RowMapperBundle\Entity;
 
 /**
  * A strict entity is an entity ignoring unknown fields
