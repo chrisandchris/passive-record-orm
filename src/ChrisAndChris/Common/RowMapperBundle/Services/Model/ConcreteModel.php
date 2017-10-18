@@ -12,6 +12,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
+use Psr\Log\LoggerInterface;
 
 /**
  * @name ConcreteModel
@@ -28,10 +29,20 @@ class ConcreteModel
     protected $dependencyProvider;
     /** @var PdoStatement */
     private $lastStatement;
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
 
-    function __construct(ModelDependencyProvider $dependencyProvider)
-    {
+    function __construct(
+        ModelDependencyProvider $dependencyProvider,
+        LoggerInterface $logger
+    ) {
         $this->dependencyProvider = $dependencyProvider;
+        $this->logger = $logger;
+    }
+
+    public function getLogger() : LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**

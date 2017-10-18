@@ -49,7 +49,11 @@ services:
     arguments: ['%kernel.cache_dir%', 'common_rowmapper']
   common_rowmapper.mapping.repository:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
-    arguments: ['%kernel.cache_dir%', 'common_rowmapper', 'mapping.json', @common_rowmapper.command.database_mapper]
+    arguments:
+      - '%kernel.cache_dir%'
+      - 'common_rowmapper'
+      - 'mapping.json'
+      - '@common_rowmapper.command.database_mapper'
   common_rowmapper.command.database_mapper:
     class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
     calls:
@@ -68,7 +72,9 @@ services:
     arguments: ['@common_rowmapper.mapping.repository']
   common_rowmapper.model:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
-    arguments: ['@common_rowmapper.dependencyprovider']
+    arguments:
+      - '@common_rowmapper.dependencyprovider'
+      - '@monolog.logger_prototype'
   common_rowmapper.pdo.factory:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
     arguments: ['@common_rowmapper.pdolayer', '%chris_and_chris_row_mapper%']
