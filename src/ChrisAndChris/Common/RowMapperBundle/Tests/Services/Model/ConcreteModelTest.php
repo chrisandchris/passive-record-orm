@@ -153,8 +153,13 @@ class ConcreteModelTest extends TestKernel
         $dependencyMock->method('getBuilder')
                        ->willReturn($builderMock);
 
+        $loggerMock = $this->getMockBuilder('\Psr\Log\LoggerInterface')
+                           ->disableOriginalConstructor()
+                           ->getMock();
+
         return new ConcreteModel(
-            $dependencyMock
+            $dependencyMock,
+            $loggerMock
         );
     }
 
