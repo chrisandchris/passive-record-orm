@@ -74,7 +74,7 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
     arguments:
       - '@common_rowmapper.dependencyprovider'
-      - '@monolog.logger_prototype'
+      - '@logger'
   common_rowmapper.pdo.factory:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
     arguments: ['@common_rowmapper.pdolayer', '%chris_and_chris_row_mapper%']
