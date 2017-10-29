@@ -407,6 +407,8 @@ class ConcreteModel
     /**
      * Handles an array query
      *
+     * WARNING: does not preserve type casting during mapping
+     *
      * @param SqlQuery $query
      * @param Entity   $entity
      * @param \Closure $closure
@@ -433,15 +435,18 @@ class ConcreteModel
     {
         return $this->handleGeneric(
             $this->prepare($query),
-            function (\PDOStatement $statement) {
+            function (\PDOStatement $statement) use ($query) {
                 return $this->getMapper()
-                            ->mapFromResult($statement);
+                            ->mapFromResult($statement, null, null,
+                                $query->getMappingInfo());
             }
         );
     }
 
     /**
      * Handles a key value query
+     *
+     * WARNING: does not preserve type casting during mapping
      *
      * @param SqlQuery $query
      * @return array

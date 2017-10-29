@@ -201,7 +201,8 @@ class RowMapper
         $entityFiller =
             function (Entity &$entity, $field, $value, $mappingInfo) {
                 $methodName = $this->buildMethodName($field);
-                if (isset($mappingInfo[$field]) && $value !== null) {
+                if (isset($mappingInfo[$field]) &&
+                    ($value !== null || $mappingInfo[$field] === 'bool')) {
                     $value = $this->getTypeCaster()
                                   ->cast($mappingInfo[$field], $value);
                 }
