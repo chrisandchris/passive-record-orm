@@ -26,9 +26,10 @@ class TypeCaster
     public function __construct()
     {
         $this->casts = [
-            'int'  => [$this, 'castInt'],
-            'json' => [$this, 'castJson'],
-            'bool' => [$this, 'castBool'],
+            'int'      => [$this, 'castInt'],
+            'json'     => [$this, 'castJson'],
+            'bool'     => [$this, 'castBool'],
+            'datetime' => [$this, 'castDate'],
         ];
     }
 
