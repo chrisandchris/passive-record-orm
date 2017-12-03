@@ -12,6 +12,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\UniqueConstraintException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\SqlQuery;
+use Psr\Log\LoggerInterface;
 
 /**
  * @name ConcreteModel
@@ -28,10 +29,20 @@ class ConcreteModel
     protected $dependencyProvider;
     /** @var PdoStatement */
     private $lastStatement;
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
 
-    function __construct(ModelDependencyProvider $dependencyProvider)
-    {
+    function __construct(
+        ModelDependencyProvider $dependencyProvider,
+        LoggerInterface $logger
+    ) {
         $this->dependencyProvider = $dependencyProvider;
+        $this->logger = $logger;
+    }
+
+    public function getLogger() : LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**
@@ -59,17 +70,22 @@ class ConcreteModel
     }
 
     /**
-     * Checks whether $optionName is the only option which is not null, except for keys of $allowAlways
+     * Checks whether $optionName is the only option which is not null, except
+     * for keys of $allowAlways
      *
      * @param array $options
      * @param       $optionName
      * @param array $allowAlways
      * @return bool
      */
-    public function isOnlyOption(array $options, $optionName, array $allowAlways = ['limit', 'offset'])
-    {
+    public function isOnlyOption(
+        array $options,
+        $optionName,
+        array $allowAlways = ['limit', 'offset']
+    ) {
         foreach ($options as $name => $value) {
-            if ($name != $optionName && $value !== null && !in_array($name, $allowAlways)) {
+            if ($name != $optionName && $value !== null &&
+                !in_array($name, $allowAlways)) {
                 return false;
             }
         }
@@ -82,11 +98,15 @@ class ConcreteModel
      *
      * @param SqlQuery      $query
      * @param Entity        $entity
-     * @param \Closure|null $callAfter a closure to call after the mapping is done
+     * @param \Closure|null $callAfter a closure to call after the mapping is
+     *                                 done
      * @return entity[]
      */
-    public function run(SqlQuery $query, Entity $entity, \Closure $callAfter = null)
-    {
+    public function run(
+        SqlQuery $query,
+        Entity $entity,
+        \Closure $callAfter = null
+    ) {
         $stmt = $this->prepare($query);
 
         return $this->handle($stmt, $entity, $callAfter,
@@ -101,7 +121,10 @@ class ConcreteModel
      */
     public function prepare(SqlQuery $query)
     {
-        $stmt = $this->createStatement($query->getQuery());
+        $stmt = $this->createStatement(
+            $query->getQuery(),
+            $query->isReadOnly()
+        );
         foreach ($query->getParameters() as $id => $parameter) {
             $bindType = \PDO::PARAM_STR;
             if ($parameter === true || $parameter === false) {
@@ -113,8 +136,10 @@ class ConcreteModel
             }
             $stmt->bindValue(++$id, $parameter, $bindType);
         }
-        $stmt->requiresResult($query->isResultRequired(),
-            $query->getRequiresResultErrorMessage());
+        $stmt->requiresResult(
+            $query->isResultRequired(),
+            $query->getRequiresResultErrorMessage()
+        );
 
         return $stmt;
     }
@@ -122,14 +147,15 @@ class ConcreteModel
     /**
      * Create a new statement from SQL-Code
      *
-     * @param $sql
-     * @return PdoStatement
+     * @param      $sql
+     * @param bool $readOnly
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoStatement
      */
-    private function createStatement($sql)
+    private function createStatement($sql, bool $readOnly = false)
     {
         /** @var PDOStatement $stmt */
         $stmt = $this->getDependencyProvider()
-                     ->getPdo()
+                     ->getPdo(($readOnly) ? 'r' : 'w')
                      ->prepare($sql);
 
         $this->lastStatement = $stmt;
@@ -163,8 +189,7 @@ class ConcreteModel
         Entity $entity = null,
         \Closure $callAfter = null,
         array $mappingInfo = []
-    )
-    {
+    ) {
         return $this->handleGeneric(
             $statement,
             function (PdoStatement $statement) use (
@@ -172,7 +197,8 @@ class ConcreteModel
                 $callAfter,
                 $mappingInfo
             ) {
-                if ((int)$statement->errorCode() != 0 || $statement->errorInfo()[1] != null) {
+                if ((int)$statement->errorCode() != 0 ||
+                    $statement->errorInfo()[1] != null) {
                     return $this->handleError($statement);
                 }
                 if ($entity === null) {
@@ -180,8 +206,12 @@ class ConcreteModel
                 }
 
                 $mapping = $this->getMapper()
-                                ->mapFromResult($statement, $entity, null,
-                                    $mappingInfo);
+                                ->mapFromResult(
+                                    $statement,
+                                    $entity,
+                                    null,
+                                    $mappingInfo
+                                );
 
                 if ($callAfter instanceof \Closure) {
                     $callAfter($mapping);
@@ -200,10 +230,13 @@ class ConcreteModel
      * @return mixed
      * @throws NoSuchRowFoundException
      */
-    private function handleGeneric(PdoStatement $statement, \Closure $mappingCallback)
-    {
+    private function handleGeneric(
+        PdoStatement $statement,
+        \Closure $mappingCallback
+    ) {
         if ($this->execute($statement)) {
-            if ($statement->rowCount() === 0 && $statement->isResultRequired()) {
+            if ($statement->rowCount() === 0 &&
+                $statement->isResultRequired()) {
                 if (strlen($statement->getRequiresResultErrorMessage()) > 0) {
                     throw new NoSuchRowFoundException($statement->getRequiresResultErrorMessage());
                 }
@@ -286,8 +319,12 @@ class ConcreteModel
      * @return mixed
      * @throws \Exception
      */
-    public function runCustom(SqlQuery $query, $onSuccess, $onFailure, $onError = null)
-    {
+    public function runCustom(
+        SqlQuery $query,
+        $onSuccess,
+        $onFailure,
+        $onError = null
+    ) {
         try {
             if ($this->runSimple($query)) {
                 if ($onSuccess instanceof \Closure) {
@@ -346,8 +383,10 @@ class ConcreteModel
      *                               for
      * @return int
      */
-    private function handleWithLastInsertId(PdoStatement $statement, $sequence = null)
-    {
+    private function handleWithLastInsertId(
+        PdoStatement $statement,
+        $sequence = null
+    ) {
         return $this->handleGeneric(
             $statement,
             function () use ($sequence) {
@@ -359,7 +398,7 @@ class ConcreteModel
                 }
 
                 return $this->getDependencyProvider()
-                            ->getPdo()
+                            ->getPdo('w')// always with write
                             ->lastInsertId($sequence);
             }
         );
@@ -367,6 +406,8 @@ class ConcreteModel
 
     /**
      * Handles an array query
+     *
+     * WARNING: does not preserve type casting during mapping
      *
      * @param SqlQuery $query
      * @param Entity   $entity
@@ -394,15 +435,18 @@ class ConcreteModel
     {
         return $this->handleGeneric(
             $this->prepare($query),
-            function (\PDOStatement $statement) {
+            function (\PDOStatement $statement) use ($query) {
                 return $this->getMapper()
-                            ->mapFromResult($statement);
+                            ->mapFromResult($statement, null, null,
+                                $query->getMappingInfo());
             }
         );
     }
 
     /**
      * Handles a key value query
+     *
+     * WARNING: does not preserve type casting during mapping
      *
      * @param SqlQuery $query
      * @return array

@@ -29,6 +29,8 @@ class Builder
     private $stopPropagation = [];
     /** @var bool indicator, if the current query uses closures */
     private $usedClosures = false;
+    /** @var bool true, as long as there is no update/write */
+    private $isReadOnly = true;
     /** @var TypeBag */
     private $typeBag;
     /** @var EncryptionExecutorInterface the encryption service used */
@@ -43,6 +45,11 @@ class Builder
     public function setParser(ParserInterface $parser)
     {
         $this->parser = $parser;
+    }
+
+    public function markAsNotReadOnly()
+    {
+        $this->isReadOnly = false;
     }
 
     public function select()
@@ -81,6 +88,9 @@ class Builder
                         $endParams[$param] = null;
                     }
                 }
+            }
+            if (isset($type['read_write']) && $type['read_write'] === true) {
+                $this->markAsNotReadOnly();
             }
             $this->statement[] = [
                 'type'   => $typeName,
@@ -910,7 +920,8 @@ class Builder
                 $parser->getSqlQuery(),
                 $parser->getParameters(),
                 $calcRowCapable,
-                $parser->getMappingInfo()
+                $parser->getMappingInfo(),
+                $this->isReadOnly
             );
         }
         $this->clear();

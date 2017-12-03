@@ -5,6 +5,7 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapper;
 use ChrisAndChris\Common\RowMapperBundle\Services\Mapper\RowMapperFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility;
+use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory;
 use ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\Builder;
 use ChrisAndChris\Common\RowMapperBundle\Services\Query\BuilderFactory;
@@ -34,28 +35,34 @@ class ModelDependencyProvider {
     private $builderFactory;
     /** @var EventDispatcherInterface the event dispatcher */
     private $eventDispatcher;
+    /**
+     * @var \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
+     */
+    private $pdoFactory;
 
     function __construct(
-        \PDO $pdo,
+        PdoFactory $pdoFactory,
         RowMapperFactory $mapperFactory,
         ErrorHandler $errorHandler,
         BuilderFactory $builderFactory,
         ContainerInterface $container = null,
         EventDispatcherInterface $eventDispatcher = null) {
 
-        $this->pdo = $pdo;
         $this->mapperFactory = $mapperFactory;
         $this->errorHandler = $errorHandler;
         $this->builderFactory = $builderFactory;
         $this->container = $container;
         $this->eventDispatcher = $eventDispatcher;
+        $this->pdoFactory = $pdoFactory;
     }
 
     /**
-     * @return PdoLayer
+     * @param string|null $type either r for read-only and w for write
+     * @return \ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoLayer
      */
-    public function getPdo() {
-        return $this->pdo;
+    public function getPdo(string $type = null) : \PDO
+    {
+        return $this->pdoFactory->getPdo($type);
     }
 
     /**

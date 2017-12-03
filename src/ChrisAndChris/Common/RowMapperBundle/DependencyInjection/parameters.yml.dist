@@ -1,0 +1,5 @@
+parameters:
+  chris_and_chris_row_mapper:
+    read: ~
+    write:
+      - ['system','host','port','database','user','password']

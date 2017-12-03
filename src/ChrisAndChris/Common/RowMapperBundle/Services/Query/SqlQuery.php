@@ -22,14 +22,18 @@ class SqlQuery
      * @var array
      */
     private $mappingInfo;
+    /**
+     * @var bool
+     */
+    private $readOnly = false;
 
     function __construct(
         $query,
         $parameters = [],
         $calcRowCapable = false,
-        array $mappingInfo = null
-    )
-    {
+        array $mappingInfo = null,
+        bool $readOnly = false
+    ) {
         $this->query = $query;
         if (!is_array($parameters)) {
             $parameters = [$parameters];
@@ -40,6 +44,7 @@ class SqlQuery
             $mappingInfo = [];
         }
         $this->mappingInfo = $mappingInfo;
+        $this->readOnly = $readOnly;
     }
 
     /**
@@ -93,5 +98,10 @@ class SqlQuery
     public function getMappingInfo()
     {
         return $this->mappingInfo;
+    }
+
+    public function isReadOnly()
+    {
+        return $this->readOnly;
     }
 }

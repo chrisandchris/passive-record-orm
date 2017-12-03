@@ -1,10 +1,12 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Services\Mapper;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\EmptyEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\Entity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\PopulateEntity;
 use ChrisAndChris\Common\RowMapperBundle\Entity\StrictEntity;
+use ChrisAndChris\Common\RowMapperBundle\Entity\WeakEntity;
 use ChrisAndChris\Common\RowMapperBundle\Events\Mapping\PopulationEvent;
 use ChrisAndChris\Common\RowMapperBundle\Events\MappingEvents;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\DatabaseException;
@@ -45,8 +47,7 @@ class RowMapper
     public function __construct(
         EventDispatcherInterface $eventDispatcher,
         TypeCaster $typeCaster
-    )
-    {
+    ) {
         $this->eventDispatcher = $eventDispatcher;
         $this->typeCaster = $typeCaster;
     }
@@ -56,8 +57,9 @@ class RowMapper
      *
      * @param EncryptionServiceInterface $encryptionService
      */
-    public function addEncryptionAbility(EncryptionServiceInterface $encryptionService)
-    {
+    public function addEncryptionAbility(
+        EncryptionServiceInterface $encryptionService
+    ) {
         $this->encryptionServices[] = $encryptionService;
     }
 
@@ -69,8 +71,10 @@ class RowMapper
      * @return Entity
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    public function mapSingleFromResult(\PDOStatement $statement, Entity $entity)
-    {
+    public function mapSingleFromResult(
+        \PDOStatement $statement,
+        Entity $entity
+    ) {
         $list = $this->mapFromResult($statement, $entity, 1);
         if (count($list) == 0) {
             throw new NotFoundHttpException;
@@ -82,19 +86,28 @@ class RowMapper
     /**
      * Maps a result from a statement into an entity
      *
-     * @param \PDOStatement $statement   the statement to map
-     * @param Entity        $entity      the entity to use
-     * @param int           $limit       max amount of rows to map
-     * @param array         $mappingInfo the mapping info (typecast)
-     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Entity[] list of mapped rows
+     * @param \PDOStatement $statement                               the
+     *                                                               statement
+     *                                                               to map
+     * @param Entity        $entity                                  the entity
+     *                                                               to use
+     * @param int           $limit                                   max amount
+     *                                                               of rows to
+     *                                                               map
+     * @param array         $mappingInfo                             the
+     *                                                               mapping
+     *                                                               info
+     *                                                               (typecast)
+     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Entity[] list of
+     *                                                               mapped
+     *                                                               rows
      */
     public function mapFromResult(
         \PDOStatement $statement,
         Entity $entity = null,
         $limit = null,
         array $mappingInfo = []
-    )
-    {
+    ) {
         $return = [];
         $count = 0;
         while (false !== ($row = $statement->fetch(\PDO::FETCH_ASSOC)) &&
@@ -120,18 +133,36 @@ class RowMapper
      *  <li>a "set" string is added to the beginning</li>
      * </ul>
      *
-     * @param array $row         the single row to map
-     * @param       $entity Entity entity to map to
-     * @param array $mappingInfo the mapping info (typecast)
-     * @return array|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity $entity the mapped entity
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException if a EmptyEntity instance is given
+     * @param array $row                                                               the
+     *                                                                                 single
+     *                                                                                 row
+     *                                                                                 to
+     *                                                                                 map
+     * @param       $entity                                                            Entity
+     *                                                                                 entity
+     *                                                                                 to
+     *                                                                                 map
+     *                                                                                 to
+     * @param array $mappingInfo                                                       the
+     *                                                                                 mapping
+     *                                                                                 info
+     *                                                                                 (typecast)
+     * @return array|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity $entity
+     *                                                                                 the
+     *                                                                                 mapped
+     *                                                                                 entity
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException if
+     *                                                                                 a
+     *                                                                                 EmptyEntity
+     *                                                                                 instance
+     *                                                                                 is
+     *                                                                                 given
      */
     public function mapRow(
         array $row,
         Entity $entity = null,
         array $mappingInfo = []
-    )
-    {
+    ) {
         if ($entity instanceof EmptyEntity) {
             throw new InvalidOptionException(
                 'You are not allowed to map rows to an EmptyEntity instance'
@@ -150,38 +181,52 @@ class RowMapper
     /**
      * @param array  $row
      * @param Entity $entity
-     * @param array  $mappingInfo the mapping info (typecast)
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\InsufficientPopulationException if strict entity is not fully populated
+     * @param array  $mappingInfo                                                                       the
+     *                                                                                                  mapping
+     *                                                                                                  info
+     *                                                                                                  (typecast)
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\InsufficientPopulationException if
+     *                                                                                                  strict
+     *                                                                                                  entity
+     *                                                                                                  is
+     *                                                                                                  not
+     *                                                                                                  fully
+     *                                                                                                  populated
      */
     public function populateFields(
         array $row,
         Entity $entity,
         array $mappingInfo
-    )
-    {
+    ) {
         $entityFiller =
             function (Entity &$entity, $field, $value, $mappingInfo) {
-            $methodName = $this->buildMethodName($field);
-                if (isset($mappingInfo[$field]) && $value !== null) {
+                $methodName = $this->buildMethodName($field);
+                if (isset($mappingInfo[$field]) &&
+                    ($value !== null || $mappingInfo[$field] === 'bool')) {
                     $value = $this->getTypeCaster()
                                   ->cast($mappingInfo[$field], $value);
                 }
-            if (method_exists($entity, $methodName)) {
-                $entity->$methodName($value);
-
-                return 1;
-            } else {
-                if (property_exists($entity, $field) ||
-                    $entity instanceof EmptyEntity
-                ) {
-                    $entity->$field = $value;
+                if (method_exists($entity, $methodName)) {
+                    $entity->$methodName($value);
 
                     return 1;
                 } else {
-                    throw new DatabaseException(sprintf('No property %s found for Entity', $field));
+                    if (property_exists($entity, $field) ||
+                        $entity instanceof EmptyEntity
+                    ) {
+                        $entity->$field = $value;
+
+                        return 1;
+                    } else {
+                        if (!($entity instanceof WeakEntity)) {
+                            throw new DatabaseException(
+                                sprintf('No property %s found for Entity',
+                                    $field)
+                            );
+                        }
+                    }
                 }
-            }
-        };
+            };
 
         $count = 0;
         foreach ($row as $field => $value) {

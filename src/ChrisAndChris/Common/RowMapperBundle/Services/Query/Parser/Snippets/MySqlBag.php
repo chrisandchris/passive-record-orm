@@ -95,8 +95,9 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
             },
             'delete'         => function (array $params) {
                 return [
-                    'code'   => 'DELETE `' . $params['table'] . '` FROM `' . $params['table'] . '`',
-                    'params' => null,
+                    'code'       => 'DELETE `' . $params['table'] . '` FROM `' .
+                        $params['table'] . '`',
+                    'params'     => null,
                 ];
             },
             'equals'         => function () {
@@ -226,9 +227,9 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
                 }
 
                 return [
-                    'code'   => 'INSERT ' . $mode . ' INTO `' .
+                    'code'       => 'INSERT ' . $mode . ' INTO `' .
                         $params['table'] . '`',
-                    'params' => null,
+                    'params'     => null,
                 ];
             },
             'isnull'         => function (array $params) {
@@ -372,8 +373,8 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
             },
             'update'         => function (array $params) {
                 return [
-                    'code'   => 'UPDATE `' . $params['table'] . '` SET',
-                    'params' => null,
+                    'code'       => 'UPDATE `' . $params['table'] . '` SET',
+                    'params'     => null,
                 ];
             },
             'using'          => function (array $params) {
