@@ -22,7 +22,7 @@
   },
   "require": {
     "php": ">=7",
-    "symfony/symfony": "2.3.*|2.7.*|2.8.*"
+    "symfony/symfony": "2.3.*|2.7.*|2.8.*|3.4.*"
   },
   "suggests": {
     "phpseclib/phpseclib": "^2.0",
