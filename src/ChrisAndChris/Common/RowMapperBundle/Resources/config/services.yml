@@ -77,4 +77,13 @@ services:
       - '@logger'
   common_rowmapper.pdo.factory:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Pdo\PdoFactory
-    arguments: ['@common_rowmapper.pdolayer', '%chris_and_chris_row_mapper%']
+    arguments:
+      - '@common_rowmapper.pdolayer'
+      - '%chris_and_chris_row_mapper%'
+  common_rowmapper.process:
+    class: ChrisAndChris\Common\RowMapperBundle\Services\BusinessProcess
+    arguments:
+      - '%kernel.environment%'
+      - '@common_rowmapper.pdolayer'
+      - '@logger'
+      - '@event_dispatcher'
