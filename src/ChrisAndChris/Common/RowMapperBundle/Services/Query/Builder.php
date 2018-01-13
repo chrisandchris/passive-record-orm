@@ -169,6 +169,8 @@ class Builder
         }
         $insertCounter = 0;
         foreach ($updates as $update) {
+            $insertCounter++;
+
             if (!is_array($updates)) {
                 throw new MalformedQueryException(
                     sprintf('Value of $values must be array, %s given', gettype($update))
@@ -179,12 +181,25 @@ class Builder
                     sprintf('Update value must have 2 indexes, %d given', count($update))
                 );
             }
+
+            // use array_keys() to extract keys (they must not start at 0
+            // nor must they be numeric)
             $keys = array_keys($update);
+
+            // c# syntax: a ?? b returns b if a is null
+            // do not update if the field value is null (selective update)
+            if (substr($update[$keys[0]], 0, 2) == '??') {
+                if ($update[$keys[1]] === null) {
+                    continue;
+                }
+                $update[$keys[0]] = substr($update[$keys[0]], 2);
+            }
+
             $this->field($update[$keys[0]])
                  ->equals()
                  ->value($update[$keys[1]]);
 
-            if (++$insertCounter < count($updates)) {
+            if ($insertCounter < count($updates)) {
                 $this->c();
             }
         }

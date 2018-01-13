@@ -534,4 +534,18 @@ class ExtendedBuilderTest extends AbstractBuilderTest
         $builder->foundRows();
         $this->equals('SQL_CALC_FOUND_ROWS *', $builder);
     }
+
+    // added in v2.6.0
+    public function testSelectiveUpdate()
+    {
+        $builder = $this->getBuilder();
+            $builder->updates([
+                ['??fieldA', null],
+                ['??fieldB', true],
+                ['??fieldC', 1],
+                ['??fieldD', '']
+            ]);
+
+        $this->equals("`fieldB` = ? , `fieldC` = ? , `fieldD` = ?", $builder);
+    }
 }
