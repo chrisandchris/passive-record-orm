@@ -38,5 +38,10 @@
     "matthiasnoback/symfony-config-test": "^1.1",
     "phpseclib/phpseclib": "^2.0"
   },
-  "minimum-stability": "stable"
+  "minimum-stability": "stable",
+  "extra": {
+    "branch-alias": {
+      "dev-master": "v2.6.x-dev"
+    }
+  }
 }
