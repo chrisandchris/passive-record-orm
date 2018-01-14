@@ -103,6 +103,14 @@ class Builder
         }
     }
 
+    private function undo(int $count = 1)
+    {
+        do {
+            // unset latest key
+            unset($this->statement[max(array_keys($this->statement))]);
+        } while (--$count > 0);
+    }
+
     private function allowAppend()
     {
         // for speed, we first check only the last index
@@ -167,9 +175,12 @@ class Builder
                 sprintf('Must update at least one field, %s given', count($updates))
             );
         }
+
         $insertCounter = 0;
+        $didProcessLastValue = false;
         foreach ($updates as $update) {
             $insertCounter++;
+            $didProcessLastValue = false;
 
             if (!is_array($updates)) {
                 throw new MalformedQueryException(
@@ -199,9 +210,17 @@ class Builder
                  ->equals()
                  ->value($update[$keys[1]]);
 
+            $didProcessLastValue = true;
+
             if ($insertCounter < count($updates)) {
                 $this->c();
             }
+        }
+
+        // when last round was not process, but we did process something, undo
+        // because otherwise we have a comma at the end which is invalid sql
+        if (!$didProcessLastValue && $insertCounter !== 0) {
+            $this->undo();
         }
 
         return $this;

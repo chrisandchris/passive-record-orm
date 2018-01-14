@@ -548,4 +548,19 @@ class ExtendedBuilderTest extends AbstractBuilderTest
 
         $this->equals("`fieldB` = ? , `fieldC` = ? , `fieldD` = ?", $builder);
     }
+
+    // added in v2.6.0
+    // will test for no trailing comma at query
+    public function testSelectiveUpdate_AfterwardsNullWillReturnCorrectString()
+    {
+        $builder = $this->getBuilder();
+        $builder->updates([
+            ['??fieldA', null],
+            ['??fieldB', true],
+            ['??fieldC', null],
+            ['??fieldD', null]
+        ]);
+
+        $this->equals("`fieldB` = ?", $builder);
+    }
 }
