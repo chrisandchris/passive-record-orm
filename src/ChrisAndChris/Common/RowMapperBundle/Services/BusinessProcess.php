@@ -169,7 +169,7 @@ class BusinessProcess
             $this->logger->info(sprintf(
                 '[ORM] %s: Starting process',
                 $this->getTraceMessage(
-                    debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)
+                    debug_backtrace(0)
                 )
             ));
         }
@@ -180,26 +180,24 @@ class BusinessProcess
 
     public function getTraceMessage(array $trace) : string
     {
-        $lastTrace = null;
+        $break = false;
         foreach ($trace as $index => $item) {
-            $lastTrace = $index;
-            // as soon as we hit BusinessProcess::run(), stop
-            if ($item['function'] == 'run' && $item['class'] == __CLASS__) {
+            if ($break) {
                 break;
+            }
+            // as soon as we hit BusinessProcess::run(), stop
+            if ($item['function'] == 'run') {
+                $break = true;
             }
         }
 
         // take the last call up from BusinessProcess::run()
         // this will be the custom process
-        if (!isset($curr) && isset($trace[$index - 1])) {
-            $curr = $trace[$index - 1];
-        }
-
         return sprintf(
             '%s:%s@%d',
-            explode('.', basename($curr['file']), 2)[0],
-            $curr['function'],
-            $curr['line']
+            explode('.', basename($item['file']), 2)[0],
+            $item['function'],
+            $item['line']
         );
     }
 
