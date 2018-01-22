@@ -80,6 +80,7 @@ class BusinessProcess
             $this->logOut($start);
 
             if (!$this->pdoLayer->inTransaction()) {
+                $this->logger->warning('[ORM] Rolling back changes...');
                 $this->rollback();
                 throw new GeneralDatabaseException(
                     'No transaction running, check query.'
@@ -89,7 +90,7 @@ class BusinessProcess
             // earlier versions returned NotFoundHttpException
             // which we must "upgrade" to NoSuchRowFoundException
             $this->logger->info(sprintf(
-                'Upgraded NotFoundHttpException at %s',
+                '[ORM] Upgraded NotFoundHttpException at %s',
                 $this->getTraceMessage(debug_backtrace(
                     DEBUG_BACKTRACE_PROVIDE_OBJECT,
                     3
@@ -103,7 +104,7 @@ class BusinessProcess
             );
         } catch (NoSuchRowFoundException $exception) {
             $this->logger->info(sprintf(
-                'Passed through NoSuchRowFoundException at %s',
+                '[ORM] Passed through NoSuchRowFoundException at %s',
                 $this->getTraceMessage(debug_backtrace(
                     DEBUG_BACKTRACE_PROVIDE_OBJECT,
                     3
@@ -115,7 +116,7 @@ class BusinessProcess
         } catch (RowMapperException $exception) {
             $this->logger->error(
                 sprintf(
-                    'business process failed with exception: %s',
+                    '[ORM] Business process failed with exception: %s',
                     $exception->getMessage()
                 )
             );
@@ -123,12 +124,12 @@ class BusinessProcess
                 $this->rollback();
             } catch (RollbackFailedException $exception) {
                 $this->logger->error(sprintf(
-                    'Rollback failed: %s',
+                    '[ORM] Rollback failed: %s',
                     $exception->getMessage()
                 ), $exception->getTrace());
             } catch (GeneralDatabaseException $exception) {
                 $this->logger->error(sprintf(
-                    'General database error: %s',
+                    '[ORM] General database error: %s',
                     $exception->getMessage()
                 ), $exception->getTrace());
             }
@@ -148,9 +149,11 @@ class BusinessProcess
      */
     public function startTransaction()
     {
+        $this->logger->debug('[ORM] Starting transaction...');
         if ($this->transactionLevel === 0 ||
             !$this->pdoLayer->inTransaction()) {
             if (!$this->pdoLayer->beginTransaction()) {
+                $this->logger->warning('[ORM] Unable to start transaction');
                 throw new TransactionException('Unable to start transaction');
             }
         }
@@ -164,7 +167,7 @@ class BusinessProcess
     {
         if ($this->environment === 'prod' || $this->environment === 'dev') {
             $this->logger->info(sprintf(
-                '%s: Starting process',
+                '[ORM] %s: Starting process',
                 $this->getTraceMessage(
                     debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)
                 )
@@ -177,17 +180,19 @@ class BusinessProcess
 
     public function getTraceMessage(array $trace) : string
     {
-        foreach ($trace as $item) {
-            if (strstr(basename($item['file']), 'Process') &&
-                basename($item['file']) !== 'BusinessProcess.php') {
-                $curr = $item;
+        $lastTrace = null;
+        foreach ($trace as $index => $item) {
+            $lastTrace = $index;
+            // as soon as we hit BusinessProcess::run(), stop
+            if ($item['function'] == 'run' && $item['class'] == __CLASS__) {
+                break;
             }
-            break;
         }
 
-        // just guess into the wild...
-        if (!isset($curr)) {
-            $curr = $trace[1];
+        // take the last call up from BusinessProcess::run()
+        // this will be the custom process
+        if (!isset($curr) && isset($trace[$index - 1])) {
+            $curr = $trace[$index - 1];
         }
 
         return sprintf(
@@ -206,7 +211,7 @@ class BusinessProcess
         if ($this->environment === 'prod' || $this->environment === 'dev') {
 
             $this->logger->info(sprintf(
-                '%s: Took %.2Fms: ',
+                '[ORM] %s: Took %.2Fms: ',
                 $this->getTraceMessage(
                     debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)
                 ),
