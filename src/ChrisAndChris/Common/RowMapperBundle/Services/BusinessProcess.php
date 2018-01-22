@@ -80,7 +80,6 @@ class BusinessProcess
             $this->logOut($start);
 
             if (!$this->pdoLayer->inTransaction()) {
-                $this->logger->warning('[ORM] Rolling back changes...');
                 $this->rollback();
                 throw new GeneralDatabaseException(
                     'No transaction running, check query.'
@@ -158,6 +157,10 @@ class BusinessProcess
             }
         }
         $this->transactionLevel++;
+        $this->logger->debug(sprintf(
+            '[ORM] Transaction level is now <%d>',
+            $this->transactionLevel
+        ));
     }
 
     /**
@@ -207,7 +210,6 @@ class BusinessProcess
     private function logOut($start)
     {
         if ($this->environment === 'prod' || $this->environment === 'dev') {
-
             $this->logger->info(sprintf(
                 '[ORM] %s: Took %.2Fms: ',
                 $this->getTraceMessage(
@@ -226,8 +228,13 @@ class BusinessProcess
     public function rollback()
     {
         $this->transactionLevel--;
+        $this->logger->debug(sprintf(
+            '[ORM] Transaction level is now <%d>',
+            $this->transactionLevel
+        ));
 
         if ($this->transactionLevel === 0 && $this->pdoLayer->inTransaction()) {
+            $this->logger->info('[ORM] Rolling back changes');
             $this->pdoLayer->rollBack();
         }
     }
@@ -240,12 +247,19 @@ class BusinessProcess
     {
         $this->transactionLevel--;
 
+        $this->logger->debug(sprintf(
+            '[ORM] Transaction level is now <%d>',
+            $this->transactionLevel
+        ));
         if ($this->transactionLevel < 0) {
+            $this->logger->warning('[ORM] Transaction level below 0');
             return;
         }
 
         if ($this->transactionLevel === 0) {
+            $this->logger->debug('[ORM] Commiting changes');
             if (!$this->pdoLayer->commit()) {
+                $this->logger->warning('[ORM] Unable to commit transaction');
                 throw new TransactionException('Unable to commit transaction');
             }
         }
