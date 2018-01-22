@@ -90,10 +90,7 @@ class BusinessProcess
             // which we must "upgrade" to NoSuchRowFoundException
             $this->logger->info(sprintf(
                 '[ORM] Upgraded NotFoundHttpException at %s',
-                $this->getTraceMessage(debug_backtrace(
-                    DEBUG_BACKTRACE_PROVIDE_OBJECT,
-                    3
-                ))
+                $this->getTraceMessage()
             ));
 
             $this->commit();
@@ -104,10 +101,7 @@ class BusinessProcess
         } catch (NoSuchRowFoundException $exception) {
             $this->logger->info(sprintf(
                 '[ORM] Passed through NoSuchRowFoundException at %s',
-                $this->getTraceMessage(debug_backtrace(
-                    DEBUG_BACKTRACE_PROVIDE_OBJECT,
-                    3
-                ))
+                $this->getTraceMessage()
             ));
 
             $this->commit();
@@ -171,9 +165,7 @@ class BusinessProcess
         if ($this->environment === 'prod' || $this->environment === 'dev') {
             $this->logger->info(sprintf(
                 '[ORM] %s: Starting process',
-                $this->getTraceMessage(
-                    debug_backtrace(0)
-                )
+                $this->getTraceMessage()
             ));
         }
         $start = microtime(true);
@@ -181,8 +173,11 @@ class BusinessProcess
         return $start;
     }
 
-    public function getTraceMessage(array $trace) : string
+    public function getTraceMessage(array $trace = null) : string
     {
+        if ($trace === null) {
+            $trace = debug_backtrace(0);
+        }
         $break = false;
         foreach ($trace as $index => $item) {
             if ($break) {
@@ -212,9 +207,7 @@ class BusinessProcess
         if ($this->environment === 'prod' || $this->environment === 'dev') {
             $this->logger->info(sprintf(
                 '[ORM] %s: Took %.2Fms: ',
-                $this->getTraceMessage(
-                    debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2)
-                ),
+                $this->getTraceMessage(),
                 (microtime(true) - $start) * 1000
             ));
         }
