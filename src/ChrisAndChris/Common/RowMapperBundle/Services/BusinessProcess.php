@@ -162,12 +162,10 @@ class BusinessProcess
      */
     private function logIn() : float
     {
-        if ($this->environment === 'prod' || $this->environment === 'dev') {
-            $this->logger->info(sprintf(
-                '[ORM] %s: Starting process',
-                $this->getTraceMessage()
-            ));
-        }
+        $this->logger->info(sprintf(
+            '[ORM] %s: Starting process',
+            $this->getTraceMessage()
+        ));
         $start = microtime(true);
 
         return $start;
@@ -224,13 +222,11 @@ class BusinessProcess
      */
     private function logOut($start)
     {
-        if ($this->environment === 'prod' || $this->environment === 'dev') {
-            $this->logger->info(sprintf(
-                '[ORM] %s: Took %.2Fms: ',
-                $this->getTraceMessage(),
-                (microtime(true) - $start) * 1000
-            ));
-        }
+        $this->logger->info(sprintf(
+            '[ORM] %s: Took %.2Fms: ',
+            $this->getTraceMessage(),
+            (microtime(true) - $start) * 1000
+        ));
     }
 
     /**
@@ -266,6 +262,7 @@ class BusinessProcess
         ));
         if ($this->transactionLevel < 0) {
             $this->logger->warning('[ORM] Transaction level below 0');
+
             return;
         }
 
