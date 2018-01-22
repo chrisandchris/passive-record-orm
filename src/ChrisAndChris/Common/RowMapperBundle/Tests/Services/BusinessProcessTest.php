@@ -117,7 +117,7 @@ class BusinessProcessTest extends TestKernel
 
         $message = $process->getTraceMessage($trace);
         $this->assertEquals(
-            'UserProcess:getUsers@5',
+            'UserProcess.php::(unknown)->getUsers()@5',
             $message
         );
     }
@@ -179,7 +179,7 @@ class BusinessProcessTest extends TestKernel
 
         $message = $process->getTraceMessage($trace);
         $this->assertEquals(
-            'UserProcess:getUsers@5',
+            'UserProcess.php::(unknown)->getUsers()@5',
             $message
         );
     }
@@ -203,7 +203,7 @@ class BusinessProcessTest extends TestKernel
 
         $message = $process->getTraceMessage($trace);
         $this->assertEquals(
-            'SomeClass:someMethod@100',
+            'SomeClass.php::(unknown)->someMethod()@100',
             $message
         );
     }

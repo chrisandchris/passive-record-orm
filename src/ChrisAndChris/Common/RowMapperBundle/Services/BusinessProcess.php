@@ -187,13 +187,33 @@ class BusinessProcess
             if ($item['function'] == 'run') {
                 $break = true;
             }
+        };
+
+        // make sure all keys exist
+        $requiredKeys = ['file', 'function', 'line', 'class'];
+        foreach ($requiredKeys as $requiredKey) {
+            if (!array_key_exists($requiredKey, $item)) {
+                $item[$requiredKey] = '';
+            }
+        }
+
+        // try to get short name of class
+        $shortName = '(unknown)';
+        try {
+            $shortName = (new \ReflectionClass($item['class']))->getShortName();
+        } catch (\ReflectionException $exception) {
+            $this->logger->warning(sprintf(
+                'Unable to get short name: <%s>',
+                $exception->getMessage()
+            ));
         }
 
         // take the last call up from BusinessProcess::run()
         // this will be the custom process
         return sprintf(
-            '%s:%s@%d',
-            explode('.', basename($item['file']), 2)[0],
+            '%s::%s->%s()@%d',
+            basename($item['file']),
+            $shortName,
             $item['function'],
             $item['line']
         );
