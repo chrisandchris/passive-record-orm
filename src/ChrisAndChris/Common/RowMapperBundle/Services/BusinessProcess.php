@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace ChrisAndChris\Common\RowMapperBundle\Services;
 
+use ChrisAndChris\Common\RowMapperBundle\Events\Process\ProcessEvent;
+use ChrisAndChris\Common\RowMapperBundle\Events\ProcessEvents;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\GeneralDatabaseException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Process\RollbackFailedException;
@@ -36,9 +38,7 @@ class BusinessProcess
     private $logger;
     /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface */
     private $eventDispatcher;
-    /**
-     * @var string
-     */
+    /** @var string */
     private $environment;
 
     /**
@@ -67,8 +67,7 @@ class BusinessProcess
      *
      * @param \Closure $process
      * @return mixed
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Process\TransactionException
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\RowMapperException
      */
     public function run(\Closure $process)
     {
@@ -162,58 +161,37 @@ class BusinessProcess
      */
     private function logIn() : float
     {
+        $trace = $this->getTraceInfo();
+
         $this->logger->info(sprintf(
             '[ORM] %s: Starting process',
-            $this->getTraceMessage()
+            $this->formatTraceInfo($trace)
         ));
         $start = microtime(true);
+
+        $this->eventDispatcher->dispatch(
+            ProcessEvents::ON_IN,
+            new ProcessEvent($trace['shortName'], $trace['function'])
+        );
 
         return $start;
     }
 
     public function getTraceMessage(array $trace = null) : string
     {
-        if ($trace === null) {
-            $trace = debug_backtrace(0);
-        }
-        $break = false;
-        foreach ($trace as $index => $item) {
-            if ($break) {
-                break;
-            }
-            // as soon as we hit BusinessProcess::run(), stop
-            if ($item['function'] == 'run') {
-                $break = true;
-            }
-        };
+        $trace = $this->getTraceInfo($trace);
 
-        // make sure all keys exist
-        $requiredKeys = ['file', 'function', 'line', 'class'];
-        foreach ($requiredKeys as $requiredKey) {
-            if (!array_key_exists($requiredKey, $item)) {
-                $item[$requiredKey] = '';
-            }
-        }
+        return $this->formatTraceInfo($trace);
+    }
 
-        // try to get short name of class
-        $shortName = '(unknown)';
-        try {
-            $shortName = (new \ReflectionClass($item['class']))->getShortName();
-        } catch (\ReflectionException $exception) {
-            $this->logger->warning(sprintf(
-                'Unable to get short name: <%s>',
-                $exception->getMessage()
-            ));
-        }
-
-        // take the last call up from BusinessProcess::run()
-        // this will be the custom process
+    public function formatTraceInfo(array $trace)
+    {
         return sprintf(
             '%s::%s->%s()@%d',
-            basename($item['file']),
-            $shortName,
-            $item['function'],
-            $item['line']
+            basename($trace['file']),
+            $trace['shortName'],
+            $trace['function'],
+            $trace['line']
         );
     }
 
@@ -222,9 +200,16 @@ class BusinessProcess
      */
     private function logOut($start)
     {
+        $trace = $this->getTraceInfo();
+
+        $this->eventDispatcher->dispatch(
+            ProcessEvents::ON_OUT,
+            new ProcessEvent($trace['shortName'], $trace['function'])
+        );
+
         $this->logger->info(sprintf(
             '[ORM] %s: Took %.2Fms: ',
-            $this->getTraceMessage(),
+            $this->formatTraceInfo($trace),
             (microtime(true) - $start) * 1000
         ));
     }
@@ -267,7 +252,7 @@ class BusinessProcess
         }
 
         if ($this->transactionLevel === 0) {
-            $this->logger->debug('[ORM] Commiting changes');
+            $this->logger->debug('[ORM] Committing changes');
             if (!$this->pdoLayer->commit()) {
                 $this->logger->warning('[ORM] Unable to commit transaction');
                 throw new TransactionException('Unable to commit transaction');
@@ -277,7 +262,6 @@ class BusinessProcess
 
     /**
      * @return bool
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\TransactionException
      */
     public function reset() : bool
     {
@@ -299,5 +283,52 @@ class BusinessProcess
     public function getEventDispatcher() : EventDispatcherInterface
     {
         return $this->eventDispatcher;
+    }
+
+    /**
+     * @param array $trace
+     * @return array
+     */
+    public function getTraceInfo(array $trace = null) : array
+    {
+        if ($trace === null) {
+            $trace = debug_backtrace(0);
+        }
+        $break = false;
+        foreach ($trace as $index => $item) {
+            if ($break) {
+                break;
+            }
+            // as soon as we hit BusinessProcess::run(), stop
+            if ($item['function'] == 'run') {
+                $break = true;
+            }
+        };
+
+        // make sure all keys exist
+        $requiredKeys = ['file', 'function', 'line', 'class'];
+        foreach ($requiredKeys as $requiredKey) {
+            if (!array_key_exists($requiredKey, $item)) {
+                $item[$requiredKey] = '';
+            }
+        }
+
+        // try to get short name of class
+        $shortName = '(unknown)';
+        try {
+            $shortName = (new \ReflectionClass($item['class']))->getShortName();
+        } catch (\ReflectionException $exception) {
+            $this->logger->warning(sprintf(
+                'Unable to get short name: <%s>',
+                $exception->getMessage()
+            ));
+        }
+
+        return [
+            'file'      => $item['file'],
+            'function'  => $item['function'],
+            'line'      => $item['line'],
+            'shortName' => $shortName,
+        ];
     }
 }

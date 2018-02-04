@@ -17,3 +17,4 @@ src/ChrisAndChris/Common/RowMapperBundle/Resources/config/parameters.yml
 *.db
 *.sql
 *.log
+composer.lock
