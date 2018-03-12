@@ -164,6 +164,7 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
             },
             'field'          => function (array $params) {
                 $qualifiedKey = $params['identifier'];
+                $mapping = [];
 
                 if (is_array($qualifiedKey)) {
                     $qualifiedKey = implode(':', $qualifiedKey);
@@ -181,6 +182,7 @@ class MySqlBag extends AbstractBag implements SnippetBagInterface
                     'code'   => $this->implodeIdentifier($qualifiedKey,
                         self::DELIMITER),
                     'params' => null,
+                    'mapping_info' => $mapping
                 ];
             },
             'function'       => function (array $params) {

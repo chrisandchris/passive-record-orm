@@ -63,8 +63,9 @@ class SqlQuery
         return $this->parameters;
     }
 
+    /** @noinspection PhpDocRedundantThrowsInspection */
     /**
-     * @inheritdoc
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException
      */
     public function requiresResult($errorMessage = '')
     {

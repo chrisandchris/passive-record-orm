@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace ChrisAndChris\Common\RowMapperBundle\Services;
 
 use ChrisAndChris\Common\RowMapperBundle\Events\Process\ProcessEvent;
+use ChrisAndChris\Common\RowMapperBundle\Events\Process\ProcessOutEvent;
 use ChrisAndChris\Common\RowMapperBundle\Events\ProcessEvents;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException;
 use ChrisAndChris\Common\RowMapperBundle\Exceptions\GeneralDatabaseException;
@@ -69,14 +70,14 @@ class BusinessProcess
      * @return mixed
      * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\RowMapperException
      */
-    public function run(\Closure $process)
+    public function run(\Closure $process, $eventClass = null)
     {
         $this->startTransaction();
 
         try {
-            $start = $this->logIn();
+            $start = $this->logIn($eventClass);
             $result = $process();
-            $this->logOut($start);
+            $this->logOut($start, $eventClass, $result);
 
             if (!$this->pdoLayer->inTransaction()) {
                 $this->rollback();
@@ -159,7 +160,7 @@ class BusinessProcess
     /**
      * @return mixed
      */
-    private function logIn() : float
+    private function logIn($eventClass) : float
     {
         $trace = $this->getTraceInfo();
 
@@ -169,19 +170,82 @@ class BusinessProcess
         ));
         $start = microtime(true);
 
+        if ($eventClass !== null) {
+            try {
+                $event = new $eventClass(
+                    $trace['shortName'],
+                    $trace['function']
+                );
+            } catch (\Exception $exception) {
+                $this->logger->warning(sprintf(
+                    '[ORM] Unable to create instance from <%s>: %s',
+                    $eventClass,
+                    $exception->getMessage()
+                ));
+            }
+        }
+        if (!isset($event) || $event === null) {
+            $this->logger->debug('[ORM] Falling back to ProcessEvent');
+            $event = new ProcessEvent($trace['shortName'], $trace['function']);
+        }
+
+        $this->logger->info(sprintf(
+            'Dispatching In Event using <%s>',
+            get_class($event)
+        ));
         $this->eventDispatcher->dispatch(
             ProcessEvents::ON_IN,
-            new ProcessEvent($trace['shortName'], $trace['function'])
+            $event
         );
 
         return $start;
     }
 
-    public function getTraceMessage(array $trace = null) : string
+    /**
+     * @param array $trace
+     * @return array
+     */
+    public function getTraceInfo(array $trace = null) : array
     {
-        $trace = $this->getTraceInfo($trace);
+        if ($trace === null) {
+            $trace = debug_backtrace(0);
+        }
+        $break = false;
+        foreach ($trace as $index => $item) {
+            if ($break) {
+                break;
+            }
+            // as soon as we hit BusinessProcess::run(), stop
+            if ($item['function'] == 'run') {
+                $break = true;
+            }
+        };
 
-        return $this->formatTraceInfo($trace);
+        // make sure all keys exist
+        $requiredKeys = ['file', 'function', 'line', 'class'];
+        foreach ($requiredKeys as $requiredKey) {
+            if (!array_key_exists($requiredKey, $item)) {
+                $item[$requiredKey] = '';
+            }
+        }
+
+        // try to get short name of class
+        $shortName = '(unknown)';
+        try {
+            $shortName = (new \ReflectionClass($item['class']))->getShortName();
+        } catch (\ReflectionException $exception) {
+            $this->logger->warning(sprintf(
+                'Unable to get short name: <%s>',
+                $exception->getMessage()
+            ));
+        }
+
+        return [
+            'file'      => $item['file'],
+            'function'  => $item['function'],
+            'line'      => $item['line'],
+            'shortName' => $shortName,
+        ];
     }
 
     public function formatTraceInfo(array $trace)
@@ -198,13 +262,41 @@ class BusinessProcess
     /**
      * @param $start
      */
-    private function logOut($start)
+    private function logOut($start, $eventClass, $result)
     {
         $trace = $this->getTraceInfo();
 
+        if ($eventClass !== null) {
+            try {
+                $event = new $eventClass(
+                    $trace['shortName'],
+                    $trace['function'],
+                    $result
+                );
+            } catch (\Exception $exception) {
+                $this->logger->warning(sprintf(
+                    '[ORM] Unable to create instance from <%s>: %s',
+                    $eventClass,
+                    $exception->getMessage()
+                ));
+            }
+        }
+        if (!isset($event) || $event === null) {
+            $this->logger->debug('[ORM] Falling back to ProcessOutEvent');
+            $event = new ProcessOutEvent(
+                $trace['shortName'],
+                $trace['function'],
+                $result
+            );
+        }
+
+        $this->logger->info(sprintf(
+            'Dispatching Out Event using <%s>',
+            get_class($event)
+        ));
         $this->eventDispatcher->dispatch(
             ProcessEvents::ON_OUT,
-            new ProcessEvent($trace['shortName'], $trace['function'])
+            $event
         );
 
         $this->logger->info(sprintf(
@@ -231,6 +323,13 @@ class BusinessProcess
             $this->logger->info('[ORM] Rolling back changes');
             $this->pdoLayer->rollBack();
         }
+    }
+
+    public function getTraceMessage(array $trace = null) : string
+    {
+        $trace = $this->getTraceInfo($trace);
+
+        return $this->formatTraceInfo($trace);
     }
 
     /**
@@ -283,52 +382,5 @@ class BusinessProcess
     public function getEventDispatcher() : EventDispatcherInterface
     {
         return $this->eventDispatcher;
-    }
-
-    /**
-     * @param array $trace
-     * @return array
-     */
-    public function getTraceInfo(array $trace = null) : array
-    {
-        if ($trace === null) {
-            $trace = debug_backtrace(0);
-        }
-        $break = false;
-        foreach ($trace as $index => $item) {
-            if ($break) {
-                break;
-            }
-            // as soon as we hit BusinessProcess::run(), stop
-            if ($item['function'] == 'run') {
-                $break = true;
-            }
-        };
-
-        // make sure all keys exist
-        $requiredKeys = ['file', 'function', 'line', 'class'];
-        foreach ($requiredKeys as $requiredKey) {
-            if (!array_key_exists($requiredKey, $item)) {
-                $item[$requiredKey] = '';
-            }
-        }
-
-        // try to get short name of class
-        $shortName = '(unknown)';
-        try {
-            $shortName = (new \ReflectionClass($item['class']))->getShortName();
-        } catch (\ReflectionException $exception) {
-            $this->logger->warning(sprintf(
-                'Unable to get short name: <%s>',
-                $exception->getMessage()
-            ));
-        }
-
-        return [
-            'file'      => $item['file'],
-            'function'  => $item['function'],
-            'line'      => $item['line'],
-            'shortName' => $shortName,
-        ];
     }
 }

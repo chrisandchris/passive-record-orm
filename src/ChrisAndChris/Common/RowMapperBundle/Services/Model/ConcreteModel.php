@@ -522,7 +522,8 @@ class ConcreteModel
      * Returns the value of SQL_CALC_FOUND_ROWS
      *
      * @return int
-     * @throws NotCapableException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\RowMapperException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\NotCapableException
      */
     public function getFoundRowCount()
     {
@@ -543,16 +544,21 @@ class ConcreteModel
 
     /**
      * Call query and get first column of first row
-     *
+     *]
      * @param SqlQuery $query
+     * @param bool     $autoCast if true, result value will be casted
      * @return mixed
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException
      */
-    public function runWithFirstKeyFirstValue(SqlQuery $query)
+    public function runWithFirstKeyFirstValue(
+        SqlQuery $query,
+        bool $autoCast = false
+    )
     {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
-            $stmt, function (PdoStatement $statement) {
+            $stmt, function (PdoStatement $statement) use ($query, $autoCast) {
             if ($statement->rowCount() > 1) {
                 throw new DatabaseException(sprintf(
                     'Expected only a single result record, but got %d',
@@ -560,8 +566,16 @@ class ConcreteModel
                 ));
             }
 
-            return $statement->fetch(\PDO::FETCH_NUM)[0];
-        }
-        );
+            $result = $statement->fetch(\PDO::FETCH_NUM)[0];
+            $values = array_values($query->getMappingInfo());
+            if ($autoCast && count($values) > 0) {
+                $result = $this->getMapper()->typeCaster->cast(
+                    $values[0],
+                    $result
+                );
+            }
+
+            return $result;
+        });
     }
 }

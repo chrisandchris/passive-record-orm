@@ -8,15 +8,19 @@
 
 namespace ChrisAndChris\Common\RowMapperBundle\Events;
 
-class ProcessEvents
+final class ProcessEvents
 {
 
     /**
      * Fired before the process is run
+     *
+     * @see \ChrisAndChris\Common\RowMapperBundle\Events\Process\ProcessEvent
      */
     const ON_IN  = 'chrisandchris.orm.process.on_in';
     /**
      * Fired after the process is (successfully) run
+     *
+     * @see \ChrisAndChris\Common\RowMapperBundle\Events\Process\ProcessOutEvent
      */
     const ON_OUT = 'chrisandchris.orm.process.on_out';
 }
