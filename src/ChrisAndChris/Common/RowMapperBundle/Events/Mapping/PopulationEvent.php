@@ -1,4 +1,5 @@
 <?php
+
 namespace ChrisAndChris\Common\RowMapperBundle\Events\Mapping;
 
 use ChrisAndChris\Common\RowMapperBundle\Entity\PopulateEntity;
@@ -43,15 +44,21 @@ class PopulationEvent extends Event
     /**
      * @return PopulateEntity returns a clone of the entity
      */
-    public function getEntity()
+    public function getEntity() : PopulateEntity
     {
         return clone $this->entity;
     }
 
-    public function fill($field, $value)
+    public function fill($field, $value, $mappingInfo = [])
     {
         $function = $this->entityFiller;
-        $this->fieldCount += $function($this->entity, $field, $value);
+        $this->fieldCount += $function(
+            $this->entity,
+            $field,
+            $value,
+            $mappingInfo,
+            false
+        );
     }
 
     public function getWrittenFieldCount()

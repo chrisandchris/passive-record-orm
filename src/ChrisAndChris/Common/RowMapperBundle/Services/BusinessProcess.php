@@ -20,8 +20,6 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *
  *
  * @name BusinessProcess
- * @version   1.0.0
- * @since     1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris
@@ -66,18 +64,31 @@ class BusinessProcess
      * Runs a process
      * If the process does not throw an exception, a successful run is assumed
      *
-     * @param \Closure $process
+     * @param \Closure            $process
+     * @param string|null         $eventClass the event class to dispatch
+     * @param mixed|\Closure|null $eventData  if not null, data to set to out
+     *                                        event
      * @return mixed
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Database\NoSuchRowFoundException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\GeneralDatabaseException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Process\RollbackFailedException
+     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Process\TransactionException
      * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\RowMapperException
      */
-    public function run(\Closure $process, $eventClass = null)
-    {
+    public function run(
+        \Closure $process,
+        $eventClass = null,
+        $eventData = null
+    ) {
         $this->startTransaction();
 
         try {
             $start = $this->logIn($eventClass);
             $result = $process();
-            $this->logOut($start, $eventClass, $result);
+            $this->logOut($start,
+                $eventClass,
+                $eventData !== null ? $eventData : $result
+            );
 
             if (!$this->pdoLayer->inTransaction()) {
                 $this->rollback();
@@ -158,6 +169,7 @@ class BusinessProcess
     }
 
     /**
+     * @param mixed $eventClass
      * @return mixed
      */
     private function logIn($eventClass) : float
@@ -260,11 +272,17 @@ class BusinessProcess
     }
 
     /**
-     * @param $start
+     * @param int                 $start      start time in microseconds
+     * @param string|null         $eventClass the event class to dispatch
+     * @param mixed|null|\Closure $result     the result to set to the event
      */
-    private function logOut($start, $eventClass, $result)
+    private function logOut($start, $eventClass = null, $result = null)
     {
         $trace = $this->getTraceInfo();
+
+        if ($result instanceof \Closure) {
+            $result = $result();
+        }
 
         if ($eventClass !== null) {
             try {

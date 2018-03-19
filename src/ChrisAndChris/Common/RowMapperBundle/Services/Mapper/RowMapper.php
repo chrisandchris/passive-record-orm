@@ -86,21 +86,11 @@ class RowMapper
     /**
      * Maps a result from a statement into an entity
      *
-     * @param \PDOStatement $statement                               the
-     *                                                               statement
-     *                                                               to map
-     * @param Entity        $entity                                  the entity
-     *                                                               to use
-     * @param int           $limit                                   max amount
-     *                                                               of rows to
-     *                                                               map
-     * @param array         $mappingInfo                             the
-     *                                                               mapping
-     *                                                               info
-     *                                                               (typecast)
-     * @return \ChrisAndChris\Common\RowMapperBundle\Entity\Entity[] list of
-     *                                                               mapped
-     *                                                               rows
+     * @param \PDOStatement $statement   the statement to map
+     * @param Entity        $entity      the entity to map to
+     * @param int           $limit       max amount of rows to map
+     * @param array         $mappingInfo mapping information (typecaset e.g.)
+     * @return Entity[] list of entities
      */
     public function mapFromResult(
         \PDOStatement $statement,
@@ -133,30 +123,11 @@ class RowMapper
      *  <li>a "set" string is added to the beginning</li>
      * </ul>
      *
-     * @param array $row                                                               the
-     *                                                                                 single
-     *                                                                                 row
-     *                                                                                 to
-     *                                                                                 map
-     * @param       $entity                                                            Entity
-     *                                                                                 entity
-     *                                                                                 to
-     *                                                                                 map
-     *                                                                                 to
-     * @param array $mappingInfo                                                       the
-     *                                                                                 mapping
-     *                                                                                 info
-     *                                                                                 (typecast)
-     * @return array|\ChrisAndChris\Common\RowMapperBundle\Entity\Entity $entity
-     *                                                                                 the
-     *                                                                                 mapped
-     *                                                                                 entity
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\InvalidOptionException if
-     *                                                                                 a
-     *                                                                                 EmptyEntity
-     *                                                                                 instance
-     *                                                                                 is
-     *                                                                                 given
+     * @param array $row         the row to map
+     * @param       $entity      entity to map to
+     * @param array $mappingInfo mapping info (typecast e.g.)
+     * @return array|Entity $entity the mapped entity
+     * @throws InvalidOptionException if EmptyEntity is given
      */
     public function mapRow(
         array $row,
@@ -179,54 +150,18 @@ class RowMapper
     }
 
     /**
-     * @param array  $row
-     * @param Entity $entity
-     * @param array  $mappingInfo                                                                       the
-     *                                                                                                  mapping
-     *                                                                                                  info
-     *                                                                                                  (typecast)
-     * @throws \ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\InsufficientPopulationException if
-     *                                                                                                  strict
-     *                                                                                                  entity
-     *                                                                                                  is
-     *                                                                                                  not
-     *                                                                                                  fully
-     *                                                                                                  populated
+     * @param array  $row                      the row to map
+     * @param Entity $entity                   entity to map to
+     * @param array  $mappingInfo              mapping info (typecast e.g.)
+     * @throws InsufficientPopulationException if strict entity is not fully
+     *                                         populated
      */
     public function populateFields(
         array $row,
         Entity $entity,
         array $mappingInfo
     ) {
-        $entityFiller =
-            function (Entity &$entity, $field, $value, $mappingInfo) {
-                $methodName = $this->buildMethodName($field);
-                if (isset($mappingInfo[$field]) &&
-                    ($value !== null || $mappingInfo[$field] === 'bool')) {
-                    $value = $this->getTypeCaster()
-                                  ->cast($mappingInfo[$field], $value);
-                }
-                if (method_exists($entity, $methodName)) {
-                    $entity->$methodName($value);
-
-                    return 1;
-                } else {
-                    if (property_exists($entity, $field) ||
-                        $entity instanceof EmptyEntity
-                    ) {
-                        $entity->$field = $value;
-
-                        return 1;
-                    } else {
-                        if (!($entity instanceof WeakEntity)) {
-                            throw new DatabaseException(
-                                sprintf('No property %s found for Entity',
-                                    $field)
-                            );
-                        }
-                    }
-                }
-            };
+        $entityFiller = $this->getEntityFiller();
 
         $count = 0;
         foreach ($row as $field => $value) {
@@ -254,6 +189,57 @@ class RowMapper
     }
 
     /**
+     * @return \Closure
+     */
+    private function getEntityFiller() : \Closure
+    {
+        return
+            function (
+                Entity &$entity,
+                $field,
+                $value,
+                $mappingInfo = [],
+                $weak = false
+            ) {
+                $methodName = $this->buildMethodName($field);
+
+                // cast if necessary
+                if (isset($mappingInfo[$field]) &&
+                    ($value !== null || $mappingInfo[$field] === 'bool')) {
+                    $value = $this->getTypeCaster()
+                                  ->cast($mappingInfo[$field], $value);
+                }
+
+                if ($weak) {
+                    // dash-case to camelCase when we're using weak mode
+                    $field = str_replace('_', '', ucwords($field, '_'));
+                    $field = lcfirst($field);
+                }
+
+                if (method_exists($entity, $methodName)) {
+                    // set using method set{property}
+                    $entity->$methodName($value);
+
+                    return 1;
+                } elseif (property_exists($entity, $field) ||
+                    $entity instanceof EmptyEntity
+                ) {
+                    // set direct to property
+                    $entity->$field = $value;
+
+                    return 1;
+                } elseif (!($entity instanceof WeakEntity) && !$weak) {
+                    throw new DatabaseException(
+                        sprintf('No property %s found for Entity',
+                            $field)
+                    );
+                }
+
+                return 0;
+            };
+    }
+
+    /**
      * Build a method name
      *
      * @param $key
@@ -267,6 +253,11 @@ class RowMapper
         }
 
         return 'set' . implode('', $partials);
+    }
+
+    private function getTypeCaster()
+    {
+        return $this->typeCaster;
     }
 
     /**
@@ -339,10 +330,5 @@ class RowMapper
         }
 
         return $return;
-    }
-
-    private function getTypeCaster()
-    {
-        return $this->typeCaster;
     }
 }

@@ -51,51 +51,6 @@ services:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Query\Parser\Snippets\PgSqlBag
     tags:
       - { name: kernel.event_subscriber }
-  common_rowmapper.utility.mapper.mysql:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\MySqlMapper
-    arguments:
-      - '@common_rowmapper.model'
-    tags:
-      - { name: kernel.event_subscriber }
-  common_rowmapper.utility.mapper.pgsql:
-      class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\Mapper\PgSqlMapper
-      arguments:
-        - '@common_rowmapper.model'
-      tags:
-        - { name: kernel.event_subscriber }
-  common_rowmapper.utilty.cache_writer:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Utility\CacheWriter
-    arguments:
-      - '%kernel.cache_dir%'
-      - 'common_rowmapper'
-  common_rowmapper.mapping.repository:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingRepository
-    arguments:
-      - '%kernel.cache_dir%'
-      - 'common_rowmapper'
-      - 'mapping.json'
-      - '@common_rowmapper.command.database_mapper'
-  common_rowmapper.command.database_mapper:
-    class: ChrisAndChris\Common\RowMapperBundle\Command\DatabaseMapperCommand
-    calls:
-        - [setContainer, ['@service_container']]
-  common_rowmapper.search.result_utility:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchResultUtility
-    arguments:
-      - '@common_rowmapper.model'
-    calls:
-        - [setMappingRepository, ['@common_rowmapper.mapping.repository']]
-        - [setQueryBuilder, ['@common_rowmapper.search.query_builder']]
-  common_rowmapper.search.query_builder:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Utilities\SearchQueryBuilder
-    arguments:
-      - '@common_rowmapper.querybuilderfactory'
-      - '@common_rowmapper.mapping.repository'
-      - '@common_rowmapper.mapping.validator'
-  common_rowmapper.mapping.validator:
-    class: ChrisAndChris\Common\RowMapperBundle\Services\Model\Mapping\MappingValidator
-    arguments:
-      - '@common_rowmapper.mapping.repository'
   common_rowmapper.model:
     class: ChrisAndChris\Common\RowMapperBundle\Services\Model\ConcreteModel
     arguments:

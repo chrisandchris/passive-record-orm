@@ -8,8 +8,6 @@ use ChrisAndChris\Common\RowMapperBundle\Exceptions\Mapping\UnknownCastTypeExcep
  * Casts arbitrary values to specified values
  *
  * @name TypeCaster
- * @version   1.0.0
- * @since     1.0.0
  * @package   RowMapperBundle
  * @author    ChrisAndChris
  * @link      https://github.com/chrisandchris

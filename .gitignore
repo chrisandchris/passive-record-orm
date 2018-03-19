@@ -18,3 +18,4 @@ src/ChrisAndChris/Common/RowMapperBundle/Resources/config/parameters.yml
 *.sql
 *.log
 composer.lock
+junit_log.xml

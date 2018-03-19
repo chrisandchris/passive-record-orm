@@ -16,8 +16,6 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @name ConcreteModel
- * @version    1
- * @since      v2.1.0
  * @package    RowMapperBundle
  * @author     ChrisAndChris
  * @link       https://github.com/chrisandchris
@@ -544,7 +542,7 @@ class ConcreteModel
 
     /**
      * Call query and get first column of first row
-     *]
+     *
      * @param SqlQuery $query
      * @param bool     $autoCast if true, result value will be casted
      * @return mixed
@@ -553,8 +551,7 @@ class ConcreteModel
     public function runWithFirstKeyFirstValue(
         SqlQuery $query,
         bool $autoCast = false
-    )
-    {
+    ) {
         $stmt = $this->prepare($query);
 
         return $this->handleGeneric(
