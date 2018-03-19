@@ -85,10 +85,7 @@ class BusinessProcess
         try {
             $start = $this->logIn($eventClass);
             $result = $process();
-            $this->logOut($start,
-                $eventClass,
-                $eventData !== null ? $eventData : $result
-            );
+            $this->logOut($start, $eventClass, $result, $eventData);
 
             if (!$this->pdoLayer->inTransaction()) {
                 $this->rollback();
@@ -274,14 +271,19 @@ class BusinessProcess
     /**
      * @param int                 $start      start time in microseconds
      * @param string|null         $eventClass the event class to dispatch
-     * @param mixed|null|\Closure $result     the result to set to the event
+     * @param mixed|null          $result     the result of the process
+     * @param \Closure|mixed|null $eventData  if not null, the effective data
      */
-    private function logOut($start, $eventClass = null, $result = null)
-    {
+    private function logOut(
+        $start,
+        $eventClass = null,
+        $result = null,
+        $eventData = null
+    ) {
         $trace = $this->getTraceInfo();
 
-        if ($result instanceof \Closure) {
-            $result = $result();
+        if ($eventData instanceof \Closure) {
+            $result = $eventData($result);
         }
 
         if ($eventClass !== null) {
