@@ -33,6 +33,26 @@ class DefaultParserTest extends TestKernel {
         $this->assertEquals('SELECT', $parser->getSqlQuery());
     }
 
+    public function testExecute_MustClearPreviousData()
+    {
+        $parser = $this->getParser();
+        $parser->setStatement([
+            [
+                'type'   => 'select',
+                'params' => [],
+            ],
+        ]);
+        // previously set mapping information
+        $parser->mappingInfo = [
+            'foo' => 'bar',
+        ];
+        $parser->execute();
+
+        $this->assertEquals([], $parser->mappingInfo);
+        $this->assertEquals([], $parser->getMappingInfo());
+        $this->assertEquals('SELECT', $parser->getSqlQuery());
+    }
+
     private function getParser() {
         /** @var EventDispatcherInterface $ed */
         $ed = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcher')

@@ -284,6 +284,8 @@ class BusinessProcess
 
         if ($eventData instanceof \Closure) {
             $result = $eventData($result);
+        } elseif ($eventData !== null) {
+            $result = $eventData;
         }
 
         if ($eventClass !== null) {

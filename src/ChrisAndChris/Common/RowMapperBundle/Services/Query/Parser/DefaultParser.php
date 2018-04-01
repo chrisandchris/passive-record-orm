@@ -108,6 +108,7 @@ class DefaultParser implements ParserInterface {
      * Clear and prepare builder for next query
      */
     private function clear() {
+        $this->mappingInfo = [];
         $this->parameters = [];
         $this->query = [];
         $this->braces = [];
