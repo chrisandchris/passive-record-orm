@@ -2,23 +2,22 @@ language: php
 matrix:
   fast_finish: true
   include:
-    - php: 5.6
-    - php: 7.0
-    - php: 7.1
-    - php: hhvm
-    - php: nightly
+  - php: 7.0
+  - php: 7.1
+  - php: 7.2
+  - php: hhvm
+  - php: nightly
   allow_failures:
-    - php: 5.6
-    - php: hhvm
-    - php: nightly
+  - php: hhvm
+  - php: nightly
 script:
-  - ./vendor/bin/phpunit -c phpunit.xml
+- ./vendor/bin/phpunit -c phpunit.xml
 before_script:
-  - composer self-update
-  - composer update
-  - composer install
+- composer self-update
+- composer update
+- composer install
 services:
-  - mysql
+- mysql
 addons:
-    code_climate:
-        repo_token: 7aff27efa0c3e0bc7c670a8ebedabbaadc3b2d4d767f3db4b4f5ecf53d57ddce
+  code_climate:
+    repo_token: 7aff27efa0c3e0bc7c670a8ebedabbaadc3b2d4d767f3db4b4f5ecf53d57ddce
