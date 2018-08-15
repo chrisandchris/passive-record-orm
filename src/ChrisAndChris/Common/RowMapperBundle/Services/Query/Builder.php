@@ -449,7 +449,7 @@ class Builder
     public function in($in = null)
     {
         // array cannot be empty because IN() clause cannot be empty
-        if (is_array($in) & count($in) == 0) {
+        if ($in !== null && is_array($in) && count($in) == 0) {
             $in = [null];
         } elseif (!is_array($in)) {
             $in = null;
